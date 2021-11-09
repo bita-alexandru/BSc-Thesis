@@ -1,6 +1,7 @@
 #pragma once
 #include "wx/wx.h"
 
+
 class Main: public wxFrame
 {
 public:
@@ -9,8 +10,8 @@ public:
 
 private:
 	enum ID_CONSTANTS {
-		ID_IMPORT_C = 10001, ID_IMPORT_G,
-		ID_EXPORT_C, ID_EXPORT_G,
+		ID_OPEN_C = 10001, ID_OPEN_G,
+		ID_SAVE_C, ID_SAVE_G,
 		ID_EXIT,
 		ID_RESET_C, ID_RESET_G,
 		ID_DOCUMENTATION
@@ -20,10 +21,10 @@ private:
 
 	void BuildMenuBar();
 	
-	void OnImportC(wxCommandEvent& evt);
-	void OnImportG(wxCommandEvent& evt);
-	void OnExportC(wxCommandEvent& evt);
-	void OnExportG(wxCommandEvent& evt);
+	void OnOpenC(wxCommandEvent& evt);
+	void OnOpenG(wxCommandEvent& evt);
+	void OnSaveC(wxCommandEvent& evt);
+	void OnSaveG(wxCommandEvent& evt);
 	void OnExit(wxCommandEvent& evt);
 	void OnResetC(wxCommandEvent& evt);
 	void OnResetG(wxCommandEvent& evt);
