@@ -1,110 +1,98 @@
 #include "Main.h"
 
-Main::Main() : wxFrame(nullptr, wxID_ANY, "Test - wxWidgets", wxPoint(30, 30), wxSize(800, 600))
+wxBEGIN_EVENT_TABLE(Main, wxFrame)
+EVT_MENU(ID_IMPORT_C, Main::OnImportC)
+EVT_MENU(ID_IMPORT_G, Main::OnImportG)
+EVT_MENU(ID_EXPORT_C, Main::OnExportC)
+EVT_MENU(ID_EXPORT_G, Main::OnExportG)
+EVT_MENU(ID_EXIT, Main::OnExit)
+
+EVT_MENU(ID_RESET_C, Main::OnResetC)
+EVT_MENU(ID_RESET_G, Main::OnResetG)
+
+EVT_MENU(ID_DOCUMENTATION, Main::OnDocumentation)
+wxEND_EVENT_TABLE()
+
+Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(1600, 900))
 {
-	btn = new wxButton* [nFieldWidth * nFieldHeight];
-	wxGridSizer* grid = new wxGridSizer(nFieldWidth, nFieldHeight, 0, 0);
-	wxFont font(24, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false);
-
-	for (int x = 0; x < nFieldWidth; x++)
-	{
-		for (int y = 0; y < nFieldHeight; y++)
-		{
-			int index = y * nFieldWidth + x;
-
-			btn[index] = new wxButton(this, 10000 + (y * nFieldWidth + x));
-			btn[index]->SetFont(font);
-			grid->Add(btn[index], 1, wxEXPAND | wxALL);
-
-			btn[index]->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &Main::OnButtonClicked, this);
-		}
-	}
-
-	field = new int[nFieldWidth * nFieldHeight]{ 0 };
-
-	this->SetSizer(grid);
-	grid->Layout();
+	Center();
+	BuildMenuBar();
 }
 
 Main::~Main()
 {
-	delete[] btn;
-	delete[] field;
+	
 }
 
-void Main::OnButtonClicked(wxCommandEvent& evt)
+void Main::BuildMenuBar()
 {
-	int x = (evt.GetId() - 10000) % nFieldWidth;
-	int y = (evt.GetId() - 10000) / nFieldWidth;
-	int index = y * nFieldWidth + x;
+	m_MenuBar = new wxMenuBar();
+	this->SetMenuBar(m_MenuBar);
 
-	if (bFirstPick)
-	{
-		bFirstPick = false;
+	wxMenu* menuFile = new wxMenu();
+	wxMenu* menuImport = new wxMenu();
+	wxMenu* menuExport = new wxMenu();
+	wxMenu* menuReset = new wxMenu();
+	wxMenu* menuHelp = new wxMenu();
 
-		srand(time(NULL));
+	menuImport->Append(ID_IMPORT_C, "&Cellular automaton configuration");
+	menuImport->Append(ID_IMPORT_G, "&Genetic algorithm configuration");
 
-		int dx[8] = { 0, 1, 1, 1, 0, -1, -1, -1 };
-		int dy[8] = { -1, -1, 0, 1, 1, 1, 0, -1 };
+	menuExport->Append(ID_EXPORT_C, "&Cellular automaton configuration");
+	menuExport->Append(ID_EXPORT_G, "&Genetic algorithm configuration");
 
-		while (nMines--)
-		{
-			while (true)
-			{
-				int x = rand() % nFieldWidth;
-				int y = rand() % nFieldHeight;
-				int mine = y * nFieldWidth + x;
+	menuFile->AppendSubMenu(menuImport, "&Import");
+	menuFile->AppendSubMenu(menuExport, "&Export");
+	menuFile->AppendSeparator();
+	menuFile->Append(ID_EXIT, "E&xit");
 
-				if (mine == index) continue;
-				if (field[mine] == -1) continue;
+	menuReset->Append(ID_RESET_C, "Reset &cellular automaton");
+	menuReset->Append(ID_RESET_G, "Reset &genetic algorithm");
 
-				field[mine] = -1;
+	menuHelp->Append(ID_DOCUMENTATION, "&Documentation");
 
-				for (int d = 0; d < 8; d++)
-				{
-					int vx = x + dx[d];
-					int vy = y + dy[d];
+	m_MenuBar->Append(menuFile, "&File");
+	m_MenuBar->Append(menuReset, "&Reset");
+	m_MenuBar->Append(menuHelp, "&Help");
+}
 
-					if (vx >= 0 && vx < nFieldWidth && vy >= 0 && vy < nFieldHeight)
-					{
-						int neighbour = vy * nFieldWidth + vx;
+void Main::OnImportC(wxCommandEvent& evt)
+{
+	wxMessageBox("This is a wxWidgets Hello World example", "OnImportC", wxOK | wxICON_INFORMATION);
+}
 
-						if (field[neighbour] != -1)
-						{
-							field[neighbour]++;
-						}
-					}
-				}
+void Main::OnImportG(wxCommandEvent& evt)
+{
+	wxMessageBox("This is a wxWidgets Hello World example", "OnImportG", wxOK | wxICON_INFORMATION);
+}
 
-				break;
-			}
-		}
-	}
+void Main::OnExportC(wxCommandEvent& evt)
+{
+	wxMessageBox("This is a wxWidgets Hello World example", "OnExportC", wxOK | wxICON_INFORMATION);
+}
 
-	int value = field[index];
+void Main::OnExportG(wxCommandEvent& evt)
+{
+	wxMessageBox("This is a wxWidgets Hello World example", "OnExportG", wxOK | wxICON_INFORMATION);
+}
 
-	btn[index]->SetLabelText(std::to_string(value));
-	btn[index]->Enable(false);
+void Main::OnExit(wxCommandEvent& evt)
+{
+	Close();
+	evt.Skip();
+}
 
-	if (value == -1)
-	{
-		wxMessageBox("Game Over");
+void Main::OnResetC(wxCommandEvent& evt)
+{
+	wxMessageBox("This is a wxWidgets Hello World example", "OnResetC", wxOK | wxICON_INFORMATION);
+}
 
-		for (int x = 0; x < nFieldWidth; x++)
-		{
-			for (int y = 0; y < nFieldHeight; y++)
-			{
-				int index = y * nFieldWidth + x;
+void Main::OnResetG(wxCommandEvent& evt)
+{
+	wxMessageBox("This is a wxWidgets Hello World example", "OnResetG", wxOK | wxICON_INFORMATION);
+}
 
-				btn[index]->Enable(true);
-				btn[index]->SetLabelText("");
-				field[index] = 0;
-			}
-		}
-
-		bFirstPick = true;
-		nMines = 20;
-	}
-
-	evt.Skip(); 
+void Main::OnDocumentation(wxCommandEvent& evt)
+{
+	wxMessageBox("This is a wxWidgets Hello World example", "OnDocumentation", wxOK | wxICON_INFORMATION);
 }
