@@ -18,7 +18,12 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(
 	SetIcon(wxICON(aaaIcon));
 	
 	Center();
+
 	BuildMenuBar();
+
+	SetShortcuts();
+
+	BuildLayout();
 }
 
 Main::~Main()
@@ -28,8 +33,8 @@ Main::~Main()
 
 void Main::BuildMenuBar()
 {
-	m_MenuBar = new wxMenuBar();
-	this->SetMenuBar(m_MenuBar);
+	wxMenuBar* menuBar = new wxMenuBar();
+	this->SetMenuBar(menuBar);
 
 	wxMenu* menuFile = new wxMenu();
 	wxMenu* menuOpen = new wxMenu();
@@ -51,11 +56,64 @@ void Main::BuildMenuBar()
 	menuReset->Append(ID_RESET_C, "Reset &cellular automaton\tCtrl-R");
 	menuReset->Append(ID_RESET_G, "Reset &genetic algorithm\tCtrl-Shift-R");
 
-	menuHelp->Append(ID_DOCUMENTATION, "&Documentation\tCtrl-H");
+	menuHelp->Append(ID_DOCUMENTATION, "&Documentation\tCtrl-D");
 
-	m_MenuBar->Append(menuFile, "&File");
-	m_MenuBar->Append(menuReset, "&Reset");
-	m_MenuBar->Append(menuHelp, "&Help");
+	menuBar->Append(menuFile, "&File");
+	menuBar->Append(menuReset, "&Reset");
+	menuBar->Append(menuHelp, "&Help");
+}
+
+void Main::SetShortcuts()
+{
+	wxAcceleratorEntry entries[7];
+	entries[0].Set(wxACCEL_CTRL, (int)'O', ID_OPEN_C);
+	entries[1].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'O', ID_OPEN_G);
+	entries[2].Set(wxACCEL_CTRL, (int)'S', ID_SAVE_C);
+	entries[3].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'S', ID_SAVE_G);
+	entries[4].Set(wxACCEL_CTRL, (int)'R', ID_RESET_C);
+	entries[5].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'R', ID_RESET_G);
+	entries[6].Set(wxACCEL_CTRL, (int)'D', ID_DOCUMENTATION);
+	
+
+	wxAcceleratorTable accel(7, entries);
+	this->SetAcceleratorTable(accel);
+}
+
+void Main::BuildLayout()
+{
+	wxBoxSizer* sizerPanels = new wxBoxSizer(wxHORIZONTAL);
+	wxPanel* panelLeft = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize());
+	wxPanel* panelRight = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize());
+
+	//panelLeft->SetBackgroundColour(wxColor(100, 200, 100));
+	//panelRight->SetBackgroundColour(wxColor(200, 100, 100));
+
+	sizerPanels->Add(panelLeft, 1, wxEXPAND);
+	sizerPanels->Add(panelRight, 2, wxEXPAND);
+
+	wxPanel* panelTop = new wxPanel(panelLeft, wxID_ANY, wxDefaultPosition, wxSize());
+	//panelTop->SetBackgroundColour(wxColor(0, 0, 100));
+	wxPanel* panelMiddle = new wxPanel(panelLeft, wxID_ANY, wxDefaultPosition, wxSize());
+	//panelMiddle->SetBackgroundColour(wxColor(100, 0, 0));
+	wxPanel* panelBottom = new wxPanel(panelLeft, wxID_ANY, wxDefaultPosition, wxSize());
+	//panelBottom->SetBackgroundColour(wxColor(0, 100, 0));
+
+	wxBoxSizer* sizerPanelLeft = new wxBoxSizer(wxVERTICAL);
+	sizerPanelLeft->Add(panelTop, 1, wxEXPAND);
+	sizerPanelLeft->Add(panelMiddle, 1, wxEXPAND);
+	sizerPanelLeft->Add(panelBottom, 1, wxEXPAND);
+
+	panelLeft->SetSizer(sizerPanelLeft);
+
+	wxStaticBoxSizer* sizerTop = new wxStaticBoxSizer(wxVERTICAL, panelTop, "States");
+	wxStaticBoxSizer* sizerMiddle = new wxStaticBoxSizer(wxVERTICAL, panelMiddle, "Neighbourhood && Rules");
+	wxStaticBoxSizer* sizerBottom = new wxStaticBoxSizer(wxVERTICAL, panelBottom, "Genetic Algorithm Parameters");
+
+	panelTop->SetSizer(sizerTop);
+	panelMiddle->SetSizer(sizerMiddle);
+	panelBottom->SetSizer(sizerBottom);
+
+	this->SetSizer(sizerPanels);
 }
 
 void Main::OnOpenC(wxCommandEvent& evt)

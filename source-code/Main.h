@@ -17,9 +17,9 @@ private:
 		ID_DOCUMENTATION
 	};
 
-	wxMenuBar* m_MenuBar = nullptr;
-
 	void BuildMenuBar();
+	void SetShortcuts();
+	void BuildLayout();
 	
 	void OnOpenC(wxCommandEvent& evt);
 	void OnOpenG(wxCommandEvent& evt);
