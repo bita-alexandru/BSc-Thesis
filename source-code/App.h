@@ -10,8 +10,7 @@ public:
 	~App();
 	
 	virtual bool OnInit();
-
 private:
-	Main* m_frame1 = nullptr;
+	Main* m_Main = nullptr;
 };
 

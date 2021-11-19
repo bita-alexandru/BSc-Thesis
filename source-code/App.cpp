@@ -14,8 +14,8 @@ App::~App()
 
 bool App::OnInit()
 {
-	m_frame1 = new Main();
-	m_frame1->Show();
+	m_Main = new Main();
+	m_Main->Show();
 
 	return true;
 }

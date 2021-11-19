@@ -1,35 +1,44 @@
 #pragma once
 #include "wx/wx.h"
+#include "wx/listctrl.h"
+#include "wx/statline.h"
 
+#include "MenuBar.h"
+#include "PanelInput.h"
+#include "PanelGrid.h"
+#include "PanelAlgorithm.h"
 
 class Main: public wxFrame
 {
 public:
 	Main();
 	~Main();
-
 private:
-	enum ID_CONSTANTS {
-		ID_OPEN_C = 10001, ID_OPEN_G,
-		ID_SAVE_C, ID_SAVE_G,
-		ID_EXIT,
-		ID_RESET_C, ID_RESET_G,
-		ID_DOCUMENTATION
+	MenuBar* m_MenuBar = nullptr;
+	PanelInput* m_PanelInput = nullptr;
+	PanelGrid* m_PanelGrid = nullptr;
+	PanelAlgorithm* m_PanelAlgorithm = nullptr;
+
+	enum CONSTANTS
+	{
+		ID_FIND = 10400, ID_REPLACE, ID_COPY, ID_CUT, ID_PASTE,
+		ID_SAVE_STATES, ID_SAVE_RULES, ID_SAVE_NEIGHBORS,
+		ID_LIST_STATES, ID_LIST_RULES, ID_LIST_NEIGHBORS
 	};
 
-	void BuildMenuBar();
+	void BuildInterface();
 	void SetShortcuts();
+
 	void BuildLayout();
-	
-	void OnOpenC(wxCommandEvent& evt);
-	void OnOpenG(wxCommandEvent& evt);
-	void OnSaveC(wxCommandEvent& evt);
-	void OnSaveG(wxCommandEvent& evt);
-	void OnExit(wxCommandEvent& evt);
-	void OnResetC(wxCommandEvent& evt);
-	void OnResetG(wxCommandEvent& evt);
-	void OnDocumentation(wxCommandEvent& evt);
 
 	wxDECLARE_EVENT_TABLE();
-};
 
+	void OnOpenAutomaton(wxCommandEvent& evt);
+	void OnOpenAlgorithm(wxCommandEvent& evt);
+	void OnSaveAutomaton(wxCommandEvent& evt);
+	void OnSaveAlgorithm(wxCommandEvent& evt);
+	void OnExit(wxCommandEvent& evt);
+	void OnResetAutomaton(wxCommandEvent& evt);
+	void OnResetAlgorithm(wxCommandEvent& evt);
+	void OnDocumentation(wxCommandEvent& evt);
+};

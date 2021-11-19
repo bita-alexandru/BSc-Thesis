@@ -20,11 +20,25 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="InputNeighbors.h" />
+    <ClInclude Include="InputRules.h" />
+    <ClInclude Include="InputStates.h" />
     <ClInclude Include="Main.h" />
+    <ClInclude Include="MenuBar.h" />
+    <ClInclude Include="PanelAlgorithm.h" />
+    <ClInclude Include="PanelGrid.h" />
+    <ClInclude Include="PanelInput.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="InputNeighbors.cpp" />
+    <ClCompile Include="InputRules.cpp" />
+    <ClCompile Include="InputStates.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MenuBar.cpp" />
+    <ClCompile Include="PanelAlgorithm.cpp" />
+    <ClCompile Include="PanelGrid.cpp" />
+    <ClCompile Include="PanelInput.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
