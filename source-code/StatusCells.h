@@ -1,5 +1,10 @@
 #pragma once
-class StatusCells
+#include "wx/wx.h"
+
+class StatusCells: wxPanel
 {
+public:
+	StatusCells(wxWindow* parent);
+	~StatusCells();
 };
 

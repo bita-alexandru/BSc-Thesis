@@ -1,5 +1,10 @@
 #pragma once
-class StatusControls
+#include "wx/wx.h"
+
+class StatusControls: wxPanel
 {
+public:
+	StatusControls(wxWindow* parent);
+	~StatusControls();
 };
 

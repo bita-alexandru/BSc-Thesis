@@ -1,5 +1,10 @@
 #pragma once
-class StatusSpeed
+#include "wx/wx.h"
+
+class StatusSpeed: wxPanel
 {
+public:
+	StatusSpeed(wxWindow* parent);
+	~StatusSpeed();
 };
 

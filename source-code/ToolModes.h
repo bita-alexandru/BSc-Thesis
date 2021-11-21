@@ -1,5 +1,10 @@
 #pragma once
-class ToolModes
+#include "wx/wx.h"
+
+class ToolModes: wxPanel
 {
+public:
+	ToolModes(wxWindow* parent);
+	~ToolModes();
 };
 

@@ -1,5 +1,10 @@
 #pragma once
-class ToolCoords
+#include "wx/wx.h"
+
+class ToolCoords: wxPanel
 {
+public:
+	ToolCoords(wxWindow* parent);
+	~ToolCoords();
 };
 

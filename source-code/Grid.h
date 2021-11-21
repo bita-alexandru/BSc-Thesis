@@ -1,5 +1,10 @@
 #pragma once
-class Grid
+#include "wx/wx.h"
+
+class Grid: wxPanel
 {
+public:
+	Grid(wxWindow* parent);
+	~Grid();
 };
 
