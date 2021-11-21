@@ -1,5 +1,6 @@
 #pragma once
 #include "wx/wx.h"
+#include "wx/statline.h"
 
 #include "ToolZoom.h"
 #include "ToolModes.h"

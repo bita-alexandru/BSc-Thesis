@@ -41,7 +41,7 @@ void Main::BuildInterface()
 	m_PanelAlgorithm = new PanelAlgorithm(panelGridAlgorithm);
 
 	wxBoxSizer* sizerGridAlgorithm = new wxBoxSizer(wxVERTICAL);
-	sizerGridAlgorithm->Add((wxPanel*)m_PanelGrid, 2, wxEXPAND | wxBOTTOM, 6);
+	sizerGridAlgorithm->Add((wxPanel*)m_PanelGrid, 3, wxEXPAND | wxBOTTOM, 6);
 	sizerGridAlgorithm->Add((wxScrolledWindow*)m_PanelAlgorithm, 1, wxEXPAND);
 
 	panelGridAlgorithm->SetSizer(sizerGridAlgorithm);

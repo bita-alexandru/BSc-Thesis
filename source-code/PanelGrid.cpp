@@ -3,6 +3,17 @@
 PanelGrid::PanelGrid(wxWindow* parent): wxPanel(parent)
 {
 	SetBackgroundColour(wxColor(190, 225, 230));
+
+	m_GridTools = new GridTools(this);
+	m_Grid = new Grid(this);
+	m_GridStatus = new GridStatus(this);
+
+	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+	sizer->Add((wxPanel*)m_GridTools, 1);
+	sizer->Add((wxPanel*)m_Grid, 14, wxEXPAND);
+	sizer->Add((wxPanel*)m_GridStatus, 1);
+
+	this->SetSizer(sizer);
 }
 
 PanelGrid::~PanelGrid()
