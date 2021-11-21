@@ -36,20 +36,20 @@ void Main::BuildInterface()
 
 	m_PanelInput = new PanelInput(this);
 
-	wxPanel* panelRight = new wxPanel(this);
-	m_PanelGrid = new PanelGrid(panelRight);
-	m_PanelAlgorithm = new PanelAlgorithm(panelRight);
+	wxPanel* panelGridAlgorithm = new wxPanel(this);
+	m_PanelGrid = new PanelGrid(panelGridAlgorithm);
+	m_PanelAlgorithm = new PanelAlgorithm(panelGridAlgorithm);
 
-	wxBoxSizer* sizerRight = new wxBoxSizer(wxVERTICAL);
-	sizerRight->Add((wxPanel*)m_PanelGrid, 2, wxEXPAND | wxBOTTOM, 6);
-	sizerRight->Add((wxScrolledWindow*)m_PanelAlgorithm, 1, wxEXPAND);
+	wxBoxSizer* sizerGridAlgorithm = new wxBoxSizer(wxVERTICAL);
+	sizerGridAlgorithm->Add((wxPanel*)m_PanelGrid, 2, wxEXPAND | wxBOTTOM, 6);
+	sizerGridAlgorithm->Add((wxScrolledWindow*)m_PanelAlgorithm, 1, wxEXPAND);
 
-	panelRight->SetSizer(sizerRight);
+	panelGridAlgorithm->SetSizer(sizerGridAlgorithm);
 
-	wxBoxSizer* sizerMain = new wxBoxSizer(wxHORIZONTAL);
-	sizerMain->Add((wxScrolledWindow*)m_PanelInput, 1, wxEXPAND | wxALL, 6);
-	sizerMain->Add(panelRight, 3, wxEXPAND | wxTOP | wxRIGHT | wxBOTTOM, 6);
-	this->SetSizer(sizerMain);
+	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+	sizer->Add((wxScrolledWindow*)m_PanelInput, 1, wxEXPAND | wxALL, 6);
+	sizer->Add(panelGridAlgorithm, 3, wxEXPAND | wxTOP | wxRIGHT | wxBOTTOM, 6);
+	this->SetSizer(sizer);
 }
 
 void Main::SetShortcuts()

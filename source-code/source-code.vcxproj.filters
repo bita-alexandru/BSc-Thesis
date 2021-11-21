@@ -13,63 +13,153 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Inputs">
+      <UniqueIdentifier>{c2199771-0c0a-4f7f-936c-e7d5000f1444}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Tools">
+      <UniqueIdentifier>{5f983656-7b71-41df-bde8-3cb02f1de692}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Status">
+      <UniqueIdentifier>{984e89b4-7266-4be1-b5e0-ea908857fce9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Grid">
+      <UniqueIdentifier>{81e6d686-7029-4b4e-9fcd-68779e30eb4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Panels">
+      <UniqueIdentifier>{c33f357a-0187-4a49-a5b6-72351868ac08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Misc">
+      <UniqueIdentifier>{4d40bad8-83f3-4640-b118-9a4ff60c69e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Grid">
+      <UniqueIdentifier>{c4cb9049-4960-4bd7-b763-1fc6e1074973}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Panels">
+      <UniqueIdentifier>{7a050383-ac76-40d3-a5b4-9ce943b29907}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Tools">
+      <UniqueIdentifier>{54648abe-bd1e-4f44-b14c-6887881acec1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Status">
+      <UniqueIdentifier>{d6aa699f-5251-45c6-9d46-df7c5608688a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Misc">
+      <UniqueIdentifier>{d961bc5b-2fcb-4e55-8c4d-5591cd88e05e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Inputs">
+      <UniqueIdentifier>{60731db1-d9d6-4dd0-b329-342a00dfd3e9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="App.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MenuBar.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PanelGrid.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="InputStates.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="InputNeighbors.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Inputs</Filter>
     </ClInclude>
     <ClInclude Include="InputRules.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Inputs</Filter>
     </ClInclude>
-    <ClInclude Include="PanelInput.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="InputStates.h">
+      <Filter>Header Files\Inputs</Filter>
+    </ClInclude>
+    <ClInclude Include="StatusCells.h">
+      <Filter>Header Files\Status</Filter>
+    </ClInclude>
+    <ClInclude Include="StatusControls.h">
+      <Filter>Header Files\Status</Filter>
+    </ClInclude>
+    <ClInclude Include="StatusSpeed.h">
+      <Filter>Header Files\Status</Filter>
+    </ClInclude>
+    <ClInclude Include="ToolCoords.h">
+      <Filter>Header Files\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="ToolModes.h">
+      <Filter>Header Files\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="ToolZoom.h">
+      <Filter>Header Files\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Grid.h">
+      <Filter>Header Files\Grid</Filter>
+    </ClInclude>
+    <ClInclude Include="GridStatus.h">
+      <Filter>Header Files\Grid</Filter>
+    </ClInclude>
+    <ClInclude Include="GridTools.h">
+      <Filter>Header Files\Grid</Filter>
     </ClInclude>
     <ClInclude Include="PanelAlgorithm.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Panels</Filter>
+    </ClInclude>
+    <ClInclude Include="PanelGrid.h">
+      <Filter>Header Files\Panels</Filter>
+    </ClInclude>
+    <ClInclude Include="PanelInput.h">
+      <Filter>Header Files\Panels</Filter>
+    </ClInclude>
+    <ClInclude Include="MenuBar.h">
+      <Filter>Header Files\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="App.h">
+      <Filter>Header Files\Misc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="App.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MenuBar.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Grid.cpp">
+      <Filter>Source Files\Grid</Filter>
     </ClCompile>
-    <ClCompile Include="PanelGrid.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="GridStatus.cpp">
+      <Filter>Source Files\Grid</Filter>
     </ClCompile>
-    <ClCompile Include="InputStates.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="GridTools.cpp">
+      <Filter>Source Files\Grid</Filter>
     </ClCompile>
     <ClCompile Include="InputNeighbors.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Inputs</Filter>
     </ClCompile>
     <ClCompile Include="InputRules.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Inputs</Filter>
+    </ClCompile>
+    <ClCompile Include="InputStates.cpp">
+      <Filter>Source Files\Inputs</Filter>
+    </ClCompile>
+    <ClCompile Include="MenuBar.cpp">
+      <Filter>Source Files\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="App.cpp">
+      <Filter>Source Files\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="ToolCoords.cpp">
+      <Filter>Source Files\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="ToolModes.cpp">
+      <Filter>Source Files\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="ToolZoom.cpp">
+      <Filter>Source Files\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="PanelGrid.cpp">
+      <Filter>Source Files\Panels</Filter>
     </ClCompile>
     <ClCompile Include="PanelInput.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Panels</Filter>
     </ClCompile>
     <ClCompile Include="PanelAlgorithm.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Panels</Filter>
+    </ClCompile>
+    <ClCompile Include="StatusCells.cpp">
+      <Filter>Source Files\Status</Filter>
+    </ClCompile>
+    <ClCompile Include="StatusControls.cpp">
+      <Filter>Source Files\Status</Filter>
+    </ClCompile>
+    <ClCompile Include="StatusSpeed.cpp">
+      <Filter>Source Files\Status</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

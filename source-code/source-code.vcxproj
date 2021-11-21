@@ -20,6 +20,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="Grid.h" />
+    <ClInclude Include="GridStatus.h" />
+    <ClInclude Include="GridTools.h" />
     <ClInclude Include="InputNeighbors.h" />
     <ClInclude Include="InputRules.h" />
     <ClInclude Include="InputStates.h" />
@@ -28,9 +31,18 @@
     <ClInclude Include="PanelAlgorithm.h" />
     <ClInclude Include="PanelGrid.h" />
     <ClInclude Include="PanelInput.h" />
+    <ClInclude Include="StatusCells.h" />
+    <ClInclude Include="StatusControls.h" />
+    <ClInclude Include="StatusSpeed.h" />
+    <ClInclude Include="ToolCoords.h" />
+    <ClInclude Include="ToolModes.h" />
+    <ClInclude Include="ToolZoom.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="Grid.cpp" />
+    <ClCompile Include="GridStatus.cpp" />
+    <ClCompile Include="GridTools.cpp" />
     <ClCompile Include="InputNeighbors.cpp" />
     <ClCompile Include="InputRules.cpp" />
     <ClCompile Include="InputStates.cpp" />
@@ -39,6 +51,12 @@
     <ClCompile Include="PanelAlgorithm.cpp" />
     <ClCompile Include="PanelGrid.cpp" />
     <ClCompile Include="PanelInput.cpp" />
+    <ClCompile Include="StatusCells.cpp" />
+    <ClCompile Include="StatusControls.cpp" />
+    <ClCompile Include="StatusSpeed.cpp" />
+    <ClCompile Include="ToolCoords.cpp" />
+    <ClCompile Include="ToolModes.cpp" />
+    <ClCompile Include="ToolZoom.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
