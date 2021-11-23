@@ -1,14 +1,14 @@
 #include "Main.h"
 
 wxBEGIN_EVENT_TABLE(Main, wxFrame)
-	EVT_MENU(MenuBar::ID_OPEN_C, Main::OnOpenAutomaton)
-	EVT_MENU(MenuBar::ID_OPEN_G, Main::OnOpenAlgorithm)
-	EVT_MENU(MenuBar::ID_SAVE_C, Main::OnSaveAutomaton)
-	EVT_MENU(MenuBar::ID_SAVE_G, Main::OnSaveAlgorithm)
-	EVT_MENU(MenuBar::ID_EXIT, Main::OnExit)
-	EVT_MENU(MenuBar::ID_RESET_C, Main::OnResetAutomaton)
-	EVT_MENU(MenuBar::ID_RESET_G, Main::OnResetAlgorithm)
-	EVT_MENU(MenuBar::ID_DOCUMENTATION, Main::OnDocumentation)
+	EVT_MENU(IDs::ID_OPEN_C, Main::OnOpenAutomaton)
+	EVT_MENU(IDs::ID_OPEN_G, Main::OnOpenAlgorithm)
+	EVT_MENU(IDs::ID_SAVE_C, Main::OnSaveAutomaton)
+	EVT_MENU(IDs::ID_SAVE_G, Main::OnSaveAlgorithm)
+	EVT_MENU(IDs::ID_EXIT, Main::OnExit)
+	EVT_MENU(IDs::ID_RESET_C, Main::OnResetAutomaton)
+	EVT_MENU(IDs::ID_RESET_G, Main::OnResetAlgorithm)
+	EVT_MENU(IDs::ID_DOCUMENTATION, Main::OnDocumentation)
 wxEND_EVENT_TABLE()
 
 Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(1600, 900))
@@ -55,13 +55,13 @@ void Main::BuildInterface()
 void Main::SetShortcuts()
 {
 	wxAcceleratorEntry entries[7];
-	entries[0].Set(wxACCEL_CTRL, (int)'O', MenuBar::ID_OPEN_C);
-	entries[1].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'O', MenuBar::ID_OPEN_G);
-	entries[2].Set(wxACCEL_CTRL, (int)'S', MenuBar::ID_SAVE_C);
-	entries[3].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'S', MenuBar::ID_SAVE_G);
-	entries[4].Set(wxACCEL_CTRL, (int)'R', MenuBar::ID_RESET_C);
-	entries[5].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'R', MenuBar::ID_RESET_G);
-	entries[6].Set(wxACCEL_CTRL, (int)'D', MenuBar::ID_DOCUMENTATION);
+	entries[0].Set(wxACCEL_CTRL, (int)'O', IDs::ID_OPEN_C);
+	entries[1].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'O', IDs::ID_OPEN_G);
+	entries[2].Set(wxACCEL_CTRL, (int)'S', IDs::ID_SAVE_C);
+	entries[3].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'S', IDs::ID_SAVE_G);
+	entries[4].Set(wxACCEL_CTRL, (int)'R', IDs::ID_RESET_C);
+	entries[5].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'R', IDs::ID_RESET_G);
+	entries[6].Set(wxACCEL_CTRL, (int)'D', IDs::ID_DOCUMENTATION);
 
 
 	wxAcceleratorTable accel(7, entries);

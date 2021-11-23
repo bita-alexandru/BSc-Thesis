@@ -1,17 +1,13 @@
 #pragma once
 #include "wx/wx.h"
 
+#include "IDs.h"
+
 class ToolModes
 {
 public:
 	ToolModes(wxWindow* parent, wxBoxSizer* sizer);
 	~ToolModes();
-
-	enum _IDs
-	{
-		ID_MODE_DRAW = 11100, ID_MODE_PICK, ID_MODE_DRAG,
-		ID_BUTTON_PREV, ID_BUTTON_NEXT
-	};
 
 	int GetMode();
 	int GetIndex();

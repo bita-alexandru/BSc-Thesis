@@ -2,8 +2,8 @@
 
 InputStates::InputStates(wxScrolledWindow* parent, wxStaticBoxSizer* sizer)
 {
-	wxButton* button = new wxButton(parent, ID_EDIT_STATES, wxString("Edit States"));
-	wxListView* list = new wxListView(parent, ID_LIST_STATES);
+	wxButton* button = new wxButton(parent, IDs::ID_EDIT_STATES, wxString("Edit States"));
+	wxListView* list = new wxListView(parent, IDs::ID_LIST_STATES);
 
 	list->AppendColumn("#", wxLIST_FORMAT_LEFT, 32);
 	list->AppendColumn("State");

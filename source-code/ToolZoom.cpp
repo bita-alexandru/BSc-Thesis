@@ -2,8 +2,8 @@
 
 ToolZoom::ToolZoom(wxWindow* parent, wxBoxSizer* sizer)
 {
-	wxButton* zoomIn = new wxButton(parent, ID_ZOOM_IN, "+");
-	wxButton* zoomOut = new wxButton(parent, ID_ZOOM_OUT, "-");
+	wxButton* zoomIn = new wxButton(parent, IDs::ID_ZOOM_IN, "+");
+	wxButton* zoomOut = new wxButton(parent, IDs::ID_ZOOM_OUT, "-");
 
 	zoomIn->SetToolTip("Zoom in");
 	zoomOut->SetToolTip("Zoom out");

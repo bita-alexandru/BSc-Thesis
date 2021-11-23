@@ -2,8 +2,8 @@
 
 InputRules::InputRules(wxScrolledWindow* parent, wxStaticBoxSizer* sizer)
 {
-	wxButton* button = new wxButton(parent, ID_EDIT_RULES, wxString("Edit Rules"));
-	wxListView * list = new wxListView(parent, ID_LIST_RULES);
+	wxButton* button = new wxButton(parent, IDs::ID_EDIT_RULES, wxString("Edit Rules"));
+	wxListView * list = new wxListView(parent, IDs::ID_LIST_RULES);
 
 	list->AppendColumn("#", wxLIST_FORMAT_LEFT, 32);
 	list->AppendColumn("Rule");

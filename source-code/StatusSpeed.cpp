@@ -2,8 +2,8 @@
 
 StatusSpeed::StatusSpeed(wxWindow* parent, wxBoxSizer* sizer)
 {
-    wxButton* slower = new wxButton(parent, ID_BUTTON_SLOWER, "<<");
-    wxButton* faster = new wxButton(parent, ID_BUTTON_FASTER, ">>");
+    wxButton* slower = new wxButton(parent, IDs::ID_BUTTON_SLOWER, "<<");
+    wxButton* faster = new wxButton(parent, IDs::ID_BUTTON_FASTER, ">>");
 
     slower->SetToolTip("Slower");
     faster->SetToolTip("Faster");

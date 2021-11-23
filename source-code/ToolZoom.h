@@ -1,16 +1,13 @@
 #pragma once
 #include "wx/wx.h"
 
+#include "IDs.h"
+
 class ToolZoom
 {
 public:
 	ToolZoom(wxWindow* parent, wxBoxSizer* sizer);
 	~ToolZoom();
-
-	enum _IDs
-	{
-		ID_ZOOM_IN = 11000, ID_ZOOM_OUT
-	};
 
 	int GetSize();
 	void SetSize(char mode);
