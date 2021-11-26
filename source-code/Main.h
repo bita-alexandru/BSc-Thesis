@@ -2,6 +2,7 @@
 #include "wx/wx.h"
 #include "wx/listctrl.h"
 #include "wx/statline.h"
+#include "wx/splitter.h"
 
 #include "Ids.h"
 #include "Sizes.h"
@@ -26,6 +27,9 @@ private:
 	EditorStates* m_EditorStates = nullptr;
 	EditorNeighbors* m_EditorNeighbors = nullptr;
 	EditorRules* m_EditorRules = nullptr;
+
+	wxSplitterWindow* splitterInputGrid = nullptr;
+	wxSplitterWindow* splitterGridAlgorithm = nullptr;
 
 	void BuildInterface();
 	void SetShortcuts();

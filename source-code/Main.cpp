@@ -47,22 +47,26 @@ void Main::BuildInterface()
 	m_MenuBar = new MenuBar();
 	this->SetMenuBar(m_MenuBar);
 
-	m_PanelInput = new PanelInput(this);
+	splitterInputGrid = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_BORDER | wxSP_LIVE_UPDATE);
+	m_PanelInput = new PanelInput(splitterInputGrid);
 
-	wxPanel* panelGridAlgorithm = new wxPanel(this);
-	m_PanelGrid = new PanelGrid(panelGridAlgorithm);
-	m_PanelAlgorithm = new PanelAlgorithm(panelGridAlgorithm);
+	splitterGridAlgorithm = new wxSplitterWindow(splitterInputGrid, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_BORDER | wxSP_LIVE_UPDATE);
+
+	m_PanelGrid = new PanelGrid(splitterGridAlgorithm);
+	m_PanelAlgorithm = new PanelAlgorithm(splitterGridAlgorithm);
 
 	wxBoxSizer* sizerGridAlgorithm = new wxBoxSizer(wxVERTICAL);
 	sizerGridAlgorithm->Add(m_PanelGrid, 3, wxEXPAND | wxBOTTOM, 6);
 	sizerGridAlgorithm->Add(m_PanelAlgorithm, 1, wxEXPAND);
 
-	panelGridAlgorithm->SetSizer(sizerGridAlgorithm);
+	splitterGridAlgorithm->SetSizer(sizerGridAlgorithm);
+	splitterGridAlgorithm->SplitHorizontally(m_PanelGrid, m_PanelAlgorithm);
+	splitterGridAlgorithm->SetMinimumPaneSize(1);
+	splitterGridAlgorithm->SetSashGravity(0.75);
 
-	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
-	sizer->Add(m_PanelInput, 1, wxEXPAND | wxALL, 6);
-	sizer->Add(panelGridAlgorithm, 3, wxEXPAND | wxTOP | wxRIGHT | wxBOTTOM, 6);
-	this->SetSizer(sizer);
+	splitterInputGrid->SplitVertically(m_PanelInput, splitterGridAlgorithm);
+	splitterInputGrid->SetMinimumPaneSize(1);
+	splitterInputGrid->SetSashGravity(0.2);
 }
 
 void Main::SetShortcuts()
