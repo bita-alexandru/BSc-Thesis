@@ -5,7 +5,7 @@
 #include "Grid.h"
 #include "GridStatus.h"
 
-class PanelGrid: wxPanel
+class PanelGrid: public wxPanel
 {
 public:
 	PanelGrid(wxWindow* parent);

@@ -16,7 +16,7 @@ void ToolCoords::SetCoords(int x, int y)
 {
 	std::string label = "(X,Y)=";
 
-	const int N = IDs::N;
+	const int N = Constants::TOTAL_CELLS;
 
 	if (x < N && x > -N && y < N && y > -N)
 	{

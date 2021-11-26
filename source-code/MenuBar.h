@@ -1,9 +1,9 @@
 #pragma once
 #include "wx/wx.h"
 
-#include "IDs.h"
+#include "Constants.h"
 
-class MenuBar: wxMenuBar
+class MenuBar: public wxMenuBar
 {
 public:
 	MenuBar();

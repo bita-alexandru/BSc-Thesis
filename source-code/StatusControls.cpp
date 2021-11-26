@@ -2,10 +2,10 @@
 
 StatusControls::StatusControls(wxWindow* parent, wxBoxSizer* sizer)
 {
-    wxButton* start = new wxButton(parent, IDs::ID_BUTTON_START, "Start");
-    wxButton* reset = new wxButton(parent, IDs::ID_BUTTON_RESET, "Reset");
-    wxButton* step = new wxButton(parent, IDs::ID_BUTTON_STEP, "Next Step");
-    wxButton* generation = new wxButton(parent, IDs::ID_BUTTON_GENERATION, "Next Generation");
+    wxButton* start = new wxButton(parent, Constants::ID_BUTTON_START, "Start");
+    wxButton* reset = new wxButton(parent, Constants::ID_BUTTON_RESET, "Reset");
+    wxButton* step = new wxButton(parent, Constants::ID_BUTTON_STEP, "Next Step");
+    wxButton* generation = new wxButton(parent, Constants::ID_BUTTON_GENERATION, "Next Generation");
 
     start->SetToolTip("Start");
     reset->SetToolTip("Reset");

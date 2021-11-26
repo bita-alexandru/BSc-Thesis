@@ -2,7 +2,7 @@
 #include "wx/wx.h"
 #include "wx/statline.h"
 
-class PanelAlgorithm: wxScrolledWindow
+class PanelAlgorithm: public wxScrolledWindow
 {
 public:
 	PanelAlgorithm(wxWindow* parent);

@@ -3,11 +3,14 @@
 #include "wx/listctrl.h"
 #include "wx/statline.h"
 
-#include "IDs.h"
+#include "Constants.h"
 #include "MenuBar.h"
 #include "PanelInput.h"
 #include "PanelGrid.h"
 #include "PanelAlgorithm.h"
+#include "EditorStates.h"
+#include "EditorNeighbors.h"
+#include "EditorRules.h"
 
 class Main: public wxFrame
 {
@@ -19,12 +22,16 @@ private:
 	PanelInput* m_PanelInput = nullptr;
 	PanelGrid* m_PanelGrid = nullptr;
 	PanelAlgorithm* m_PanelAlgorithm = nullptr;
+	EditorStates* m_EditorStates = nullptr;
+	EditorNeighbors* m_EditorNeighbors = nullptr;
+	EditorRules* m_EditorRules = nullptr;
 
 	void BuildInterface();
 	void SetShortcuts();
 
 	wxDECLARE_EVENT_TABLE();
 
+	// MenuBar
 	void OnOpenAutomaton(wxCommandEvent& evt);
 	void OnOpenAlgorithm(wxCommandEvent& evt);
 	void OnSaveAutomaton(wxCommandEvent& evt);
@@ -33,4 +40,16 @@ private:
 	void OnResetAutomaton(wxCommandEvent& evt);
 	void OnResetAlgorithm(wxCommandEvent& evt);
 	void OnDocumentation(wxCommandEvent& evt);
+
+	// ToolZoom
+	void OnZoomIn(wxCommandEvent& evt);
+	void OnZoomOut(wxCommandEvent& evt);
+
+	// Editors
+	void EditStates(wxCommandEvent& evt);
+	void EditNeighbors(wxCommandEvent& evt);
+	void EditRules(wxCommandEvent& evt);
+
+	// Save Buttons
+	void SaveStates(wxCommandEvent& evt);
 };

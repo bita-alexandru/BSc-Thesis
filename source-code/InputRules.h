@@ -2,7 +2,7 @@
 #include "wx/wx.h"
 #include "wx/listctrl.h"
 
-#include "IDs.h"
+#include "Constants.h"
 
 class InputRules
 {

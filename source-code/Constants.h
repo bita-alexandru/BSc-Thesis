@@ -1,11 +1,21 @@
 #pragma once
-class IDs
+class Constants
 {
 private:
-	IDs() {}
-	~IDs() {};
+	Constants() {}
+	~Constants() {};
 public:
-	static const int N = 5000;
+	static const int TOTAL_CELLS = 1000;
+
+	static const int CELL_SIZE_DEFAULT = 16;
+	static const int CELL_SIZE_MIN = 4;
+	static const int CELL_SIZE_MAX = 64;
+
+	static const int MAIN_WIDTH = 1600;
+	static const int MAIN_HEIGHT = 900;
+
+	static const int EDITOR_WIDTH = 960;
+	static const int EDITOR_HEIGHT = 720;
 
 	enum
 	{
@@ -51,7 +61,7 @@ public:
 		ID_ZOOM_IN, ID_ZOOM_OUT,
 
 		// text options
-		ID_FIND, ID_REPLACE, ID_COPY, ID_CUT, ID_PASTE,
+		ID_FIND, ID_REPLACE, ID_CUT, ID_COPY, ID_PASTE, ID_SELECT_ALL,
 
 		// save buttons
 		ID_SAVE_STATES, ID_SAVE_RULES, ID_SAVE_NEIGHBORS,

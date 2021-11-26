@@ -20,7 +20,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
-    <ClInclude Include="IDs.h" />
+    <ClInclude Include="Constants.h" />
+    <ClInclude Include="EditorNeighbors.h" />
+    <ClInclude Include="EditorRules.h" />
+    <ClInclude Include="EditorStates.h" />
     <ClInclude Include="Grid.h" />
     <ClInclude Include="GridStatus.h" />
     <ClInclude Include="GridTools.h" />
@@ -41,6 +44,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="EditorNeighbors.cpp" />
+    <ClCompile Include="EditorRules.cpp" />
+    <ClCompile Include="EditorStates.cpp" />
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="GridStatus.cpp" />
     <ClCompile Include="GridTools.cpp" />

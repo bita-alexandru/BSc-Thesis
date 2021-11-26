@@ -1,7 +1,7 @@
 #pragma once
 #include "wx/wx.h"
 
-#include "IDs.h"
+#include "Constants.h"
 
 class StatusControls
 {

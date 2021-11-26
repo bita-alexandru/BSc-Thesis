@@ -6,7 +6,7 @@
 #include "InputNeighbors.h"
 #include "InputRules.h"
 
-class PanelInput : wxScrolledWindow
+class PanelInput : public wxScrolledWindow
 {
 public:
 	PanelInput(wxWindow* parent);

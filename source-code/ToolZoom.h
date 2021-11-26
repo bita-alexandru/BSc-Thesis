@@ -1,7 +1,8 @@
 #pragma once
 #include "wx/wx.h"
 
-#include "IDs.h"
+#include "Constants.h"
+#include "Grid.h"
 
 class ToolZoom
 {
@@ -10,14 +11,12 @@ public:
 	~ToolZoom();
 
 	int GetSize();
-	void SetSize(char mode);
+	void SetSize(char mode, Grid* grid);
 private:
-	int m_Size = 16;
-	int m_MaximumSize = 32;
-	int m_MinimumSize = 1;
+	int m_Size = Constants::CELL_SIZE_DEFAULT;
+	int m_MaximumSize = Constants::CELL_SIZE_MAX;
+	int m_MinimumSize = Constants::CELL_SIZE_MIN;
 
 	wxStaticText* m_TextScale = nullptr;
-
-	void UpdateTextScale();
 };
 

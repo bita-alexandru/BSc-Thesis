@@ -1,8 +1,6 @@
 #pragma once
 #include "wx/wx.h"
 
-#include "IDs.h"
-
 class ToolModes
 {
 public:

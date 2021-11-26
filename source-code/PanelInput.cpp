@@ -1,6 +1,6 @@
 #include "PanelInput.h"
 
-PanelInput::PanelInput(wxWindow* parent): wxScrolledWindow(parent)
+PanelInput::PanelInput(wxWindow* parent) : wxScrolledWindow(parent)
 {
 	SetBackgroundColour(wxColor(250, 210, 225));
 

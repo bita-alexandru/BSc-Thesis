@@ -49,6 +49,12 @@
     <Filter Include="Source Files\Inputs">
       <UniqueIdentifier>{60731db1-d9d6-4dd0-b329-342a00dfd3e9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Editors">
+      <UniqueIdentifier>{97bfd37f-2a97-4c60-8344-d06e4d306ddb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Editors">
+      <UniqueIdentifier>{aa914eb0-d853-4856-bb6c-a834d5a6e2f1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Main.h">
@@ -105,8 +111,17 @@
     <ClInclude Include="App.h">
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
-    <ClInclude Include="IDs.h">
+    <ClInclude Include="Constants.h">
       <Filter>Header Files\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorNeighbors.h">
+      <Filter>Header Files\Editors</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorRules.h">
+      <Filter>Header Files\Editors</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorStates.h">
+      <Filter>Header Files\Editors</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -163,6 +178,15 @@
     </ClCompile>
     <ClCompile Include="StatusSpeed.cpp">
       <Filter>Source Files\Status</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorStates.cpp">
+      <Filter>Source Files\Editors</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorNeighbors.cpp">
+      <Filter>Source Files\Editors</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorRules.cpp">
+      <Filter>Source Files\Editors</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

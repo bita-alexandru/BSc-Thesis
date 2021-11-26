@@ -2,8 +2,8 @@
 
 ToolZoom::ToolZoom(wxWindow* parent, wxBoxSizer* sizer)
 {
-	wxButton* zoomIn = new wxButton(parent, IDs::ID_ZOOM_IN, "+");
-	wxButton* zoomOut = new wxButton(parent, IDs::ID_ZOOM_OUT, "-");
+	wxButton* zoomIn = new wxButton(parent, Constants::ID_ZOOM_IN, "+");
+	wxButton* zoomOut = new wxButton(parent, Constants::ID_ZOOM_OUT, "-");
 
 	zoomIn->SetToolTip("Zoom in");
 	zoomOut->SetToolTip("Zoom out");
@@ -26,7 +26,7 @@ int ToolZoom::GetSize()
 	return m_Size;
 }
 
-void ToolZoom::SetSize(char mode)
+void ToolZoom::SetSize(char mode, Grid* grid)
 {
 	switch (mode)
 	{
@@ -58,11 +58,8 @@ void ToolZoom::SetSize(char mode)
 		return;
 	}
 
-	UpdateTextScale();
-}
+	grid->SetSize(m_Size);
 
-void ToolZoom::UpdateTextScale()
-{
 	std::string label = "Scale=1:" + std::to_string(m_Size);
 	m_TextScale->SetLabel(label);
 }

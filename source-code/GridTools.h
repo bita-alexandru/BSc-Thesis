@@ -6,7 +6,7 @@
 #include "ToolModes.h"
 #include "ToolCoords.h"
 
-class GridTools: wxPanel
+class GridTools: public wxPanel
 {
 public:
 	GridTools(wxWindow* parent);

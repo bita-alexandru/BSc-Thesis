@@ -5,7 +5,7 @@
 #include "StatusControls.h"
 #include "StatusCells.h"
 
-class GridStatus: wxPanel
+class GridStatus: public wxPanel
 {
 public:
 	GridStatus(wxWindow* parent);

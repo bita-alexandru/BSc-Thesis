@@ -1,6 +1,6 @@
 #include "PanelGrid.h"
 
-PanelGrid::PanelGrid(wxWindow* parent): wxPanel(parent)
+PanelGrid::PanelGrid(wxWindow* parent) : wxPanel(parent)
 {
 	SetBackgroundColour(wxColor(190, 225, 230));
 
@@ -9,9 +9,9 @@ PanelGrid::PanelGrid(wxWindow* parent): wxPanel(parent)
 	m_GridStatus = new GridStatus(this);
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-	sizer->Add((wxPanel*)m_GridTools, 1);
-	sizer->Add((wxPanel*)m_Grid, 14, wxEXPAND);
-	sizer->Add((wxPanel*)m_GridStatus, 1);
+	sizer->Add(m_GridTools, 1);
+	sizer->Add(m_Grid, 14, wxEXPAND);
+	sizer->Add(m_GridStatus, 1);
 
 	this->SetSizer(sizer);
 }
