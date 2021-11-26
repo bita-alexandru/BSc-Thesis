@@ -1,12 +1,12 @@
 #include "EditorStates.h"
 
-EditorStates::EditorStates(wxFrame* parent) : wxFrame(parent, wxID_ANY, "CellyGen::States", wxDefaultPosition, wxSize(Constants::EDITOR_WIDTH, Constants::EDITOR_HEIGHT))
+EditorStates::EditorStates(wxFrame* parent) : wxFrame(parent, wxID_ANY, "CellyGen::States", wxDefaultPosition, wxSize(Sizes::EDITOR_WIDTH, Sizes::EDITOR_HEIGHT))
 {
 	SetIcon(wxICON(aaaIcon));
 
 	Center();
 
-	SetBackgroundColour(wxColour(255, 255, 255));
+	SetBackgroundColour(wxColour(255, 232, 214));
 
 	BuildMenuBar();
 
@@ -19,14 +19,19 @@ EditorStates::~EditorStates()
 {
 }
 
+std::vector<std::string> EditorStates::GetData()
+{
+	return std::vector<std::string>();
+}
+
 void EditorStates::BuildMenuBar()
 {
 	wxMenu* menu = new wxMenu();
 
-	menu->Append(Constants::ID_FIND, "&Find\tCtrl-F");
-	menu->Append(Constants::ID_REPLACE, "&Replace\tCtrl-R");
+	menu->Append(Ids::ID_FIND, "&Find\tCtrl-F");
+	menu->Append(Ids::ID_REPLACE, "&Replace\tCtrl-R");
 	menu->AppendSeparator();
-	menu->Append(Constants::ID_EXIT, "E&xit");
+	menu->Append(Ids::ID_EXIT, "E&xit");
 
 	wxMenuBar* menuBar = new wxMenuBar();
 	menuBar->Append(menu, "&File");
@@ -39,16 +44,20 @@ void EditorStates::BuildInputPanel()
 	std::string labelHelp = "so basically yeah, plz no more than 256 states lol ok ? thx.";
 	wxStaticText* help = new wxStaticText(this, wxID_ANY, labelHelp);
 
-	wxStyledTextCtrl* states = new wxStyledTextCtrl(this);
-	states->SetMarginWidth(1, 32);
-	states->SetMarginType(1, wxSTC_MARGIN_NUMBER);
+	m_TextCtrl = new wxStyledTextCtrl(this);
+	m_TextCtrl->SetMarginWidth(wxSTC_MARGIN_NUMBER, 32);
+	m_TextCtrl->SetMarginType(wxSTC_MARGINOPTION_SUBLINESELECT, wxSTC_MARGIN_NUMBER);
+	m_TextCtrl->SetScrollWidth(1);
 
-	wxButton* close = new wxButton(this, Constants::ID_SAVE_STATES, wxString("Close"));
+	wxFont font = wxFont(16, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false);
+	m_TextCtrl->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
+
+	wxButton* close = new wxButton(this, Ids::ID_SAVE_STATES, wxString("Close"));
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-	sizer->Add(help, 0);
-	sizer->Add(states, 1, wxEXPAND);
-	sizer->Add(close, 0, wxALIGN_RIGHT);
+	sizer->Add(help, 0, wxALL, 6);
+	sizer->Add(m_TextCtrl, 1, wxEXPAND | wxLEFT | wxRIGHT, 6);
+	sizer->Add(close, 0, wxALIGN_RIGHT | wxALL, 6);
 
 	this->SetSizer(sizer);
 }

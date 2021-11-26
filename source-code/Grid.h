@@ -5,7 +5,8 @@
 #include "wx/dcmemory.h"
 #include "wx/dcbuffer.h"
 
-#include "Constants.h"
+#include "Ids.h"
+#include "Sizes.h"
 
 class Grid: public wxHVScrolledWindow
 {
@@ -17,7 +18,7 @@ public:
 	void SetSize(int size);
 	void ScrollToCenter();
 private:
-	int m_Size = Constants::CELL_SIZE_DEFAULT;
+	int m_Size = Sizes::CELL_SIZE_DEFAULT;
 
 	virtual wxCoord OnGetRowHeight(size_t row) const;
 	virtual wxCoord OnGetColumnWidth(size_t row) const;

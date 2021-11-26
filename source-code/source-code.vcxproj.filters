@@ -55,6 +55,9 @@
     <Filter Include="Source Files\Editors">
       <UniqueIdentifier>{aa914eb0-d853-4856-bb6c-a834d5a6e2f1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Constants">
+      <UniqueIdentifier>{4db53e3d-5602-42a5-8ac5-997d74dac257}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Main.h">
@@ -111,9 +114,6 @@
     <ClInclude Include="App.h">
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
-    <ClInclude Include="Constants.h">
-      <Filter>Header Files\Misc</Filter>
-    </ClInclude>
     <ClInclude Include="EditorNeighbors.h">
       <Filter>Header Files\Editors</Filter>
     </ClInclude>
@@ -122,6 +122,12 @@
     </ClInclude>
     <ClInclude Include="EditorStates.h">
       <Filter>Header Files\Editors</Filter>
+    </ClInclude>
+    <ClInclude Include="Ids.h">
+      <Filter>Header Files\Constants</Filter>
+    </ClInclude>
+    <ClInclude Include="Sizes.h">
+      <Filter>Header Files\Constants</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

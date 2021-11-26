@@ -1,11 +1,11 @@
 #include "ToolModes.h"
-#include "Constants.h"
+#include "Ids.h"
 
 ToolModes::ToolModes(wxWindow* parent, wxBoxSizer* sizer)
 {
-	wxButton* draw = new wxButton(parent, Constants::ID_MODE_DRAW, "D");
-	wxButton* pick = new wxButton(parent, Constants::ID_MODE_PICK, "P");
-	wxButton* drag = new wxButton(parent, Constants::ID_MODE_DRAG, "M");
+	wxButton* draw = new wxButton(parent, Ids::ID_MODE_DRAW, "D");
+	wxButton* pick = new wxButton(parent, Ids::ID_MODE_PICK, "P");
+	wxButton* drag = new wxButton(parent, Ids::ID_MODE_DRAG, "M");
 
 	sizer->Add(draw, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->Add(pick, 0, wxALIGN_CENTER_VERTICAL);
@@ -20,8 +20,8 @@ ToolModes::ToolModes(wxWindow* parent, wxBoxSizer* sizer)
 	m_TextIndex = new wxStaticText(parent, wxID_ANY, "1 / 1");
 	m_StateColor = new wxButton(parent, wxID_ANY);
 
-	wxButton* previous = new wxButton(parent, Constants::ID_BUTTON_PREV, "<");
-	wxButton* next = new wxButton(parent, Constants::ID_BUTTON_NEXT, ">");
+	wxButton* previous = new wxButton(parent, Ids::ID_BUTTON_PREV, "<");
+	wxButton* next = new wxButton(parent, Ids::ID_BUTTON_NEXT, ">");
 
 	sizer->Add(m_TextIndex, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_CENTER);
 	sizer->Add(previous, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_CENTER);

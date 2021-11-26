@@ -1,7 +1,7 @@
 #pragma once
 #include "wx/wx.h"
 
-#include "Constants.h"
+#include "Ids.h"
 
 class StatusSpeed
 {

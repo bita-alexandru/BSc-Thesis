@@ -9,7 +9,7 @@ Grid::Grid(wxWindow* parent): wxHVScrolledWindow(parent)
 {
 	SetBackgroundColour(wxColor(255, 214, 165));
 	
-	SetRowColumnCount(Constants::TOTAL_CELLS, Constants::TOTAL_CELLS);
+	SetRowColumnCount(Sizes::TOTAL_CELLS, Sizes::TOTAL_CELLS);
 
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
 	
@@ -35,7 +35,7 @@ void Grid::SetSize(int size)
 
 void Grid::ScrollToCenter()
 {
-	ScrollToRowColumn(wxPosition(Constants::TOTAL_CELLS / 2, Constants::TOTAL_CELLS / 2));
+	ScrollToRowColumn(wxPosition(Sizes::TOTAL_CELLS / 2, Sizes::TOTAL_CELLS / 2));
 }
 
 wxCoord Grid::OnGetRowHeight(size_t row) const

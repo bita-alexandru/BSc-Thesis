@@ -1,7 +1,8 @@
 #pragma once
 #include "wx/wx.h"
 
-#include "Constants.h"
+#include "Ids.h"
+#include "Sizes.h"
 
 class ToolCoords
 {

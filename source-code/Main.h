@@ -3,7 +3,8 @@
 #include "wx/listctrl.h"
 #include "wx/statline.h"
 
-#include "Constants.h"
+#include "Ids.h"
+#include "Sizes.h"
 #include "MenuBar.h"
 #include "PanelInput.h"
 #include "PanelGrid.h"

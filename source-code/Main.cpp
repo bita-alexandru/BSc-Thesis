@@ -2,29 +2,29 @@
 
 wxBEGIN_EVENT_TABLE(Main, wxFrame)
 	// MenuBar
-	EVT_MENU(Constants::ID_OPEN_C, Main::OnOpenAutomaton)
-	EVT_MENU(Constants::ID_OPEN_G, Main::OnOpenAlgorithm)
-	EVT_MENU(Constants::ID_SAVE_C, Main::OnSaveAutomaton)
-	EVT_MENU(Constants::ID_SAVE_G, Main::OnSaveAlgorithm)
-	EVT_MENU(Constants::ID_EXIT, Main::OnExit)
-	EVT_MENU(Constants::ID_RESET_C, Main::OnResetAutomaton)
-	EVT_MENU(Constants::ID_RESET_G, Main::OnResetAlgorithm)
-	EVT_MENU(Constants::ID_DOCUMENTATION, Main::OnDocumentation)
+	EVT_MENU(Ids::ID_OPEN_C, Main::OnOpenAutomaton)
+	EVT_MENU(Ids::ID_OPEN_G, Main::OnOpenAlgorithm)
+	EVT_MENU(Ids::ID_SAVE_C, Main::OnSaveAutomaton)
+	EVT_MENU(Ids::ID_SAVE_G, Main::OnSaveAlgorithm)
+	EVT_MENU(Ids::ID_EXIT, Main::OnExit)
+	EVT_MENU(Ids::ID_RESET_C, Main::OnResetAutomaton)
+	EVT_MENU(Ids::ID_RESET_G, Main::OnResetAlgorithm)
+	EVT_MENU(Ids::ID_DOCUMENTATION, Main::OnDocumentation)
 
 	// ToolZoom
-	EVT_BUTTON(Constants::ID_ZOOM_IN, Main::OnZoomIn)
-	EVT_BUTTON(Constants::ID_ZOOM_OUT, Main::OnZoomOut)
+	EVT_BUTTON(Ids::ID_ZOOM_IN, Main::OnZoomIn)
+	EVT_BUTTON(Ids::ID_ZOOM_OUT, Main::OnZoomOut)
 
 	// Editors
-	EVT_BUTTON(Constants::ID_EDIT_STATES, Main::EditStates)
-	EVT_BUTTON(Constants::ID_EDIT_NEIGHBORS, Main::EditNeighbors)
-	EVT_BUTTON(Constants::ID_EDIT_RULES, Main::EditRules)
+	EVT_BUTTON(Ids::ID_EDIT_STATES, Main::EditStates)
+	EVT_BUTTON(Ids::ID_EDIT_NEIGHBORS, Main::EditNeighbors)
+	EVT_BUTTON(Ids::ID_EDIT_RULES, Main::EditRules)
 
 	// Save Buttons
-	EVT_BUTTON(Constants::ID_SAVE_STATES, Main::SaveStates)
+	EVT_BUTTON(Ids::ID_SAVE_STATES, Main::SaveStates)
 wxEND_EVENT_TABLE()
 
-Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(Constants::MAIN_WIDTH, Constants::MAIN_HEIGHT))
+Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(Sizes::MAIN_WIDTH, Sizes::MAIN_HEIGHT))
 {
 	SetIcon(wxICON(aaaIcon));
 
@@ -68,13 +68,13 @@ void Main::BuildInterface()
 void Main::SetShortcuts()
 {
 	wxAcceleratorEntry entries[7];
-	entries[0].Set(wxACCEL_CTRL, (int)'O', Constants::ID_OPEN_C);
-	entries[1].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'O', Constants::ID_OPEN_G);
-	entries[2].Set(wxACCEL_CTRL, (int)'S', Constants::ID_SAVE_C);
-	entries[3].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'S', Constants::ID_SAVE_G);
-	entries[4].Set(wxACCEL_CTRL, (int)'R', Constants::ID_RESET_C);
-	entries[5].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'R', Constants::ID_RESET_G);
-	entries[6].Set(wxACCEL_CTRL, (int)'D', Constants::ID_DOCUMENTATION);
+	entries[0].Set(wxACCEL_CTRL, (int)'O', Ids::ID_OPEN_C);
+	entries[1].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'O', Ids::ID_OPEN_G);
+	entries[2].Set(wxACCEL_CTRL, (int)'S', Ids::ID_SAVE_C);
+	entries[3].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'S', Ids::ID_SAVE_G);
+	entries[4].Set(wxACCEL_CTRL, (int)'R', Ids::ID_RESET_C);
+	entries[5].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'R', Ids::ID_RESET_G);
+	entries[6].Set(wxACCEL_CTRL, (int)'D', Ids::ID_DOCUMENTATION);
 
 	wxAcceleratorTable accel(7, entries);
 	this->SetAcceleratorTable(accel);
