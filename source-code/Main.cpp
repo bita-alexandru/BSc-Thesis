@@ -35,11 +35,13 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(
 	BuildInterface();
 
 	SetShortcuts();
+
+	PrepareInput();
 }
 
 Main::~Main()
 {
-	
+	wxDELETE(m_Input);
 }
 
 void Main::BuildInterface()
@@ -47,26 +49,26 @@ void Main::BuildInterface()
 	m_MenuBar = new MenuBar();
 	this->SetMenuBar(m_MenuBar);
 
-	splitterInputGrid = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_BORDER | wxSP_LIVE_UPDATE);
-	m_PanelInput = new PanelInput(splitterInputGrid);
+	m_SplitterInputGrid = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_BORDER | wxSP_LIVE_UPDATE);
+	m_PanelInput = new PanelInput(m_SplitterInputGrid);
 
-	splitterGridAlgorithm = new wxSplitterWindow(splitterInputGrid, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_BORDER | wxSP_LIVE_UPDATE);
+	m_SplitterGridAlgorithm = new wxSplitterWindow(m_SplitterInputGrid, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_BORDER | wxSP_LIVE_UPDATE);
 
-	m_PanelGrid = new PanelGrid(splitterGridAlgorithm);
-	m_PanelAlgorithm = new PanelAlgorithm(splitterGridAlgorithm);
+	m_PanelGrid = new PanelGrid(m_SplitterGridAlgorithm);
+	m_PanelAlgorithm = new PanelAlgorithm(m_SplitterGridAlgorithm);
 
 	wxBoxSizer* sizerGridAlgorithm = new wxBoxSizer(wxVERTICAL);
 	sizerGridAlgorithm->Add(m_PanelGrid, 3, wxEXPAND | wxBOTTOM, 6);
 	sizerGridAlgorithm->Add(m_PanelAlgorithm, 1, wxEXPAND);
 
-	splitterGridAlgorithm->SetSizer(sizerGridAlgorithm);
-	splitterGridAlgorithm->SplitHorizontally(m_PanelGrid, m_PanelAlgorithm);
-	splitterGridAlgorithm->SetMinimumPaneSize(1);
-	splitterGridAlgorithm->SetSashGravity(0.75);
+	m_SplitterGridAlgorithm->SetSizer(sizerGridAlgorithm);
+	m_SplitterGridAlgorithm->SplitHorizontally(m_PanelGrid, m_PanelAlgorithm);
+	m_SplitterGridAlgorithm->SetMinimumPaneSize(1);
+	m_SplitterGridAlgorithm->SetSashGravity(0.75);
 
-	splitterInputGrid->SplitVertically(m_PanelInput, splitterGridAlgorithm);
-	splitterInputGrid->SetMinimumPaneSize(1);
-	splitterInputGrid->SetSashGravity(0.2);
+	m_SplitterInputGrid->SplitVertically(m_PanelInput, m_SplitterGridAlgorithm);
+	m_SplitterInputGrid->SetMinimumPaneSize(1);
+	m_SplitterInputGrid->SetSashGravity(0.2);
 }
 
 void Main::SetShortcuts()
@@ -82,6 +84,15 @@ void Main::SetShortcuts()
 
 	wxAcceleratorTable accel(7, entries);
 	this->SetAcceleratorTable(accel);
+}
+
+void Main::PrepareInput()
+{
+	m_Input = new Input(
+		m_PanelInput->GetInputStates()->GetList(),
+		m_PanelInput->GetInputNeighbors()->GetList(),
+		m_PanelInput->GetInputRules()->GetList()
+	);
 }
 
 void Main::OnOpenAutomaton(wxCommandEvent& evt)
@@ -144,6 +155,8 @@ void Main::EditStates(wxCommandEvent& evt)
 	}
 	else
 	{
+		//m_EditorStates->LoadData(m_PanelInput->GetInputStates()->GetList());
+		m_EditorStates->Show();
 		m_EditorStates->SetFocus();
 	}
 }
@@ -176,5 +189,5 @@ void Main::EditRules(wxCommandEvent& evt)
 
 void Main::SaveStates(wxCommandEvent& evt)
 {
-	wxMessageBox("uite ca a mers", "ce mirare", wxOK | wxICON_INFORMATION);
+	m_Input->SetStates(m_EditorStates->GetData());
 }

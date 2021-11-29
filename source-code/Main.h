@@ -1,4 +1,5 @@
 #pragma once
+
 #include "wx/wx.h"
 #include "wx/listctrl.h"
 #include "wx/statline.h"
@@ -13,6 +14,7 @@
 #include "EditorStates.h"
 #include "EditorNeighbors.h"
 #include "EditorRules.h"
+#include "Input.h"
 
 class Main: public wxFrame
 {
@@ -28,11 +30,14 @@ private:
 	EditorNeighbors* m_EditorNeighbors = nullptr;
 	EditorRules* m_EditorRules = nullptr;
 
-	wxSplitterWindow* splitterInputGrid = nullptr;
-	wxSplitterWindow* splitterGridAlgorithm = nullptr;
+	wxSplitterWindow* m_SplitterInputGrid = nullptr;
+	wxSplitterWindow* m_SplitterGridAlgorithm = nullptr;
+
+	Input* m_Input = nullptr;
 
 	void BuildInterface();
 	void SetShortcuts();
+	void PrepareInput();
 
 	wxDECLARE_EVENT_TABLE();
 

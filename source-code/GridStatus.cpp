@@ -19,6 +19,9 @@ GridStatus::GridStatus(wxWindow* parent): wxPanel(parent)
 
 GridStatus::~GridStatus()
 {
+	wxDELETE(m_StatusSpeed);
+	wxDELETE(m_StatusControls);
+	wxDELETE(m_StatusCells);
 }
 
 StatusSpeed* GridStatus::GetStatusSpeed()

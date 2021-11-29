@@ -19,6 +19,9 @@ GridTools::GridTools(wxWindow* parent): wxPanel(parent)
 
 GridTools::~GridTools()
 {
+    wxDELETE(m_ToolZoom);
+    wxDELETE(m_ToolModes);
+    wxDELETE(m_ToolCoords);
 }
 
 ToolZoom* GridTools::GetToolZoom()

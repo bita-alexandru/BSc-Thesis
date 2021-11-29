@@ -16,5 +16,12 @@ public:
 
 	static const int EDITOR_WIDTH = 960;
 	static const int EDITOR_HEIGHT = 720;
+
+	static const int STATES_MAX = 255;
+	static const int NEIGHBORS_MAX = 9;
+	static const int RULES_MAX = 256*255;
+
+	static const int CHARS_STATE_MIN = 1;
+	static const int CHARS_STATE_MAX = 32;
 };
 

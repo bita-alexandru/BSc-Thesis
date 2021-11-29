@@ -2,6 +2,9 @@
 #include "wx/wx.h"
 #include "wx/stc/stc.h"
 
+#include <unordered_map>
+#include <any>
+
 #include "Ids.h"
 #include "Sizes.h"
 
@@ -11,7 +14,7 @@ public:
 	EditorRules(wxFrame* parent);
 	~EditorRules();
 
-	std::vector<std::string> GetData();
+	std::unordered_map<std::string, std::any> GetData();
 private:
 	wxStyledTextCtrl* m_TextCtrl = nullptr;
 

@@ -19,9 +19,9 @@ EditorRules::~EditorRules()
 {
 }
 
-std::vector<std::string> EditorRules::GetData()
+std::unordered_map<std::string, std::any> EditorRules::GetData()
 {
-	return std::vector<std::string>();
+	return std::unordered_map<std::string, std::any>();
 }
 
 void EditorRules::BuildMenuBar()

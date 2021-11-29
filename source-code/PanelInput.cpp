@@ -20,6 +20,9 @@ PanelInput::PanelInput(wxWindow* parent) : wxScrolledWindow(parent)
 
 PanelInput::~PanelInput()
 {
+	wxDELETE(m_InputStates);
+	wxDELETE(m_InputNeighbors);
+	wxDELETE(m_InputRules);
 }
 
 InputStates* PanelInput::GetInputStates()
