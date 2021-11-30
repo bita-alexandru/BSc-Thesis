@@ -18,7 +18,7 @@ public:
 
 	void SetStates(std::vector<std::string> states);
 	void SetNeighbors(std::vector<std::string> neighbors);
-	void SetRules(std::vector<std::string> rules);
+	void SetRules(std::vector<std::unordered_map<std::string, std::any>> rules);
 private:
 	wxListView* m_ListStates = nullptr;
 	wxListView* m_ListNeighbors = nullptr;

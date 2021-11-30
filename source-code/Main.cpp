@@ -21,6 +21,7 @@ wxBEGIN_EVENT_TABLE(Main, wxFrame)
 
 	// Save Buttons
 	EVT_BUTTON(Ids::ID_SAVE_STATES, Main::SaveStates)
+	EVT_BUTTON(Ids::ID_SAVE_RULES, Main::SaveRules)
 wxEND_EVENT_TABLE()
 
 Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(Sizes::MAIN_WIDTH, Sizes::MAIN_HEIGHT))
@@ -152,7 +153,6 @@ void Main::EditStates(wxCommandEvent& evt)
 	}
 	else
 	{
-		//m_EditorStates->LoadData(m_PanelInput->GetInputStates()->GetList());
 		m_EditorStates->Show();
 		m_EditorStates->SetFocus();
 	}
@@ -167,11 +167,19 @@ void Main::EditRules(wxCommandEvent& evt)
 	}
 	else
 	{
+		m_EditorRules->Show();
 		m_EditorRules->SetFocus();
 	}
 }
 
 void Main::SaveStates(wxCommandEvent& evt)
 {
+	m_EditorStates->Hide();
 	m_Input->SetStates(m_EditorStates->GetData());
+}
+
+void Main::SaveRules(wxCommandEvent& evt)
+{
+	m_EditorRules->Hide();
+	m_Input->SetRules(m_EditorRules->GetData());
 }

@@ -51,6 +51,8 @@ std::vector<std::string> EditorStates::GetData()
 	{
 		cntLine++;
 
+		if (state.size() < 1) continue;
+
 		// state's name does not respect the character limits
 		if (state.size() < Sizes::CHARS_STATE_MIN || state.size() > Sizes::CHARS_STATE_MAX)
 		{
@@ -81,7 +83,7 @@ std::vector<std::string> EditorStates::GetData()
 	if (states.size() > Sizes::STATES_MAX || indexDuplicates.size() || indexInvalid.size())
 	{
 		// error
-		cout(text);
+		//cout(text);
 		return std::vector<std::string>({ "FREE" });
 	}
 
@@ -136,7 +138,7 @@ void EditorStates::BuildInputPanel()
 
 void EditorStates::OnClose(wxCloseEvent& evt)
 {
-	this->Show(false);
+	this->Hide();
 }
 
 void EditorStates::OnShow(wxShowEvent& evt)

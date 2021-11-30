@@ -59,4 +59,5 @@ private:
 
 	// Save Buttons
 	void SaveStates(wxCommandEvent& evt);
+	void SaveRules(wxCommandEvent& evt);
 };

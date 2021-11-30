@@ -23,5 +23,7 @@ public:
 
 	static const int CHARS_STATE_MIN = 1;
 	static const int CHARS_STATE_MAX = 32;
+	static const int CHARS_RULE_MIN = 4;
+	static const int CHARS_RULE_MAX = 65536;
 };
 

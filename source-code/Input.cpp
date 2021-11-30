@@ -153,7 +153,7 @@ void Input::SetNeighbors(std::vector<std::string> neighbors)
 {
 }
 
-void Input::SetRules(std::vector<std::string> rules)
+void Input::SetRules(std::vector<std::unordered_map<std::string, std::any>> rules)
 {
 }
 
