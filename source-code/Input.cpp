@@ -7,10 +7,9 @@
 
 #define cout(x) wxMessageBox(x, "debug")
 
-Input::Input(wxListView* listStates, wxListView* listNeighbors, wxListView* listRules)
+Input::Input(wxListView* listStates, wxListView* listRules)
 {
     m_ListStates = listStates;
-    m_ListNeighbors = listNeighbors;
     m_ListRules = listRules;
 
     m_Colors = std::deque<std::string> ({

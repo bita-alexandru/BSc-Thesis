@@ -12,7 +12,6 @@
 #include "PanelGrid.h"
 #include "PanelAlgorithm.h"
 #include "EditorStates.h"
-#include "EditorNeighbors.h"
 #include "EditorRules.h"
 #include "Input.h"
 
@@ -27,7 +26,6 @@ private:
 	PanelGrid* m_PanelGrid = nullptr;
 	PanelAlgorithm* m_PanelAlgorithm = nullptr;
 	EditorStates* m_EditorStates = nullptr;
-	EditorNeighbors* m_EditorNeighbors = nullptr;
 	EditorRules* m_EditorRules = nullptr;
 
 	wxSplitterWindow* m_SplitterInputGrid = nullptr;
@@ -57,7 +55,6 @@ private:
 
 	// Editors
 	void EditStates(wxCommandEvent& evt);
-	void EditNeighbors(wxCommandEvent& evt);
 	void EditRules(wxCommandEvent& evt);
 
 	// Save Buttons

@@ -1,6 +1,6 @@
 #pragma once
 #include "wx/wx.h"
-#include "wx/statline.h"
+#include "wx/splitter.h"
 
 #include "InputStates.h"
 #include "InputNeighbors.h"
@@ -19,5 +19,9 @@ private:
 	InputStates* m_InputStates = nullptr;
 	InputNeighbors* m_InputNeighbors = nullptr;
 	InputRules* m_InputRules = nullptr;
+
+	wxSplitterWindow* s1 = nullptr;
+	wxSplitterWindow* s2 = nullptr;
+	wxSplitterWindow* s3 = nullptr;
 };
 

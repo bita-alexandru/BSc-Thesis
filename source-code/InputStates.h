@@ -4,10 +4,10 @@
 
 #include "Ids.h"
 
-class InputStates
+class InputStates : public wxPanel
 {
 public:
-	InputStates(wxScrolledWindow* parent, wxStaticBoxSizer* sizer);
+	InputStates(wxWindow* parent);
 	~InputStates();
 
 	wxListView* GetList();

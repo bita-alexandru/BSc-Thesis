@@ -8,7 +8,7 @@
 class Input
 {
 public:
-	Input(wxListView* listStates, wxListView* listNeighbors, wxListView* listRules);
+	Input(wxListView* listStates, wxListView* listRules);
 	~Input();
 	
 	std::unordered_map<std::string, std::string>* GetStates();

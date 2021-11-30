@@ -114,9 +114,6 @@
     <ClInclude Include="App.h">
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
-    <ClInclude Include="EditorNeighbors.h">
-      <Filter>Header Files\Editors</Filter>
-    </ClInclude>
     <ClInclude Include="EditorRules.h">
       <Filter>Header Files\Editors</Filter>
     </ClInclude>
@@ -189,9 +186,6 @@
       <Filter>Source Files\Status</Filter>
     </ClCompile>
     <ClCompile Include="EditorStates.cpp">
-      <Filter>Source Files\Editors</Filter>
-    </ClCompile>
-    <ClCompile Include="EditorNeighbors.cpp">
       <Filter>Source Files\Editors</Filter>
     </ClCompile>
     <ClCompile Include="EditorRules.cpp">

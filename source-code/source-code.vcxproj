@@ -21,7 +21,6 @@
   <ItemGroup>
     <ClInclude Include="App.h" />
     <ClInclude Include="Input.h" />
-    <ClInclude Include="EditorNeighbors.h" />
     <ClInclude Include="EditorRules.h" />
     <ClInclude Include="EditorStates.h" />
     <ClInclude Include="Grid.h" />
@@ -47,7 +46,6 @@
   <ItemGroup>
     <ClCompile Include="App.cpp" />
     <ClCompile Include="Input.cpp" />
-    <ClCompile Include="EditorNeighbors.cpp" />
     <ClCompile Include="EditorRules.cpp" />
     <ClCompile Include="EditorStates.cpp" />
     <ClCompile Include="Grid.cpp" />

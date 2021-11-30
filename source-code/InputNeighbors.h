@@ -1,17 +1,23 @@
 #pragma once
 #include "wx/wx.h"
-#include "wx/listctrl.h"
+#include "wx/tglbtn.h"
 
 #include "Ids.h"
 
-class InputNeighbors
+class InputNeighbors : public wxPanel
 {
 public:
-	InputNeighbors(wxScrolledWindow* parent, wxStaticBoxSizer* sizer);
+	InputNeighbors(wxWindow* parent);
 	~InputNeighbors();
-
-	wxListView* GetList();
 private:
-	wxListView* m_List = nullptr;
+	wxToggleButton* m_NW = nullptr;
+	wxToggleButton* m_N = nullptr;
+	wxToggleButton* m_NE = nullptr;
+	wxToggleButton* m_E = nullptr;
+	wxToggleButton* m_SE = nullptr;
+	wxToggleButton* m_S = nullptr;
+	wxToggleButton* m_SW = nullptr;
+	wxToggleButton* m_W = nullptr;
+	wxToggleButton* m_C = nullptr;
 };
 

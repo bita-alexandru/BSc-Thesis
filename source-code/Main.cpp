@@ -17,7 +17,6 @@ wxBEGIN_EVENT_TABLE(Main, wxFrame)
 
 	// Editors
 	EVT_BUTTON(Ids::ID_EDIT_STATES, Main::EditStates)
-	EVT_BUTTON(Ids::ID_EDIT_NEIGHBORS, Main::EditNeighbors)
 	EVT_BUTTON(Ids::ID_EDIT_RULES, Main::EditRules)
 
 	// Save Buttons
@@ -53,7 +52,6 @@ void Main::BuildInterface()
 	m_PanelInput = new PanelInput(m_SplitterInputGrid);
 
 	m_SplitterGridAlgorithm = new wxSplitterWindow(m_SplitterInputGrid, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_BORDER | wxSP_LIVE_UPDATE);
-
 	m_PanelGrid = new PanelGrid(m_SplitterGridAlgorithm);
 	m_PanelAlgorithm = new PanelAlgorithm(m_SplitterGridAlgorithm);
 
@@ -68,7 +66,7 @@ void Main::BuildInterface()
 
 	m_SplitterInputGrid->SplitVertically(m_PanelInput, m_SplitterGridAlgorithm);
 	m_SplitterInputGrid->SetMinimumPaneSize(1);
-	m_SplitterInputGrid->SetSashGravity(0.2);
+	m_SplitterInputGrid->SetSashGravity(0.21);
 }
 
 void Main::SetShortcuts()
@@ -90,7 +88,6 @@ void Main::PrepareInput()
 {
 	m_Input = new Input(
 		m_PanelInput->GetInputStates()->GetList(),
-		m_PanelInput->GetInputNeighbors()->GetList(),
 		m_PanelInput->GetInputRules()->GetList()
 	);
 }
@@ -158,19 +155,6 @@ void Main::EditStates(wxCommandEvent& evt)
 		//m_EditorStates->LoadData(m_PanelInput->GetInputStates()->GetList());
 		m_EditorStates->Show();
 		m_EditorStates->SetFocus();
-	}
-}
-
-void Main::EditNeighbors(wxCommandEvent& evt)
-{
-	if (m_EditorNeighbors == nullptr)
-	{
-		m_EditorNeighbors = new EditorNeighbors(this);
-		m_EditorNeighbors->Show();
-	}
-	else
-	{
-		m_EditorNeighbors->SetFocus();
 	}
 }
 

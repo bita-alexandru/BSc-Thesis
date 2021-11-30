@@ -4,10 +4,10 @@
 
 #include "Ids.h"
 
-class InputRules
+class InputRules : public wxPanel
 {
 public:
-	InputRules(wxScrolledWindow* parent, wxStaticBoxSizer* sizer);
+	InputRules(wxWindow* parent);
 	~InputRules();
 
 	wxListView* GetList();
