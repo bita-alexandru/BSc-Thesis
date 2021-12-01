@@ -2,22 +2,21 @@
 #include "wx/wx.h"
 #include "wx/tglbtn.h"
 
-#include "Ids.h"
+#include <unordered_set>
 
 class InputNeighbors : public wxPanel
 {
 public:
 	InputNeighbors(wxWindow* parent);
 	~InputNeighbors();
+
+	std::unordered_set<std::string>& GetNeighbors();
+	
+	void SetNeighbors(std::vector<std::string> neighbors);
 private:
-	wxToggleButton* m_NW = nullptr;
-	wxToggleButton* m_N = nullptr;
-	wxToggleButton* m_NE = nullptr;
-	wxToggleButton* m_E = nullptr;
-	wxToggleButton* m_SE = nullptr;
-	wxToggleButton* m_S = nullptr;
-	wxToggleButton* m_SW = nullptr;
-	wxToggleButton* m_W = nullptr;
-	wxToggleButton* m_C = nullptr;
+	std::unordered_map<std::string, wxToggleButton*> m_Buttons = std::unordered_map<std::string, wxToggleButton*>();
+	std::unordered_set<std::string> m_Neighbors = std::unordered_set<std::string>();
+
+	void BuildInterface();
 };
 

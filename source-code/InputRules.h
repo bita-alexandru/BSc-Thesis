@@ -4,6 +4,8 @@
 
 #include "Ids.h"
 
+#include <any>
+
 class InputRules : public wxPanel
 {
 public:
@@ -11,7 +13,13 @@ public:
 	~InputRules();
 
 	wxListView* GetList();
+	std::unordered_map<std::string, std::unordered_map<std::string, std::any>>& GetRules();
+	void SetRules(std::vector<std::string> rules);
 private:
 	wxListView* m_List = nullptr;
+	std::unordered_map<std::string, std::unordered_map<std::string, std::any>> m_Rules = 
+		std::unordered_map<std::string, std::unordered_map<std::string, std::any>>();
+
+	void BuildInterface();
 };
 

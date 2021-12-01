@@ -7,9 +7,9 @@ wxBEGIN_EVENT_TABLE(Main, wxFrame)
 	EVT_MENU(Ids::ID_SAVE_C, Main::OnSaveAutomaton)
 	EVT_MENU(Ids::ID_SAVE_G, Main::OnSaveAlgorithm)
 	EVT_MENU(Ids::ID_EXIT, Main::OnExit)
-	EVT_MENU(Ids::ID_RESET_C, Main::OnResetAutomaton)
-	EVT_MENU(Ids::ID_RESET_G, Main::OnResetAlgorithm)
-	EVT_MENU(Ids::ID_DOCUMENTATION, Main::OnDocumentation)
+	EVT_MENU(Ids::ID_CLEAR_C, Main::OnResetAutomaton)
+	EVT_MENU(Ids::ID_CLEAR_G, Main::OnResetAlgorithm)
+	EVT_MENU(Ids::ID_USERMANUAL, Main::OnDocumentation)
 
 	// ToolZoom
 	EVT_BUTTON(Ids::ID_ZOOM_IN, Main::OnZoomIn)
@@ -35,13 +35,10 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(
 	BuildInterface();
 
 	SetShortcuts();
-
-	PrepareInput();
 }
 
 Main::~Main()
 {
-	wxDELETE(m_Input);
 }
 
 void Main::BuildInterface()
@@ -67,7 +64,7 @@ void Main::BuildInterface()
 
 	m_SplitterInputGrid->SplitVertically(m_PanelInput, m_SplitterGridAlgorithm);
 	m_SplitterInputGrid->SetMinimumPaneSize(1);
-	m_SplitterInputGrid->SetSashGravity(0.21);
+	m_SplitterInputGrid->SetSashGravity(0.2);
 }
 
 void Main::SetShortcuts()
@@ -77,20 +74,62 @@ void Main::SetShortcuts()
 	entries[1].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'O', Ids::ID_OPEN_G);
 	entries[2].Set(wxACCEL_CTRL, (int)'S', Ids::ID_SAVE_C);
 	entries[3].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'S', Ids::ID_SAVE_G);
-	entries[4].Set(wxACCEL_CTRL, (int)'R', Ids::ID_RESET_C);
-	entries[5].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'R', Ids::ID_RESET_G);
-	entries[6].Set(wxACCEL_CTRL, (int)'D', Ids::ID_DOCUMENTATION);
+	entries[4].Set(wxACCEL_CTRL, (int)'R', Ids::ID_CLEAR_C);
+	entries[5].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'R', Ids::ID_CLEAR_G);
+	entries[6].Set(wxACCEL_CTRL, (int)'U', Ids::ID_USERMANUAL);
 
 	wxAcceleratorTable accel(7, entries);
 	this->SetAcceleratorTable(accel);
 }
 
-void Main::PrepareInput()
+void Main::EditStates(wxCommandEvent& evt)
 {
-	m_Input = new Input(
-		m_PanelInput->GetInputStates()->GetList(),
-		m_PanelInput->GetInputRules()->GetList()
-	);
+	if (m_EditorStates == nullptr)
+	{
+		m_EditorStates = new EditorStates(this);
+		m_EditorStates->Show();
+	}
+	else
+	{
+		m_EditorStates->Show();
+		m_EditorStates->SetFocus();
+	}
+}
+
+void Main::EditRules(wxCommandEvent& evt)
+{
+	if (m_EditorRules == nullptr)
+	{
+		m_EditorRules = new EditorRules(this);
+		m_EditorRules->Show();
+	}
+	else
+	{
+		m_EditorRules->Show();
+		m_EditorRules->SetFocus();
+	}
+}
+
+void Main::SaveStates(wxCommandEvent& evt)
+{
+	m_EditorStates->Hide();
+	m_PanelInput->GetInputStates()->SetStates(m_EditorStates->GetData());
+}
+
+void Main::SaveRules(wxCommandEvent& evt)
+{
+	m_EditorRules->Hide();
+	m_PanelInput->GetInputRules()->SetRules(m_EditorRules->GetData());
+}
+
+void Main::OnZoomIn(wxCommandEvent& evt)
+{
+	m_PanelGrid->GetGridTools()->GetToolZoom()->SetSize('+', m_PanelGrid->GetGrid());
+}
+
+void Main::OnZoomOut(wxCommandEvent& evt)
+{
+	m_PanelGrid->GetGridTools()->GetToolZoom()->SetSize('-', m_PanelGrid->GetGrid());
 }
 
 void Main::OnOpenAutomaton(wxCommandEvent& evt)
@@ -132,54 +171,4 @@ void Main::OnResetAlgorithm(wxCommandEvent& evt)
 void Main::OnDocumentation(wxCommandEvent& evt)
 {
 	wxMessageBox("This is a wxWidgets Hello World example", "OnDocumentation", wxOK | wxICON_INFORMATION);
-}
-
-void Main::OnZoomIn(wxCommandEvent& evt)
-{
-	m_PanelGrid->GetGridTools()->GetToolZoom()->SetSize('+', m_PanelGrid->GetGrid());
-}
-
-void Main::OnZoomOut(wxCommandEvent& evt)
-{
-	m_PanelGrid->GetGridTools()->GetToolZoom()->SetSize('-', m_PanelGrid->GetGrid());
-}
-
-void Main::EditStates(wxCommandEvent& evt)
-{
-	if (m_EditorStates == nullptr)
-	{
-		m_EditorStates = new EditorStates(this);
-		m_EditorStates->Show();
-	}
-	else
-	{
-		m_EditorStates->Show();
-		m_EditorStates->SetFocus();
-	}
-}
-
-void Main::EditRules(wxCommandEvent& evt)
-{
-	if (m_EditorRules == nullptr)
-	{
-		m_EditorRules = new EditorRules(this);
-		m_EditorRules->Show();
-	}
-	else
-	{
-		m_EditorRules->Show();
-		m_EditorRules->SetFocus();
-	}
-}
-
-void Main::SaveStates(wxCommandEvent& evt)
-{
-	m_EditorStates->Hide();
-	m_Input->SetStates(m_EditorStates->GetData());
-}
-
-void Main::SaveRules(wxCommandEvent& evt)
-{
-	m_EditorRules->Hide();
-	m_Input->SetRules(m_EditorRules->GetData());
 }

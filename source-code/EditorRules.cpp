@@ -28,7 +28,7 @@ EditorRules::~EditorRules()
 {
 }
 
-std::vector<std::unordered_map<std::string, std::any>> EditorRules::GetData()
+std::vector<std::string> EditorRules::GetData()
 {
 	std::string text = (std::string)m_TextCtrl->GetText();
 
@@ -44,7 +44,7 @@ std::vector<std::unordered_map<std::string, std::any>> EditorRules::GetData()
 
 	std::stringstream ssText(text);
 	std::string rule;
-	std::vector<std::string> rules({ "FREE" });
+	std::vector<std::string> rules;
 
 	int cntLine = 0;
 	while (std::getline(ssText, rule, '\n'))
@@ -61,7 +61,7 @@ std::vector<std::unordered_map<std::string, std::any>> EditorRules::GetData()
 		}
 
 		// rule's name contains illegal characters
-		if (std::find_if(rule.begin(), rule.end(), [](char c) { return !(isalnum(c) || (c == '_')); }) != rule.end())
+		if (std::find_if(rule.begin(), rule.end(), [](char c) { return !(isalnum(c) || (std::string("_->@()&<>+=#:").find(c)) != std::string::npos); }) != rule.end())
 		{
 			indexInvalid.push_back(cntLine);
 			continue;
@@ -84,10 +84,10 @@ std::vector<std::unordered_map<std::string, std::any>> EditorRules::GetData()
 	{
 		// error
 		//cout(text);
-		return std::vector<std::unordered_map<std::string, std::any>>();
+		return std::vector<std::string>();
 	}
-
-	return std::vector<std::unordered_map<std::string, std::any>>();
+	
+	return rules;
 }
 
 void EditorRules::BuildMenuBar()

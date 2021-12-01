@@ -13,7 +13,6 @@
 #include "PanelAlgorithm.h"
 #include "EditorStates.h"
 #include "EditorRules.h"
-#include "Input.h"
 
 class Main: public wxFrame
 {
@@ -31,13 +30,22 @@ private:
 	wxSplitterWindow* m_SplitterInputGrid = nullptr;
 	wxSplitterWindow* m_SplitterGridAlgorithm = nullptr;
 
-	Input* m_Input = nullptr;
-
 	void BuildInterface();
 	void SetShortcuts();
-	void PrepareInput();
 
 	wxDECLARE_EVENT_TABLE();
+
+	// Editors
+	void EditStates(wxCommandEvent& evt);
+	void EditRules(wxCommandEvent& evt);
+
+	// Save Buttons
+	void SaveStates(wxCommandEvent& evt);
+	void SaveRules(wxCommandEvent& evt);
+
+	// ToolZoom
+	void OnZoomIn(wxCommandEvent& evt);
+	void OnZoomOut(wxCommandEvent& evt);
 
 	// MenuBar
 	void OnOpenAutomaton(wxCommandEvent& evt);
@@ -48,16 +56,4 @@ private:
 	void OnResetAutomaton(wxCommandEvent& evt);
 	void OnResetAlgorithm(wxCommandEvent& evt);
 	void OnDocumentation(wxCommandEvent& evt);
-
-	// ToolZoom
-	void OnZoomIn(wxCommandEvent& evt);
-	void OnZoomOut(wxCommandEvent& evt);
-
-	// Editors
-	void EditStates(wxCommandEvent& evt);
-	void EditRules(wxCommandEvent& evt);
-
-	// Save Buttons
-	void SaveStates(wxCommandEvent& evt);
-	void SaveRules(wxCommandEvent& evt);
 };

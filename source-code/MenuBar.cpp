@@ -5,7 +5,8 @@ MenuBar::MenuBar(): wxMenuBar()
 	wxMenu* menuFile = new wxMenu();
 	wxMenu* menuOpen = new wxMenu();
 	wxMenu* menuSave = new wxMenu();
-	wxMenu* menuReset = new wxMenu();
+	wxMenu* menuClear = new wxMenu();
+	wxMenu* menuView = new wxMenu();
 	wxMenu* menuHelp = new wxMenu();
 
 	menuOpen->Append(Ids::ID_OPEN_C, "&Cellular Automaton Configuration\tCtrl-O");
@@ -17,15 +18,24 @@ MenuBar::MenuBar(): wxMenuBar()
 	menuFile->AppendSubMenu(menuOpen, "&Open");
 	menuFile->AppendSubMenu(menuSave, "&Save");
 	menuFile->AppendSeparator();
+	menuFile->AppendSubMenu(menuClear, "&Clear");
+	menuFile->AppendSeparator();
 	menuFile->Append(Ids::ID_EXIT, "E&xit");
 
-	menuReset->Append(Ids::ID_RESET_C, "Reset &Cellular Automaton\tCtrl-R");
-	menuReset->Append(Ids::ID_RESET_G, "Reset &Genetic Algorithm\tCtrl-Shift-R");
+	menuClear->Append(Ids::ID_CLEAR_C, "&Cellular Automaton Input\tCtrl-T");
+	menuClear->Append(Ids::ID_CLEAR_G, "&Genetic Algorithm Input\tCtrl-Shift-T");
 
-	menuHelp->Append(Ids::ID_DOCUMENTATION, "&Documentation\tCtrl-D");
+	menuView->Append(Ids::ID_VIEW_DEFAULT, "&Default Perspective\tCtrl-1");
+	menuView->AppendSeparator();
+	menuView->Append(Ids::ID_VIEW_INPUT, "&Input Perspective\tCtrl-2");
+	menuView->Append(Ids::ID_VIEW_GRID, "&Grid Perspective\tCtrl-3");
+	menuView->Append(Ids::ID_VIEW_PARAMETERS, "&Parameters Perspective\tCtrl-4");
+
+	menuHelp->Append(Ids::ID_USERMANUAL, "&User Manual\tCtrl-U");
+	menuHelp->Append(Ids::ID_SHORTCUTS, "&Shortcuts\tCtrl-J");
 
 	this->Append(menuFile, "&File");
-	this->Append(menuReset, "&Reset");
+	this->Append(menuView, "&View");
 	this->Append(menuHelp, "&Help");
 }
 
