@@ -82,10 +82,10 @@ void ToolModes::BuildInterface()
 	m_Move->SetToolTip("Move");
 
 	m_TextIndex = new wxStaticText(this, wxID_ANY, "0 / 0");
-	m_State = new wxButton(this, wxID_ANY);
-	m_State->Enable(false);
+	m_State = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(24, 24), wxSIMPLE_BORDER);
 	m_State->SetBackgroundColour(wxColour("#FFFFFF"));
 	m_State->SetToolTip("FREE");
+	m_State->Refresh();
 
 	wxButton* previous = new wxButton(this, Ids::ID_BUTTON_PREV, "<");
 	wxButton* next = new wxButton(this, Ids::ID_BUTTON_NEXT, ">");
@@ -122,6 +122,7 @@ void ToolModes::UpdateStateColor() // to do
 {
 	m_State->SetBackgroundColour(m_States[m_Index].second);
 	m_State->SetToolTip(m_States[m_Index].first);
+	m_State->Refresh();
 }
 
 void ToolModes::OnToggleButton(wxCommandEvent& evt)

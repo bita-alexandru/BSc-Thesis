@@ -27,7 +27,8 @@ private:
 	wxToggleButton* m_Pick = nullptr;
 	wxToggleButton* m_Move = nullptr;
 	
-	wxButton* m_State = nullptr;
+	//wxButton* m_State = nullptr;
+	wxPanel* m_State = nullptr;
 	wxStaticText* m_TextIndex = nullptr;
 
 	wxListView* m_ListStates = nullptr;
