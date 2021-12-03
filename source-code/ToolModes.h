@@ -1,10 +1,10 @@
 #pragma once
 #include "wx/wx.h"
 
-class ToolModes
+class ToolModes : public wxPanel
 {
 public:
-	ToolModes(wxWindow* parent, wxBoxSizer* sizer);
+	ToolModes(wxWindow* parent);
 	~ToolModes();
 
 	int GetMode();
@@ -17,6 +17,7 @@ private:
 	wxButton* m_StateColor = nullptr;
 	wxStaticText* m_TextIndex = nullptr;
 
+	void BuildInterface();
 	void UpdateTextIndex();
 	void UpdateStateColor();
 };

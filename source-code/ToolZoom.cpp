@@ -1,20 +1,8 @@
 #include "ToolZoom.h"
 
-ToolZoom::ToolZoom(wxWindow* parent, wxBoxSizer* sizer)
+ToolZoom::ToolZoom(wxWindow* parent) : wxPanel(parent)
 {
-	wxButton* zoomIn = new wxButton(parent, Ids::ID_ZOOM_IN, "+");
-	wxButton* zoomOut = new wxButton(parent, Ids::ID_ZOOM_OUT, "-");
-
-	zoomIn->SetToolTip("Zoom in");
-	zoomOut->SetToolTip("Zoom out");
-
-	sizer->Add(zoomIn, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_LEFT);
-	sizer->Add(zoomOut, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_LEFT);
-
-	std::string label = "Scale=1:" + std::to_string(m_Size);
-	m_TextScale = new wxStaticText(parent, wxID_ANY, label);
-
-	sizer->Add(m_TextScale, 0, wxALIGN_CENTER_VERTICAL);
+	BuildInterface();
 }
 
 ToolZoom::~ToolZoom()
@@ -62,4 +50,23 @@ void ToolZoom::SetSize(char mode, Grid* grid)
 
 	std::string label = "Scale=1:" + std::to_string(m_Size);
 	m_TextScale->SetLabel(label);
+}
+
+void ToolZoom::BuildInterface()
+{
+	wxButton* zoomIn = new wxButton(this, Ids::ID_ZOOM_IN, "+");
+	wxButton* zoomOut = new wxButton(this, Ids::ID_ZOOM_OUT, "-");
+
+	zoomIn->SetToolTip("Zoom in");
+	zoomOut->SetToolTip("Zoom out");
+
+	std::string label = "Scale=1:" + std::to_string(m_Size);
+	m_TextScale = new wxStaticText(this, wxID_ANY, label);
+
+	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+	sizer->Add(zoomIn, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_LEFT);
+	sizer->Add(zoomOut, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_LEFT);
+	sizer->Add(m_TextScale, 0, wxALIGN_CENTER_VERTICAL);
+
+	this->SetSizer(sizer);
 }

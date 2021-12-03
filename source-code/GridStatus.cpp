@@ -4,15 +4,16 @@ GridStatus::GridStatus(wxWindow* parent): wxPanel(parent)
 {
 	SetBackgroundColour(wxColor(255, 173, 173));
 
+	m_StatusSpeed = new StatusSpeed(this);
+	m_StatusControls = new StatusControls(this);
+	m_StatusCells = new StatusCells(this);
+
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
-
-	m_StatusSpeed = new StatusSpeed(this, sizer);
+	sizer->Add(m_StatusSpeed, 1, wxEXPAND);
 	sizer->AddSpacer(64);
-
-	m_StatusControls = new StatusControls(this, sizer);
+	sizer->Add(m_StatusControls, 1, wxEXPAND);
 	sizer->AddSpacer(64);
-
-	m_StatusCells = new StatusCells(this, sizer);
+	sizer->Add(m_StatusCells, 1, wxEXPAND);
 
 	this->SetSizer(sizer);
 }

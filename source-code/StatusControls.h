@@ -3,10 +3,10 @@
 
 #include "Ids.h"
 
-class StatusControls
+class StatusControls : public wxPanel
 {
 public:
-	StatusControls(wxWindow* parent, wxBoxSizer* sizer);
+	StatusControls(wxWindow* parent);
 	~StatusControls();
 
 	char GetStartState();
@@ -14,5 +14,7 @@ public:
 private:
 	char m_StartState = 'S';
 	wxButton* m_StartButton = nullptr;
+
+	void BuildInterface();
 };
 

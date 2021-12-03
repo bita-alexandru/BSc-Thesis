@@ -3,10 +3,10 @@
 
 #include "Ids.h"
 
-class StatusSpeed
+class StatusSpeed : public wxPanel
 {
 public:
-	StatusSpeed(wxWindow* parent, wxBoxSizer* sizer);
+	StatusSpeed(wxWindow* parent);
 	~StatusSpeed();
 
 	int GetDelay();
@@ -18,6 +18,7 @@ private:
 
 	wxStaticText* m_TextDelay = nullptr;
 
+	void BuildInterface();
 	void UpdateDelay();
 };
 

@@ -4,15 +4,16 @@ GridTools::GridTools(wxWindow* parent): wxPanel(parent)
 {
     SetBackgroundColour(wxColor(253, 255, 182));
 
+    m_ToolZoom = new ToolZoom(this);
+    m_ToolModes = new ToolModes(this);
+    m_ToolCoords = new ToolCoords(this);
+
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
-
-    m_ToolZoom = new ToolZoom(this, sizer);
+    sizer->Add(m_ToolZoom, 1, wxEXPAND);
     sizer->AddSpacer(64);
-
-    m_ToolModes = new ToolModes(this, sizer);
+    sizer->Add(m_ToolModes, 1, wxEXPAND);
     sizer->AddSpacer(64);
-
-    m_ToolCoords = new ToolCoords(this, sizer);
+    sizer->Add(m_ToolCoords, 1, wxEXPAND);
 
     this->SetSizer(sizer);
 }

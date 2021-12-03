@@ -1,10 +1,10 @@
 #pragma once
 #include "wx/wx.h"
 
-class StatusCells
+class StatusCells : public wxPanel
 {
 public:
-	StatusCells(wxWindow* parent, wxBoxSizer* sizer);
+	StatusCells(wxWindow* parent);
 	~StatusCells();
 
 	int GetCountGeneration();
@@ -17,6 +17,7 @@ private:
 	wxStaticText* m_TextCountGeneration = nullptr;
 	wxStaticText* m_TextCountPopulation = nullptr;
 
+	void BuildInterface();
 	void UpdateTextCountGeneration();
 	void UpdateTextCountPopulation();
 };

@@ -1,37 +1,9 @@
 #include "ToolModes.h"
 #include "Ids.h"
 
-ToolModes::ToolModes(wxWindow* parent, wxBoxSizer* sizer)
+ToolModes::ToolModes(wxWindow* parent) : wxPanel(parent)
 {
-	wxButton* draw = new wxButton(parent, Ids::ID_MODE_DRAW, "D");
-	wxButton* pick = new wxButton(parent, Ids::ID_MODE_PICK, "P");
-	wxButton* drag = new wxButton(parent, Ids::ID_MODE_DRAG, "M");
-
-	sizer->Add(draw, 0, wxALIGN_CENTER_VERTICAL);
-	sizer->Add(pick, 0, wxALIGN_CENTER_VERTICAL);
-	sizer->Add(drag, 0, wxALIGN_CENTER_VERTICAL);
-
-	sizer->AddSpacer(16);
-
-	draw->SetToolTip("Draw");
-	pick->SetToolTip("Pick");
-	drag->SetToolTip("Drag");
-
-	m_TextIndex = new wxStaticText(parent, wxID_ANY, "1 / 1");
-	m_StateColor = new wxButton(parent, wxID_ANY);
-
-	wxButton* previous = new wxButton(parent, Ids::ID_BUTTON_PREV, "<");
-	wxButton* next = new wxButton(parent, Ids::ID_BUTTON_NEXT, ">");
-
-	sizer->Add(m_TextIndex, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_CENTER);
-	sizer->Add(previous, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_CENTER);
-	sizer->Add(m_StateColor, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_CENTER);
-	sizer->Add(next, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_CENTER);
-
-	previous->SetToolTip("Previous");
-	next->SetToolTip("Next");
-	
-	m_StateColor->Enable(false);
+	BuildInterface();
 }
 
 ToolModes::~ToolModes()
@@ -94,6 +66,39 @@ void ToolModes::SetIndex(char direction, int index)
 
 	UpdateTextIndex();
 	UpdateStateColor();
+}
+
+void ToolModes::BuildInterface()
+{
+	wxButton* draw = new wxButton(this, Ids::ID_MODE_DRAW, "D");
+	wxButton* pick = new wxButton(this, Ids::ID_MODE_PICK, "P");
+	wxButton* drag = new wxButton(this, Ids::ID_MODE_DRAG, "M");
+
+	draw->SetToolTip("Draw");
+	pick->SetToolTip("Pick");
+	drag->SetToolTip("Drag");
+
+	m_TextIndex = new wxStaticText(this, wxID_ANY, "1 / 1");
+	m_StateColor = new wxButton(this, wxID_ANY);
+	m_StateColor->Enable(false);
+
+	wxButton* previous = new wxButton(this, Ids::ID_BUTTON_PREV, "<");
+	wxButton* next = new wxButton(this, Ids::ID_BUTTON_NEXT, ">");
+	previous->SetToolTip("Previous");
+	next->SetToolTip("Next");
+
+	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+	sizer->Add(draw, 0, wxALIGN_CENTER_VERTICAL);
+	sizer->Add(pick, 0, wxALIGN_CENTER_VERTICAL);
+	sizer->Add(drag, 0, wxALIGN_CENTER_VERTICAL);
+
+	sizer->AddSpacer(16);
+	sizer->Add(m_TextIndex, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_CENTER);
+	sizer->Add(previous, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_CENTER);
+	sizer->Add(m_StateColor, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_CENTER);
+	sizer->Add(next, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_CENTER);
+
+	this->SetSizer(sizer);
 }
 
 void ToolModes::UpdateTextIndex()

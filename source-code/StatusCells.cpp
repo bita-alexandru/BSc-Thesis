@@ -1,15 +1,8 @@
 #include "StatusCells.h"
 
-StatusCells::StatusCells(wxWindow* parent, wxBoxSizer* sizer)
+StatusCells::StatusCells(wxWindow* parent) : wxPanel(parent)
 {
-	m_TextCountGeneration = new wxStaticText(parent, wxID_ANY, "Generation: 0");
-	m_TextCountPopulation= new wxStaticText(parent, wxID_ANY, "Population: 0");
-
-	sizer->Add(m_TextCountGeneration, 0, wxALIGN_CENTER_VERTICAL);
-
-	sizer->AddSpacer(16);
-
-	sizer->Add(m_TextCountPopulation, 0, wxALIGN_CENTER_VERTICAL);
+	BuildInterface();
 }
 
 StatusCells::~StatusCells()
@@ -36,6 +29,19 @@ void StatusCells::SetCountPopulation(int n)
 {
 	m_CountPopulation = n;
 	UpdateTextCountPopulation();
+}
+
+void StatusCells::BuildInterface()
+{
+	m_TextCountGeneration = new wxStaticText(this, wxID_ANY, "Generation: 0");
+	m_TextCountPopulation = new wxStaticText(this, wxID_ANY, "Population: 0");
+
+	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+	sizer->Add(m_TextCountGeneration, 0, wxALIGN_CENTER_VERTICAL);
+	sizer->AddSpacer(16);
+	sizer->Add(m_TextCountPopulation, 0, wxALIGN_CENTER_VERTICAL);
+
+	this->SetSizer(sizer);
 }
 
 void StatusCells::UpdateTextCountGeneration()

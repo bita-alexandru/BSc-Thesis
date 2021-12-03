@@ -5,10 +5,10 @@
 #include "Sizes.h"
 #include "Grid.h"
 
-class ToolZoom
+class ToolZoom : public wxPanel
 {
 public:
-	ToolZoom(wxWindow* parent, wxBoxSizer* sizer);
+	ToolZoom(wxWindow* parent);
 	~ToolZoom();
 
 	int GetSize();
@@ -19,5 +19,7 @@ private:
 	int m_MinimumSize = Sizes::CELL_SIZE_MIN;
 
 	wxStaticText* m_TextScale = nullptr;
+
+	void BuildInterface();
 };
 
