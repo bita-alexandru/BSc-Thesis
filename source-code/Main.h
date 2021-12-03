@@ -32,6 +32,7 @@ private:
 
 	void BuildInterface();
 	void SetShortcuts();
+	void PrepareInput();
 
 	wxDECLARE_EVENT_TABLE();
 

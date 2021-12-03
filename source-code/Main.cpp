@@ -35,6 +35,8 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(
 	BuildInterface();
 
 	SetShortcuts();
+
+	PrepareInput();
 }
 
 Main::~Main()
@@ -80,6 +82,28 @@ void Main::SetShortcuts()
 
 	wxAcceleratorTable accel(7, entries);
 	this->SetAcceleratorTable(accel);
+}
+
+void Main::PrepareInput()
+{
+	InputStates* inputStates = m_PanelInput->GetInputStates();
+	InputNeighbors* inputNeighbors = m_PanelInput->GetInputNeighbors();
+	InputRules* inputRules = m_PanelInput->GetInputRules();
+
+	GridTools* gridTools = m_PanelGrid->GetGridTools();
+	Grid* grid = m_PanelGrid->GetGrid();
+	GridStatus* gridStatus = m_PanelGrid->GetGridStatus();
+
+	ToolZoom* toolZoom = gridTools->GetToolZoom();
+	ToolModes* toolModes = gridTools->GetToolModes();
+	ToolCoords* toolCoords = gridTools->GetToolCoords();
+
+	StatusSpeed* statusSpeed = gridStatus->GetStatusSpeed();
+	StatusControls* statusControls = gridStatus->GetStatusControls();
+	StatusCells* statusCells = gridStatus->GetStatusCells();
+
+	inputStates->SetToolModes(toolModes);
+	toolModes->SetListStates(inputStates->GetList());
 }
 
 void Main::EditStates(wxCommandEvent& evt)

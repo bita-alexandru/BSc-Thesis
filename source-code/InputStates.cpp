@@ -97,15 +97,33 @@ void InputStates::SetStates(std::vector<std::string> states)
     {
         m_List->DeleteItem(i);
     }
+
+    // update ToolModes (state, color) list
+    std::vector<std::pair<std::string, wxColour>> statesColors;
+    for (auto it : states)
+    {
+        statesColors.push_back({ it, wxColour(m_States[it]) });
+    }
+
+    m_ToolModes->SetStates(statesColors);
+}
+
+void InputStates::SetToolModes(ToolModes* toolModes)
+{
+    m_ToolModes = toolModes;
 }
 
 void InputStates::BuildInterface()
 {
     wxButton* button = new wxButton(this, Ids::ID_EDIT_STATES, wxString("Edit States"));
-    m_List = new wxListView(this, Ids::ID_LIST_STATES, wxDefaultPosition, wxSize(128, 128));
 
+    m_List = new wxListView(this, Ids::ID_LIST_STATES, wxDefaultPosition, wxSize(128, 128));
     m_List->AppendColumn("#", wxLIST_FORMAT_LEFT, 32);
     m_List->AppendColumn("State");
+    
+    m_List->InsertItem(0, "0");
+    m_List->SetItem(0, 1, "FREE");
+    m_List->SetItemBackgroundColour(0, wxColour("#FFFFFF"));
 
     wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "States");
     sizer->Add(button, 0, wxEXPAND);
@@ -153,9 +171,9 @@ void InputStates::InitializeColors()
 
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     shuffle(m_Colors.begin(), m_Colors.end(), std::default_random_engine(seed));
-    m_Colors.push_front("#FFFFFF");
+    m_Colors.push_back("#FFFFFF");
 
-    SetStates({ "FREE" });
+    m_States.insert({ "FREE", "#FFFFFF" });
 }
 
 void InputStates::MakeColorAvailable(std::string& color)
