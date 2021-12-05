@@ -20,8 +20,8 @@ void StatusSpeed::SetDelay(char mode)
 
 void StatusSpeed::BuildInterface()
 {
-    wxButton* slower = new wxButton(this, Ids::ID_BUTTON_SLOWER, "<<");
-    wxButton* faster = new wxButton(this, Ids::ID_BUTTON_FASTER, ">>");
+    wxButton* slower = new wxButton(this, Ids::ID_BUTTON_SLOWER, "<<", wxDefaultPosition, wxSize(32, 32));
+    wxButton* faster = new wxButton(this, Ids::ID_BUTTON_FASTER, ">>", wxDefaultPosition, wxSize(32, 32));
     slower->SetToolTip("Slower");
     faster->SetToolTip("Faster");
 
@@ -37,7 +37,7 @@ void StatusSpeed::BuildInterface()
     sizer->Add(faster, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(m_TextDelay, 0, wxALIGN_CENTER_VERTICAL);
 
-    this->SetSizer(sizer);
+    this->SetSizerAndFit(sizer);
 }
 
 void StatusSpeed::UpdateDelay()

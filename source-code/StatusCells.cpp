@@ -38,8 +38,7 @@ void StatusCells::BuildInterface()
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 	sizer->Add(m_TextCountGeneration, 0, wxALIGN_CENTER_VERTICAL);
-	sizer->AddSpacer(16);
-	sizer->Add(m_TextCountPopulation, 0, wxALIGN_CENTER_VERTICAL);
+	sizer->Add(m_TextCountPopulation, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 16);
 
 	this->SetSizer(sizer);
 }

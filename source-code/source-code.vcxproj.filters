@@ -126,6 +126,9 @@
     <ClInclude Include="Sizes.h">
       <Filter>Header Files\Constants</Filter>
     </ClInclude>
+    <ClInclude Include="ToolStates.h">
+      <Filter>Header Files\Tools</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -187,6 +190,9 @@
     </ClCompile>
     <ClCompile Include="EditorRules.cpp">
       <Filter>Source Files\Editors</Filter>
+    </ClCompile>
+    <ClCompile Include="ToolStates.cpp">
+      <Filter>Source Files\Tools</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

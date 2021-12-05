@@ -9,13 +9,11 @@ GridStatus::GridStatus(wxWindow* parent): wxPanel(parent)
 	m_StatusCells = new StatusCells(this);
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
-	sizer->Add(m_StatusSpeed, 1, wxEXPAND);
-	sizer->AddSpacer(64);
-	sizer->Add(m_StatusControls, 1, wxEXPAND);
-	sizer->AddSpacer(64);
-	sizer->Add(m_StatusCells, 1, wxEXPAND);
+	sizer->Add(m_StatusSpeed, 0, wxEXPAND);
+	sizer->Add(m_StatusControls, 0, wxEXPAND | wxLEFT, 48);
+	sizer->Add(m_StatusCells, 0, wxEXPAND | wxLEFT, 48);
 
-	this->SetSizer(sizer);
+	this->SetSizerAndFit(sizer);
 }
 
 GridStatus::~GridStatus()

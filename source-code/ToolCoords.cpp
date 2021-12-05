@@ -31,5 +31,5 @@ void ToolCoords::BuildInterface()
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 	sizer->Add(m_Coords, 0, wxALIGN_CENTER_VERTICAL);
 
-	this->SetSizer(sizer);
+	this->SetSizerAndFit(sizer);
 }

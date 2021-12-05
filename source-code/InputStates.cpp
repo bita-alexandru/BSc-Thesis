@@ -105,12 +105,12 @@ void InputStates::SetStates(std::vector<std::string> states)
         statesColors.push_back({ it, wxColour(m_States[it]) });
     }
 
-    m_ToolModes->SetStates(statesColors);
+    m_ToolStates->SetStates(statesColors);
 }
 
-void InputStates::SetToolModes(ToolModes* toolModes)
+void InputStates::SetToolStates(ToolStates* toolStates)
 {
-    m_ToolModes = toolModes;
+    m_ToolStates = toolStates;
 }
 
 void InputStates::BuildInterface()

@@ -6,22 +6,23 @@ GridTools::GridTools(wxWindow* parent): wxPanel(parent)
 
     m_ToolZoom = new ToolZoom(this);
     m_ToolModes = new ToolModes(this);
+    m_ToolStates = new ToolStates(this);
     m_ToolCoords = new ToolCoords(this);
 
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
-    sizer->Add(m_ToolZoom, 1, wxEXPAND);
-    sizer->AddSpacer(64);
-    sizer->Add(m_ToolModes, 1, wxEXPAND);
-    sizer->AddSpacer(64);
-    sizer->Add(m_ToolCoords, 1, wxEXPAND);
+    sizer->Add(m_ToolZoom, 0, wxEXPAND);
+    sizer->Add(m_ToolModes, 0, wxEXPAND | wxLEFT, 48);
+    sizer->Add(m_ToolStates, 0, wxEXPAND | wxLEFT, 48);
+    sizer->Add(m_ToolCoords, 0, wxEXPAND | wxLEFT, 48);
 
-    this->SetSizer(sizer);
+    this->SetSizerAndFit(sizer);
 }
 
 GridTools::~GridTools()
 {
     wxDELETE(m_ToolZoom);
     wxDELETE(m_ToolModes);
+    wxDELETE(m_ToolStates);
     wxDELETE(m_ToolCoords);
 }
 
@@ -33,6 +34,11 @@ ToolZoom* GridTools::GetToolZoom()
 ToolModes* GridTools::GetToolModes()
 {
     return m_ToolModes;
+}
+
+ToolStates* GridTools::GetToolStates()
+{
+    return m_ToolStates;
 }
 
 ToolCoords* GridTools::GetToolCoords()

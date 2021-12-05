@@ -54,8 +54,8 @@ void ToolZoom::SetSize(char mode, Grid* grid)
 
 void ToolZoom::BuildInterface()
 {
-	wxButton* zoomIn = new wxButton(this, Ids::ID_ZOOM_IN, "+");
-	wxButton* zoomOut = new wxButton(this, Ids::ID_ZOOM_OUT, "-");
+	wxButton* zoomIn = new wxButton(this, Ids::ID_ZOOM_IN, "+", wxDefaultPosition, wxSize(32, 32));
+	wxButton* zoomOut = new wxButton(this, Ids::ID_ZOOM_OUT, "-", wxDefaultPosition, wxSize(32, 32));
 
 	zoomIn->SetToolTip("Zoom in");
 	zoomOut->SetToolTip("Zoom out");
@@ -64,9 +64,9 @@ void ToolZoom::BuildInterface()
 	m_TextScale = new wxStaticText(this, wxID_ANY, label);
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
-	sizer->Add(zoomIn, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_LEFT);
-	sizer->Add(zoomOut, 0, wxALIGN_CENTER_VERTICAL | wxALIGN_LEFT);
+	sizer->Add(zoomOut, 0, wxALIGN_CENTER_VERTICAL);
+	sizer->Add(zoomIn, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->Add(m_TextScale, 0, wxALIGN_CENTER_VERTICAL);
 
-	this->SetSizer(sizer);
+	this->SetSizerAndFit(sizer);
 }

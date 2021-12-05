@@ -8,5 +8,7 @@ class MenuBar: public wxMenuBar
 public:
 	MenuBar();
 	~MenuBar();
+private:
+	void BuildInterface();
 };
 

@@ -37,10 +37,10 @@ void StatusControls::SetStartState(char state)
 
 void StatusControls::BuildInterface()
 {
-    wxButton* start = new wxButton(this, Ids::ID_BUTTON_START, "Start");
-    wxButton* reset = new wxButton(this, Ids::ID_BUTTON_RESET, "Reset");
-    wxButton* step = new wxButton(this, Ids::ID_BUTTON_STEP, "Next Step");
-    wxButton* generation = new wxButton(this, Ids::ID_BUTTON_GENERATION, "Next Generation");
+    wxButton* start = new wxButton(this, Ids::ID_BUTTON_START, "S", wxDefaultPosition, wxSize(32, 32));
+    wxButton* reset = new wxButton(this, Ids::ID_BUTTON_RESET, "R", wxDefaultPosition, wxSize(32, 32));
+    wxButton* step = new wxButton(this, Ids::ID_BUTTON_STEP, "NS", wxDefaultPosition, wxSize(32, 32));
+    wxButton* generation = new wxButton(this, Ids::ID_BUTTON_GENERATION, "NG", wxDefaultPosition, wxSize(32, 32));
 
     start->SetToolTip("Start");
     reset->SetToolTip("Reset");
@@ -50,8 +50,7 @@ void StatusControls::BuildInterface()
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
     sizer->Add(start, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(reset, 0, wxALIGN_CENTER_VERTICAL);
-    sizer->AddSpacer(16);
-    sizer->Add(step, 0, wxALIGN_CENTER_VERTICAL);
+    sizer->Add(step, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 16);
     sizer->Add(generation, 0, wxALIGN_CENTER_VERTICAL);
 
     this->SetSizer(sizer);

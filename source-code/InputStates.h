@@ -3,7 +3,7 @@
 #include "wx/listctrl.h"
 
 #include "Ids.h"
-#include "ToolModes.h"
+#include "ToolStates.h"
 
 #include <deque>
 
@@ -17,10 +17,10 @@ public:
 	std::unordered_map<std::string, std::string>& GetStates();
 
 	void SetStates(std::vector<std::string> states);
-	void SetToolModes(ToolModes* toolModes);
+	void SetToolStates(ToolStates* toolModes);
 private:
 	wxListView* m_List = nullptr;
-	ToolModes* m_ToolModes = nullptr;
+	ToolStates* m_ToolStates = nullptr;
 
 	std::deque<std::string> m_Colors = std::deque<std::string>();
 	std::unordered_map<std::string, std::string> m_States = std::unordered_map<std::string, std::string>();
