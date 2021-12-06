@@ -2,6 +2,8 @@
 
 ToolZoom::ToolZoom(wxWindow* parent) : wxPanel(parent)
 {
+    SetBackgroundColour(wxColour(242, 204, 143));
+
 	BuildInterface();
 }
 
@@ -50,6 +52,8 @@ void ToolZoom::SetSize(char mode, Grid* grid)
 
 	std::string label = "Scale=1:" + std::to_string(m_Size);
 	m_TextScale->SetLabel(label);
+
+	Layout();
 }
 
 void ToolZoom::BuildInterface()
@@ -66,7 +70,7 @@ void ToolZoom::BuildInterface()
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 	sizer->Add(zoomOut, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->Add(zoomIn, 0, wxALIGN_CENTER_VERTICAL);
-	sizer->Add(m_TextScale, 0, wxALIGN_CENTER_VERTICAL);
+	sizer->Add(m_TextScale, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 48);
 
 	this->SetSizerAndFit(sizer);
 }

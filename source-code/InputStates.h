@@ -21,13 +21,14 @@ public:
 private:
 	wxListView* m_List = nullptr;
 	ToolStates* m_ToolStates = nullptr;
+	wxFont m_Font = wxFont(8, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD);
 
 	std::deque<std::string> m_Colors = std::deque<std::string>();
 	std::unordered_map<std::string, std::string> m_States = std::unordered_map<std::string, std::string>();
 	
 	void BuildInterface();
 	void InitializeColors();
-	void MakeColorAvailable(std::string& color);
-	void MakeColorUnavailable(std::string& color);
+	void MakeColorAvailable(std::string color);
+	void MakeColorUnavailable(std::string color);
 };
 

@@ -10,6 +10,8 @@ wxEND_EVENT_TABLE()
 
 ToolStates::ToolStates(wxWindow* parent) : wxPanel(parent)
 {
+    SetBackgroundColour(wxColour(242, 204, 143));
+
     BuildInterface();
 }
 
@@ -52,7 +54,7 @@ void ToolStates::BuildInterface()
 	m_TextIndex = new wxStaticText(this, wxID_ANY, "0 / 0");
 
 	m_State = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(32, 32), wxSIMPLE_BORDER);
-	m_State->SetBackgroundColour(wxColour("#FFFFFF"));
+	m_State->SetBackgroundColour(wxColour("white"));
 	m_State->SetToolTip("FREE");
 	m_State->Refresh();
 
@@ -66,6 +68,7 @@ void ToolStates::BuildInterface()
 	sizer->Add(next, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->Add(m_State, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->Add(m_TextIndex, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 8);
+	sizer->AddSpacer(48);
 
 	this->SetSizerAndFit(sizer);
 }
@@ -74,6 +77,7 @@ void ToolStates::UpdateTextIndex()
 {
 	std::string label = std::to_string(m_Index) + " / " + std::to_string(m_MaximumIndex);
 	m_TextIndex->SetLabel(label);
+	
 	//Layout();
 }
 

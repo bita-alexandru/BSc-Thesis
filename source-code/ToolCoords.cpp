@@ -2,6 +2,8 @@
 
 ToolCoords::ToolCoords(wxWindow* parent) : wxPanel(parent)
 {
+    SetBackgroundColour(wxColour(242, 204, 143));
+
 	BuildInterface();
 }
 
@@ -9,27 +11,34 @@ ToolCoords::~ToolCoords()
 {
 }
 
-void ToolCoords::SetCoords(int x, int y)
+void ToolCoords::Set(int x, int y, std::string state)
 {
-	std::string label = "(X,Y)=";
+	std::string coords = "(X,Y)=(" + std::to_string(x) + "," + std::to_string(y) + ")";
+	std::string name = "State=" + state;
 
-	const int N = Sizes::TOTAL_CELLS;
-
-	if (x < N && x > -N && y < N && y > -N)
-	{
-		label += "(" + std::to_string(x) + "," + std::to_string(y) + ")";
-	}
+	m_Coords->SetLabel(coords);
+	m_State->SetLabel(name);
 	
-	m_Coords->SetLabel(label);
+	//Layout();
+}
+
+void ToolCoords::Reset()
+{
+	m_Coords->SetLabel("(X,Y)=");
+	m_State->SetLabel("State=");
+
+	//Layout();
 }
 
 void ToolCoords::BuildInterface()
 {
-	std::string label = "(X,Y)=";
-	m_Coords = new wxStaticText(this, wxID_ANY, label);
+	m_Coords = new wxStaticText(this, wxID_ANY, "(X,Y)=");
+	m_State = new wxStaticText(this, wxID_ANY, "State=");
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 	sizer->Add(m_Coords, 0, wxALIGN_CENTER_VERTICAL);
+	sizer->Add(m_State, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 80);
+	sizer->AddSpacer(128);
 
 	this->SetSizerAndFit(sizer);
 }

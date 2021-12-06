@@ -10,9 +10,11 @@ public:
 	ToolCoords(wxWindow* parent);
 	~ToolCoords();
 
-	void SetCoords(int x, int y);
+	void Set(int x, int y, std::string state);
+	void Reset();
 private:
 	wxStaticText* m_Coords = nullptr;
+	wxStaticText* m_State = nullptr;
 
 	void BuildInterface();
 };

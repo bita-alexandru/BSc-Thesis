@@ -17,7 +17,7 @@ EditorStates::EditorStates(wxFrame* parent) : wxFrame(parent, wxID_ANY, "CellyGe
 
 	Center();
 
-	SetBackgroundColour(wxColour(255, 232, 214));
+    SetBackgroundColour(wxColour(255, 232, 214));
 
 	BuildMenuBar();
 
@@ -30,7 +30,7 @@ EditorStates::~EditorStates()
 
 std::vector<std::string> EditorStates::GetData()
 {
-	std::string text = (std::string)m_TextCtrl->GetText();
+	std::string text = (std::string)m_TextCtrl->GetText().MakeUpper();
 
 	// remove empty lines, white spaces and carriage symbols
 	text.erase(remove(text.begin(), text.end(), ' '), text.end());
@@ -119,7 +119,7 @@ void EditorStates::BuildInputPanel()
 	wxStaticText* help = new wxStaticText(this, wxID_ANY, labelHelp);
 
 	m_TextCtrl = new wxStyledTextCtrl(this);
-	m_TextCtrl->SetMarginWidth(wxSTC_MARGIN_NUMBER, 32);
+	m_TextCtrl->SetMarginWidth(wxSTC_MARGIN_NUMBER, 48);
 	m_TextCtrl->SetMarginType(wxSTC_MARGINOPTION_SUBLINESELECT, wxSTC_MARGIN_NUMBER);
 	m_TextCtrl->SetScrollWidth(1);
 

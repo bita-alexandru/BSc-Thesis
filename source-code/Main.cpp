@@ -30,7 +30,7 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(
 
 	Center();
 
-	SetBackgroundColour(wxColour(255, 255, 255));
+    SetBackgroundColour(wxColour(255, 255, 255));
 
 	BuildInterface();
 
@@ -126,6 +126,7 @@ void Main::PrepareInput()
 
 	grid->SetToolModes(toolModes);
 	grid->SetToolStates(toolStates);
+	grid->SetToolCoords(toolCoords);
 }
 
 void Main::EditStates(wxCommandEvent& evt)

@@ -52,8 +52,8 @@ void InputStates::SetStates(std::vector<std::string> states)
     {
         if (m_States.find(states[i]) == m_States.end())
         {
-            m_States.insert({ states[i], m_Colors.front() });
-            MakeColorUnavailable(m_Colors.front());
+            m_States.insert({ states[i], m_Colors[0]});
+            MakeColorUnavailable(m_Colors[0]);
         }
     }
 
@@ -65,12 +65,15 @@ void InputStates::SetStates(std::vector<std::string> states)
         wxString id = std::to_string(i);
         wxString state = states[i];
         wxColour color = wxColour(m_States[states[i]]);
+        wxColour blackwhite = (color.Red() * 0.299 + color.Green() * 0.587 + color.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
 
         if (i > nOfItems - 1)
         {
             m_List->InsertItem(i, id);
             m_List->SetItem(i, 1, state);
             m_List->SetItemBackgroundColour(i, color);
+            m_List->SetItemTextColour(i, blackwhite);
+            m_List->SetItemFont(i, m_Font);
 
             continue;
         }
@@ -90,6 +93,7 @@ void InputStates::SetStates(std::vector<std::string> states)
         if (itmColor != color)
         {
             m_List->SetItemBackgroundColour(i, color);
+            m_List->SetItemTextColour(i, blackwhite);
         }
     }
 
@@ -120,10 +124,11 @@ void InputStates::BuildInterface()
     m_List = new wxListView(this, Ids::ID_LIST_STATES, wxDefaultPosition, wxSize(128, 128));
     m_List->AppendColumn("#", wxLIST_FORMAT_LEFT, 32);
     m_List->AppendColumn("State");
-    
+
     m_List->InsertItem(0, "0");
     m_List->SetItem(0, 1, "FREE");
-    m_List->SetItemBackgroundColour(0, wxColour("#FFFFFF"));
+    m_List->SetItemBackgroundColour(0, wxColour("white"));
+    m_List->SetItemFont(0, m_Font);
 
     wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "States");
     sizer->Add(button, 0, wxEXPAND);
@@ -166,7 +171,7 @@ void InputStates::InitializeColors()
         "#003109", "#0060CD", "#D20096", "#895563", "#29201D", "#5B3213", "#A76F42", "#89412E",
         "#1A3A2A", "#494B5A", "#A88C85", "#F4ABAA", "#A3F3AB", "#00C6C8", "#EA8B66", "#958A9F",
         "#BDC9D2", "#9FA064", "#BE4700", "#658188", "#83A485", "#453C23", "#47675D", "#3A3F00",
-        "#061203", "#DFFB71", "#868E7E", "#98D058", "#6C8F7D", "#D7BFC2", "#3C3E6E", "#D83D66"
+        "#DFFB71", "#868E7E", "#98D058", "#6C8F7D", "#D7BFC2", "#3C3E6E", "#D83D66"
         });
 
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -176,7 +181,7 @@ void InputStates::InitializeColors()
     m_States.insert({ "FREE", "#FFFFFF" });
 }
 
-void InputStates::MakeColorAvailable(std::string& color)
+void InputStates::MakeColorAvailable(std::string color)
 {
     for (auto it = m_Colors.rbegin(); it != m_Colors.rend(); it++)
     {
@@ -189,7 +194,7 @@ void InputStates::MakeColorAvailable(std::string& color)
     }
 }
 
-void InputStates::MakeColorUnavailable(std::string& color)
+void InputStates::MakeColorUnavailable(std::string color)
 {
     m_Colors.pop_front();
     m_Colors.push_back(color);

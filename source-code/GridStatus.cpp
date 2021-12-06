@@ -2,7 +2,7 @@
 
 GridStatus::GridStatus(wxWindow* parent): wxPanel(parent)
 {
-	SetBackgroundColour(wxColor(255, 173, 173));
+    SetBackgroundColour(wxColor(255, 173, 173));
 
 	m_StatusSpeed = new StatusSpeed(this);
 	m_StatusControls = new StatusControls(this);

@@ -2,6 +2,8 @@
 
 StatusSpeed::StatusSpeed(wxWindow* parent) : wxPanel(parent)
 {
+    SetBackgroundColour(wxColour(242, 204, 143));
+
     BuildInterface();
 }
 
@@ -35,7 +37,7 @@ void StatusSpeed::BuildInterface()
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
     sizer->Add(slower, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(faster, 0, wxALIGN_CENTER_VERTICAL);
-    sizer->Add(m_TextDelay, 0, wxALIGN_CENTER_VERTICAL);
+    sizer->Add(m_TextDelay, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 48);
 
     this->SetSizerAndFit(sizer);
 }

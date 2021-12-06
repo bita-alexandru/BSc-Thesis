@@ -2,6 +2,8 @@
 
 StatusControls::StatusControls(wxWindow* parent) : wxPanel(parent)
 {
+    SetBackgroundColour(wxColour(242, 204, 143));
+
     BuildInterface();
 }
 
@@ -51,7 +53,7 @@ void StatusControls::BuildInterface()
     sizer->Add(start, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(reset, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(step, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 16);
-    sizer->Add(generation, 0, wxALIGN_CENTER_VERTICAL);
+    sizer->Add(generation, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 48);
 
     this->SetSizer(sizer);
 }

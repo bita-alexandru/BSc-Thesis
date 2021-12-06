@@ -18,7 +18,7 @@ private:
 	int m_MaximumIndex = 0;
 	wxListView* m_ListStates = nullptr;
 
-	std::vector<std::pair<std::string, wxColour>> m_States = std::vector<std::pair<std::string, wxColor>>({ {"FREE", wxColour("#FFFFFF")} });
+	std::vector<std::pair<std::string, wxColour>> m_States = std::vector<std::pair<std::string, wxColor>>({ {"FREE", wxColour("white")} });
 
 	wxStaticText* m_TextIndex = nullptr;
 	wxPanel* m_State = nullptr;

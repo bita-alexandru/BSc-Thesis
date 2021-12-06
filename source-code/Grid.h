@@ -28,6 +28,8 @@ public:
 	void SetToolCoords(ToolCoords* toolCoords);
 private:
 	int m_Size = Sizes::CELL_SIZE_DEFAULT;
+	const int m_Offset = Sizes::TOTAL_CELLS / 2;
+	bool m_Centered = false;
 
 	ToolModes* m_ToolModes = nullptr;
 	ToolStates* m_ToolStates = nullptr;
@@ -51,10 +53,9 @@ private:
 	virtual wxCoord OnGetColumnWidth(size_t row) const;
 
 	wxDECLARE_EVENT_TABLE();
-
 	void OnDraw(wxDC& dc);
 	void OnPaint(wxPaintEvent& evt);
 
-	void OnMouseLeftRight(wxMouseEvent& evt);
+	void OnMouse(wxMouseEvent& evt);
 };
 
