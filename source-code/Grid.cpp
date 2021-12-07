@@ -5,6 +5,7 @@
 wxBEGIN_EVENT_TABLE(Grid, wxHVScrolledWindow)
 	EVT_PAINT(Grid::OnPaint)
 	EVT_MOUSE_EVENTS(Grid::OnMouse)
+	EVT_TIMER(Ids::ID_TIMER_SELECTION, Grid::OnTimer)
 wxEND_EVENT_TABLE()
 
 
@@ -15,6 +16,8 @@ Grid::Grid(wxWindow* parent): wxHVScrolledWindow(parent)
 	SetRowColumnCount(Sizes::TOTAL_CELLS, Sizes::TOTAL_CELLS);
 
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
+
+	m_Timer = new wxTimer(this, Ids::ID_TIMER_SELECTION);
 }
 
 Grid::~Grid()
@@ -64,6 +67,86 @@ void Grid::SetToolStates(ToolStates* toolStates)
 void Grid::SetToolCoords(ToolCoords* toolCoords)
 {
 	m_ToolCoords = toolCoords;
+}
+
+void Grid::InsertCell(int x, int y, std::string state, wxColour color)
+{
+	// current cell is of state "FREE" but there's already a cell of another state
+	// on this exact position -> remove it
+	if (m_Cells.find({ x, y }) != m_Cells.end() && color == wxColour("white"))
+	{
+		RemoveCell(x, y, state, color);
+	}
+	// position is available
+	else
+	{
+		m_Cells[{x, y}] = { state, color };
+		m_StatePositions[state].insert({ x,y });
+	}
+}
+
+void Grid::RemoveCell(int x, int y, std::string state, wxColour color)
+{
+	if (m_Cells.find({ x, y }) != m_Cells.end())
+	{
+		m_Cells.erase({ x,y });
+		m_StatePositions[state].erase({ x,y });
+
+		// there are no more cells of this state anymore -> remove it from our map
+		if (m_StatePositions[state].size() == 0)
+		{
+			m_StatePositions.erase(state);
+		}
+	}
+}
+
+void Grid::RemoveState(std::string state, wxColour color)
+{
+	// cells of this state have been placed on the grid
+	if (m_StatePositions.find(state) != m_StatePositions.end())
+	{
+		// remove every cell of this state from our map
+		for (auto it : m_StatePositions[state])
+		{
+			// remove from m_Cells, one by one
+			m_Cells.erase(it);
+			Refresh(false);
+		}
+
+		// remove the corresponding map
+		m_StatePositions.erase(state);
+	}
+}
+
+void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newState, wxColour newColor)
+{
+	// cells of this state need their names & colors updated
+	if (m_StatePositions.find(oldState) != m_StatePositions.end())
+	{
+		// same state but a new color
+		if (oldState == newState)
+		{
+			for (auto it : m_StatePositions[oldState])
+			{
+				m_Cells[it].second = newColor;
+				Refresh(false);
+			}
+		}
+		// just a regular update
+		else
+		{
+			// update both the name and the color + make a new map
+			for (auto it : m_StatePositions[oldState])
+			{
+				m_Cells[it] = { newState, newColor };
+				Refresh(false);
+				m_StatePositions[newState].insert(it);
+			}
+
+			// remove the old map
+			m_StatePositions.erase(oldState);
+		}
+	}
 }
 
 wxCoord Grid::OnGetRowHeight(size_t row) const
@@ -130,9 +213,30 @@ void Grid::OnPaint(wxPaintEvent& evt)
 
 void Grid::OnMouse(wxMouseEvent& evt)
 {
+	if (evt.Entering())
+	{
+		this->SetFocus();
+		evt.Skip();
+
+		return;
+	}
+
 	if (evt.Leaving())
 	{
 		m_ToolCoords->Reset();
+
+		evt.Skip();
+		return;
+	}
+
+	if (wxGetKeyState(WXK_SHIFT))
+	{
+		if (evt.LeftIsDown() || evt.RightIsDown())
+		{
+			if (!m_Timer->IsRunning()) m_Timer->Start(80);
+		}
+
+		evt.Skip();
 		return;
 	}
 
@@ -140,44 +244,66 @@ void Grid::OnMouse(wxMouseEvent& evt)
 
 	int x = evt.GetX() / m_Size + visible.GetCol();
 	int y = evt.GetY() / m_Size + visible.GetRow();
+	std::string name = "FREE";
 
+	// update coordinates displayed on screen
 	if (m_Cells.find({ x, y }) != m_Cells.end())
 	{
-		m_ToolCoords->Set(x - m_Offset, y - m_Offset, m_Cells[{x, y}].first);
+		name = m_Cells[{x, y}].first;
 	}
-	else
+	m_ToolCoords->Set(x - m_Offset, y - m_Offset, name);
+
+	char mode = m_ToolModes->GetMode();
+
+	// "draw" mode
+	if (mode == 'D')
 	{
-		m_ToolCoords->Set(x - m_Offset, y - m_Offset, "FREE");
-	}
-
-	if (evt.LeftIsDown() || evt.RightIsDown())
-	{
-		/*std::string msg = std::to_string(x-200) + "," + std::to_string(y-200) + "\n";
-		cout(msg);*/
-
-		std::pair<std::string, wxColour> state = m_ToolStates->GetState();
-
-		if (evt.LeftIsDown())
+		if (evt.LeftIsDown() || evt.RightIsDown())
 		{
-			if (m_Cells.find({ x, y }) != m_Cells.end() && state.second == wxColour("white"))
+			std::pair<std::string, wxColour> state = m_ToolStates->GetState();
+
+			// left click -> place a cell
+			if (evt.LeftIsDown())
 			{
-				m_Cells.erase({ x, y });
+				InsertCell(x, y, state.first, state.second);
 			}
+			// right click -> remove a cell
 			else
 			{
-				m_Cells[{x, y}] = state;
+				RemoveCell(x, y, state.first, state.second);
 			}
-		}
-		else
-		{
-			if (m_Cells.find({ x, y }) != m_Cells.end())
-			{
-				m_Cells.erase({ x, y });
-			}
-		}
 
-		this->Refresh(false);
+			this->Refresh(false);
+		}
+	}
+	// "pick" mode
+	else if (mode == 'P')
+	{
+		if (evt.LeftDown())
+		{
+			std::pair<std::string, wxColour> state = m_ToolStates->GetState();
+
+			m_ToolStates->SetState(name);
+			m_ToolModes->SetMode('D');
+		}
+		else if (evt.RightDown())
+		{
+			m_ToolModes->SetMode('D');
+		}
 	}
 
 	evt.Skip();
+}
+
+void Grid::OnTimer(wxTimerEvent& evt)
+{
+	wxMouseState mouseState = wxGetMouseState();
+	if (!wxGetKeyState(WXK_SHIFT) || (!mouseState.LeftIsDown() && !mouseState.RightIsDown()))
+	{
+		m_Timer->Stop();
+		return;
+	}
+
+	if (mouseState.LeftIsDown()) m_ToolStates->SelectPrevState();
+	if (mouseState.RightIsDown()) m_ToolStates->SelectNextState();
 }

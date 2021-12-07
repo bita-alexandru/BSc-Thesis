@@ -86,20 +86,32 @@ void InputStates::SetStates(std::vector<std::string> states)
         {
             m_List->SetItem(i, 0, id);
         }
-        if (itmState != state)
+        if (itmState != state || itmColor != color)
         {
             m_List->SetItem(i, 1, state);
-        }
-        if (itmColor != color)
-        {
             m_List->SetItemBackgroundColour(i, color);
             m_List->SetItemTextColour(i, blackwhite);
+
+            // update color
+            if (itmState == state)
+            {
+                m_Grid->UpdateState(std::string(itmState), itmColor, std::string(state), color);
+            }
+            // old state deleted -> update on grid (if necessary)
+            else if (m_States.find(std::string(itmState)) == m_States.end())
+            {
+                m_Grid->UpdateState(std::string(itmState), itmColor, std::string(state), color);
+            }
         }
     }
 
     while (i < nOfItems--)
     {
+        wxString state = m_List->GetItemText(i, 1);
+        wxColour color = m_List->GetItemBackgroundColour(i);
         m_List->DeleteItem(i);
+        
+        m_Grid->RemoveState(std::string(state), color);
     }
 
     // update ToolModes (state, color) list
@@ -115,6 +127,11 @@ void InputStates::SetStates(std::vector<std::string> states)
 void InputStates::SetToolStates(ToolStates* toolStates)
 {
     m_ToolStates = toolStates;
+}
+
+void InputStates::SetGrid(Grid* grid)
+{
+    m_Grid = grid;
 }
 
 void InputStates::BuildInterface()
@@ -163,7 +180,7 @@ void InputStates::InitializeColors()
         "#00005F", "#A97399", "#4B8160", "#59738A", "#FF5DA7", "#F7C9BF", "#643127", "#513A01",
         "#6B94AA", "#51A058", "#A45B02", "#1D1702", "#E20027", "#E7AB63", "#4C6001", "#9C6966",
         "#64547B", "#97979E", "#006A66", "#391406", "#F4D749", "#0045D2", "#006C31", "#DDB6D0",
-        "#7C6571", "#9FB2A4", "#00D891", "#15A08A", "#BC65E9", "#FFFFFE", "#C6DC99", "#203B3C",
+        "#7C6571", "#9FB2A4", "#00D891", "#15A08A", "#BC65E9", "#000000", "#C6DC99", "#203B3C",
         "#671190", "#6B3A64", "#F5E1FF", "#FFA0F2", "#CCAA35", "#374527", "#8BB400", "#797868",
         "#C6005A", "#3B000A", "#C86240", "#29607C", "#402334", "#7D5A44", "#CCB87C", "#B88183",
         "#AA5199", "#B5D6C3", "#A38469", "#9F94F0", "#A74571", "#B894A6", "#71BB8C", "#00B433",

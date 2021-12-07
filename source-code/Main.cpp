@@ -37,6 +37,8 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(
 	SetShortcuts();
 
 	PrepareInput();
+
+	//CaptureMouse();
 }
 
 Main::~Main()
@@ -122,6 +124,7 @@ void Main::PrepareInput()
 	StatusCells* statusCells = gridStatus->GetStatusCells();
 
 	inputStates->SetToolStates(toolStates);
+	inputStates->SetGrid(grid);
 	toolStates->SetListStates(inputStates->GetList());
 
 	grid->SetToolModes(toolModes);
@@ -219,3 +222,5 @@ void Main::OnDocumentation(wxCommandEvent& evt)
 {
 	wxMessageBox("This is a wxWidgets Hello World example", "OnDocumentation", wxOK | wxICON_INFORMATION);
 }
+
+

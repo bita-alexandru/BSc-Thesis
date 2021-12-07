@@ -26,6 +26,11 @@ public:
 	void SetToolModes(ToolModes* toolModes);
 	void SetToolStates(ToolStates* toolStates);
 	void SetToolCoords(ToolCoords* toolCoords);
+
+	void InsertCell(int x, int y, std::string state, wxColour color);
+	void RemoveCell(int x, int y, std::string state, wxColour color);
+	void RemoveState(std::string state, wxColour color);
+	void UpdateState(std::string oldState, wxColour oldColor, std::string newState, wxColour newColor);
 private:
 	int m_Size = Sizes::CELL_SIZE_DEFAULT;
 	const int m_Offset = Sizes::TOTAL_CELLS / 2;
@@ -45,9 +50,9 @@ private:
 		}
 	};
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, PairHash> m_Cells = std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, PairHash>();
-	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>>> m_StatePositions = std::unordered_map<std::string, std::unordered_set<std::pair<int, int>>>();
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, PairHash>> m_StatePositions = std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, PairHash>>();
 
-	wxTimer* m_MouseTimer = nullptr;
+	wxTimer* m_Timer = nullptr;
 
 	virtual wxCoord OnGetRowHeight(size_t row) const;
 	virtual wxCoord OnGetColumnWidth(size_t row) const;
@@ -57,5 +62,6 @@ private:
 	void OnPaint(wxPaintEvent& evt);
 
 	void OnMouse(wxMouseEvent& evt);
+	void OnTimer(wxTimerEvent& evt);
 };
 

@@ -9,6 +9,8 @@ public:
 	{
 		INDEX_START = 10000,
 
+		ID_TIMER_SELECTION,
+
 		// InputMenubar
 		ID_OPEN_C, ID_OPEN_G,
 		ID_SAVE_C, ID_SAVE_G,

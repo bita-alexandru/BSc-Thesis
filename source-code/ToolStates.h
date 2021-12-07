@@ -13,6 +13,10 @@ public:
 
 	void SetStates(std::vector<std::pair<std::string, wxColour>> states);
 	void SetListStates(wxListView* list);
+	void SetState(std::string state);
+
+	void SelectPrevState();
+	void SelectNextState();
 private:
 	int m_Index = 0;
 	int m_MaximumIndex = 0;

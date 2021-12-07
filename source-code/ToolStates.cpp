@@ -49,6 +49,55 @@ void ToolStates::SetListStates(wxListView* list)
 	m_ListStates = list;
 }
 
+void ToolStates::SetState(std::string state)
+{
+	for (int i = 0; i < m_States.size(); i++)
+	{
+		if (m_States[i].first == state)
+		{
+			m_Index = i;
+
+			UpdateTextIndex();
+			UpdateState();
+			return;
+		}
+	}
+}
+
+void ToolStates::SelectPrevState()
+{
+	m_Index = std::max(0, m_Index - 1);
+
+	UpdateTextIndex();
+	UpdateState();
+
+	int selection = m_ListStates->GetFirstSelected();
+	while (selection != -1)
+	{
+		m_ListStates->Select(selection, false);
+		selection = m_ListStates->GetNextSelected(selection);
+	}
+	m_ListStates->Select(m_Index);
+	m_ListStates->EnsureVisible(m_Index);
+}
+
+void ToolStates::SelectNextState()
+{
+	m_Index = std::min(m_MaximumIndex, m_Index + 1);
+
+	UpdateTextIndex();
+	UpdateState();
+
+	int selection = m_ListStates->GetFirstSelected();
+	while (selection != -1)
+	{
+		m_ListStates->Select(selection, false);
+		selection = m_ListStates->GetNextSelected(selection);
+	}
+	m_ListStates->Select(m_Index);
+	m_ListStates->EnsureVisible(m_Index);
+}
+
 void ToolStates::BuildInterface()
 {
 	m_TextIndex = new wxStaticText(this, wxID_ANY, "0 / 0");
@@ -90,34 +139,10 @@ void ToolStates::UpdateState()
 
 void ToolStates::OnPrev(wxCommandEvent& evt)
 {
-	m_Index = std::max(0, m_Index - 1);
-
-	UpdateTextIndex();
-	UpdateState();
-
-	int selection = m_ListStates->GetFirstSelected();
-	while (selection != -1)
-	{
-		m_ListStates->Select(selection, false);
-		selection = m_ListStates->GetNextSelected(selection);
-	}
-	m_ListStates->Select(m_Index);
-	m_ListStates->EnsureVisible(m_Index);
+	SelectPrevState();
 }
 
 void ToolStates::OnNext(wxCommandEvent& evt)
 {
-	m_Index = std::min(m_MaximumIndex, m_Index + 1);
-
-	UpdateTextIndex();
-	UpdateState();
-
-	int selection = m_ListStates->GetFirstSelected();
-	while (selection != -1)
-	{
-		m_ListStates->Select(selection, false);
-		selection = m_ListStates->GetNextSelected(selection);
-	}
-	m_ListStates->Select(m_Index);
-	m_ListStates->EnsureVisible(m_Index);
+	SelectNextState();
 }
