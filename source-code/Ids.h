@@ -9,8 +9,6 @@ public:
 	{
 		INDEX_START = 10000,
 
-		ID_TIMER_SELECTION,
-
 		// InputMenubar
 		ID_OPEN_C, ID_OPEN_G,
 		ID_SAVE_C, ID_SAVE_G,
@@ -57,6 +55,9 @@ public:
 
 		// save buttons
 		ID_SAVE_STATES, ID_SAVE_RULES,
+
+		// timers
+		ID_TIMER_SELECTION, ID_TIMER_PANNING
 	};
 };
 

@@ -57,16 +57,33 @@ private:
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, PairHash> m_Cells = std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, PairHash>();
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, PairHash>> m_StatePositions = std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, PairHash>>();
 
-	wxTimer* m_Timer = nullptr;
+	wxTimer* m_TimerSelection = nullptr;
+	wxTimer* m_TimerPanning = nullptr;
+	bool m_PrevScrolledCol = false;
+	bool m_PrevScrolledRow = false;
+
+	std::pair<int, int> m_PrevCell;
 
 	virtual wxCoord OnGetRowHeight(size_t row) const;
 	virtual wxCoord OnGetColumnWidth(size_t row) const;
+	void OnPaint(wxPaintEvent& evt);
+
+	void BuildInterface();
+	void InitializeTimers();
+
+	std::pair<int, int> GetHoveredCell(wxMouseEvent& evt);
+	bool ControlSelectState(wxMouseEvent& evt);
+	void ControlScroll(wxMouseEvent& evt);
+	bool ControlZoom(wxMouseEvent& evt, int x, int y);
+	std::string ControlUpdateCoords(wxMouseEvent& evt, int x, int y);
+	bool ModeDraw(wxMouseEvent& evt, int x, int y, char mode);
+	bool ModePick(wxMouseEvent& evt, int x, int y, char mode, std::string state);
+	bool ModeMove(wxMouseEvent& evt, int x, int y, char mode);
 
 	wxDECLARE_EVENT_TABLE();
 	void OnDraw(wxDC& dc);
-	void OnPaint(wxPaintEvent& evt);
-
 	void OnMouse(wxMouseEvent& evt);
-	void OnTimer(wxTimerEvent& evt);
+	void OnTimerSelection(wxTimerEvent& evt);
+	void OnTimerPanning(wxTimerEvent& evt);
 };
 

@@ -51,6 +51,8 @@ void ToolStates::SetListStates(wxListView* list)
 
 void ToolStates::SetState(std::string state)
 {
+	if (m_States[m_Index].first == state) return;
+
 	for (int i = 0; i < m_States.size(); i++)
 	{
 		if (m_States[i].first == state)
