@@ -9,9 +9,12 @@
 
 #include "Ids.h"
 #include "Sizes.h"
+#include "ToolZoom.h"
 #include "ToolModes.h"
 #include "ToolStates.h"
 #include "ToolCoords.h"
+
+class ToolZoom;
 
 class Grid: public wxHVScrolledWindow
 {
@@ -21,8 +24,9 @@ public:
 
 	int GetSize();
 	void SetSize(int size);
-	void ScrollToCenter();
+	void ScrollToCenter(int x, int y);
 
+	void SetToolZoom(ToolZoom* toolZoom);
 	void SetToolModes(ToolModes* toolModes);
 	void SetToolStates(ToolStates* toolStates);
 	void SetToolCoords(ToolCoords* toolCoords);
@@ -36,6 +40,7 @@ private:
 	const int m_Offset = Sizes::TOTAL_CELLS / 2;
 	bool m_Centered = false;
 
+	ToolZoom* m_ToolZoom = nullptr;
 	ToolModes* m_ToolModes = nullptr;
 	ToolStates* m_ToolStates = nullptr;
 	ToolCoords* m_ToolCoords = nullptr;

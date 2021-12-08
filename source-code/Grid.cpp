@@ -33,25 +33,38 @@ void Grid::SetSize(int size)
 {
 	m_Size = size;
 
+	wxPosition visibleBegin = GetVisibleBegin();
+	wxPosition visibleEnd = GetVisibleEnd();
+
+	int x = visibleEnd.GetCol() - (visibleEnd.GetCol() - visibleBegin.GetCol() - 1) / 2;
+	int y = visibleEnd.GetRow() - (visibleEnd.GetRow() - visibleBegin.GetRow() + 1) / 2;
+
 	wxVarHScrollHelper::RefreshAll();
 	wxVarVScrollHelper::RefreshAll();
+
+	ScrollToCenter(x , y);
 }
 
-void Grid::ScrollToCenter()
+void Grid::ScrollToCenter(int x = Sizes::TOTAL_CELLS/2, int y = Sizes::TOTAL_CELLS/2)
 {
 	wxPosition visibleBegin = GetVisibleBegin();
 	wxPosition visibleEnd = GetVisibleEnd();
 
-	int row = Sizes::TOTAL_CELLS / 2;
-	int column = Sizes::TOTAL_CELLS / 2;
-
-	int a = visibleEnd.GetCol();
-	int b = visibleBegin.GetCol();
+	int row = y;
+	int column = x;
 
 	row = row - (visibleEnd.GetRow() - visibleBegin.GetRow()) / 2;
 	column = column - (visibleEnd.GetCol() - visibleBegin.GetCol()) / 2;
 
+	row = std::max(0, row); row = std::min(Sizes::TOTAL_CELLS - 1, row);
+	column = std::max(0, column); column = std::min(Sizes::TOTAL_CELLS - 1, column);
+
 	ScrollToRowColumn(row, column);
+}
+
+void Grid::SetToolZoom(ToolZoom* toolZoom)
+{
+	m_ToolZoom = toolZoom;
 }
 
 void Grid::SetToolModes(ToolModes* toolModes)
@@ -172,6 +185,7 @@ void Grid::OnDraw(wxDC& dc)
 	brush.SetColour(wxColour("white"));
 
 	dc.SetPen(pen);
+	if (m_Size == Sizes::CELL_SIZE_MIN) dc.SetPen(*wxTRANSPARENT_PEN);
 
 	wxPosition visibleBegin = GetVisibleBegin();
 	wxPosition visibleEnd = GetVisibleEnd();
@@ -213,10 +227,10 @@ void Grid::OnPaint(wxPaintEvent& evt)
 
 void Grid::OnMouse(wxMouseEvent& evt)
 {
+	// gain focus on mouse hover
 	if (evt.Entering())
 	{
 		this->SetFocus();
-		evt.Skip();
 
 		return;
 	}
@@ -225,10 +239,10 @@ void Grid::OnMouse(wxMouseEvent& evt)
 	{
 		m_ToolCoords->Reset();
 
-		evt.Skip();
 		return;
 	}
 
+	// shortcut for alternating between states: ALT + L/R Click
 	if (wxGetKeyState(WXK_SHIFT))
 	{
 		if (evt.LeftIsDown() || evt.RightIsDown())
@@ -236,14 +250,33 @@ void Grid::OnMouse(wxMouseEvent& evt)
 			if (!m_Timer->IsRunning()) m_Timer->Start(80);
 		}
 
-		evt.Skip();
 		return;
 	}
 
+	// get hovered cell information 
 	wxPosition visible = GetVisibleBegin();
 
 	int x = evt.GetX() / m_Size + visible.GetCol();
 	int y = evt.GetY() / m_Size + visible.GetRow();
+
+	// shortcut for zooming in/out with focus on hovered cell
+	if (wxGetKeyState(WXK_CONTROL))
+	{
+		int wheelRotation = evt.GetWheelRotation();
+		if (wheelRotation > 0 && m_ToolZoom->GetSize() < Sizes::CELL_SIZE_MAX)
+		{
+			
+			ScrollToCenter(x, y);
+			m_ToolZoom->ZoomIn();
+		}
+		if (wheelRotation < 0 && m_ToolZoom->GetSize() > Sizes::CELL_SIZE_MIN)
+		{
+			ScrollToCenter(x, y);
+			m_ToolZoom->ZoomOut();
+		}
+
+		return;
+	}
 	std::string name = "FREE";
 
 	// update coordinates displayed on screen

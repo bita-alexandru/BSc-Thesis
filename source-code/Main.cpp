@@ -37,8 +37,6 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(
 	SetShortcuts();
 
 	PrepareInput();
-
-	//CaptureMouse();
 }
 
 Main::~Main()
@@ -125,8 +123,11 @@ void Main::PrepareInput()
 
 	inputStates->SetToolStates(toolStates);
 	inputStates->SetGrid(grid);
+
+	toolZoom->SetGrid(grid);
 	toolStates->SetListStates(inputStates->GetList());
 
+	grid->SetToolZoom(toolZoom);
 	grid->SetToolModes(toolModes);
 	grid->SetToolStates(toolStates);
 	grid->SetToolCoords(toolCoords);
@@ -174,12 +175,12 @@ void Main::SaveRules(wxCommandEvent& evt)
 
 void Main::OnZoomIn(wxCommandEvent& evt)
 {
-	m_PanelGrid->GetGridTools()->GetToolZoom()->SetSize('+', m_PanelGrid->GetGrid());
+	m_PanelGrid->GetGridTools()->GetToolZoom()->ZoomIn();
 }
 
 void Main::OnZoomOut(wxCommandEvent& evt)
 {
-	m_PanelGrid->GetGridTools()->GetToolZoom()->SetSize('-', m_PanelGrid->GetGrid());
+	m_PanelGrid->GetGridTools()->GetToolZoom()->ZoomOut();
 }
 
 void Main::OnOpenAutomaton(wxCommandEvent& evt)

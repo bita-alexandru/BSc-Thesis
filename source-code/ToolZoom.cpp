@@ -16,44 +16,39 @@ int ToolZoom::GetSize()
 	return m_Size;
 }
 
-void ToolZoom::SetSize(char mode, Grid* grid)
+void ToolZoom::ZoomIn()
 {
-	switch (mode)
+	if (m_Size == m_MaximumSize)
 	{
-	case '+':
-	{
-		if (m_Size == m_MaximumSize)
-		{
-			// error
+		// error
 
-			return;
-		}
-
-		m_Size *= 2;
-		break;
-	}
-	case '-':
-	{
-		if (m_Size == m_MinimumSize)
-		{
-			// error
-
-			return;
-		}
-
-		m_Size /= 2;
-		break;
-	}
-	default:
 		return;
 	}
 
-	grid->SetSize(m_Size);
+	m_Size *= 2;
+	m_Grid->SetSize(m_Size);
 
-	std::string label = "Scale=1:" + std::to_string(m_Size);
-	m_TextScale->SetLabel(label);
+	UpdateTextScale();
+}
 
-	Layout();
+void ToolZoom::ZoomOut()
+{
+	if (m_Size == m_MinimumSize)
+	{
+		// error
+
+		return;
+	}
+
+	m_Size /= 2;
+	m_Grid->SetSize(m_Size);
+
+	UpdateTextScale();
+}
+
+void ToolZoom::SetGrid(Grid* grid)
+{
+	m_Grid = grid;
 }
 
 void ToolZoom::BuildInterface()
@@ -73,4 +68,11 @@ void ToolZoom::BuildInterface()
 	sizer->Add(m_TextScale, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 48);
 
 	this->SetSizerAndFit(sizer);
+}
+
+void ToolZoom::UpdateTextScale()
+{
+	std::string label = "Scale=1:" + std::to_string(m_Size);
+	m_TextScale->SetLabel(label);
+	//Layout();
 }
