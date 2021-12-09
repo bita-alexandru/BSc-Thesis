@@ -5,7 +5,7 @@
 #include <chrono>
 #include <unordered_set>
 
-#define cout(x) wxMessageBox(x, "debug")
+#define cout(x) wxLogDebug(x)
 
 InputStates::InputStates(wxWindow* parent) : wxPanel(parent)
 {
@@ -141,6 +141,10 @@ void InputStates::SetInputRules(InputRules* inputRules)
 void InputStates::BuildInterface()
 {
     wxButton* button = new wxButton(this, Ids::ID_EDIT_STATES, wxString("Edit States"));
+    
+    wxSearchCtrl* search = new wxSearchCtrl(this, wxID_ANY);
+    search->Bind(wxEVT_TEXT, &InputStates::Search, this);
+    search->Bind(wxEVT_SEARCHCTRL_SEARCH_BTN, &InputStates::SearchEnter, this);
 
     m_List = new ListStates(this);
     m_List->PushBack({ 0, "FREE" }, { wxColour("white"), wxColour("black") });
@@ -148,6 +152,7 @@ void InputStates::BuildInterface()
 
     wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "States");
     sizer->Add(button, 0, wxEXPAND);
+    sizer->Add(search, 0, wxEXPAND);
     sizer->Add(m_List, 1, wxEXPAND);
 
     this->SetSizer(sizer);
@@ -214,4 +219,77 @@ void InputStates::MakeColorUnavailable(std::string color)
 {
     m_Colors.pop_front();
     m_Colors.push_back(color);
+}
+
+void InputStates::Search(wxCommandEvent& evt)
+{
+    std::string query = std::string(evt.GetString().MakeUpper());
+
+    // unselect previous found queries
+    int selection = m_List->GetFirstSelected();
+    while (selection != -1)
+    {
+        m_List->Select(selection, false);
+        selection = m_List->GetNextSelected(selection);
+    }
+
+    if (query.size() < 1) return;
+
+    for (int i = 0; i < m_List->GetItemCount(); i++)
+    {
+        std::string state = m_List->Get(i).second;
+
+        if (state.find(query) != state.npos)
+        {
+            m_List->Select(i);
+            m_List->EnsureVisible(i);
+
+            return;
+        }
+    }
+}
+
+void InputStates::SearchEnter(wxCommandEvent& evt)
+{
+    std::string query = std::string(evt.GetString().MakeUpper());
+    
+    int selection = m_List->GetFirstSelected();
+
+    if (query.size() < 1) return;
+
+    // continue searching
+    if (wxGetKeyState(WXK_SHIFT))
+    {
+        // search upwards
+        for (int i = selection - 1; i > -1; i--)
+        {
+            std::string state = m_List->Get(i).second;
+
+            if (state.find(query) != state.npos)
+            {
+                m_List->Select(selection, false);
+                m_List->Select(i);
+                m_List->EnsureVisible(i);
+
+                return;
+            }
+        }
+
+        return;
+    }
+
+    // search downwards
+    for (int i = selection + 1; i < m_List->GetItemCount(); i++)
+    {
+        std::string state = m_List->Get(i).second;
+
+        if (state.find(query) != state.npos)
+        {
+            m_List->Select(selection, false);
+            m_List->Select(i);
+            m_List->EnsureVisible(i);
+
+            return;
+        }
+    }
 }

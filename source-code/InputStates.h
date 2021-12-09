@@ -1,5 +1,6 @@
 #pragma once
 #include "wx/wx.h"
+#include "wx/srchctrl.h"
 
 #include "Ids.h"
 #include "ListStates.h"
@@ -35,5 +36,8 @@ private:
 	void InitializeColors();
 	void MakeColorAvailable(std::string color);
 	void MakeColorUnavailable(std::string color);
+
+	void Search(wxCommandEvent& evt);
+	void SearchEnter(wxCommandEvent& evt);
 };
 

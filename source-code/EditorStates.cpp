@@ -4,7 +4,7 @@
 #include <sstream>
 #include <unordered_set>
 
-#define cout(x) wxMessageBox(x, "debug")
+#define cout(x) wxLogDebug(x)
 
 wxBEGIN_EVENT_TABLE(EditorStates, wxFrame)
 	EVT_CLOSE(EditorStates::OnClose)

@@ -1,6 +1,6 @@
 #include "InputNeighbors.h"
 
-#define cout(x) wxMessageBox(x, "debug")
+#define cout(x) wxLogDebug(x)
 
 InputNeighbors::InputNeighbors(wxWindow* parent) : wxPanel(parent)
 {

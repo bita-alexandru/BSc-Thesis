@@ -1,6 +1,6 @@
 #include "Grid.h"
 
-#define cout(x) wxMessageBox(x, "debug")
+#define cout(x) wxLogDebug(x)
 #define WXDEBUG 1
 
 wxBEGIN_EVENT_TABLE(Grid, wxHVScrolledWindow)

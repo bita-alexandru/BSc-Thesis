@@ -4,7 +4,7 @@
 #include <sstream>
 #include <unordered_set>
 
-#define cout(x) wxMessageBox(x, "debug")
+#define cout(x) wxLogDebug(x)
 
 wxBEGIN_EVENT_TABLE(EditorRules, wxFrame)
 	EVT_CLOSE(EditorRules::OnClose)
@@ -30,7 +30,7 @@ EditorRules::~EditorRules()
 
 std::vector<std::string> EditorRules::GetData()
 {
-	std::string text = (std::string)m_TextCtrl->GetText();
+	std::string text = (std::string)m_TextCtrl->GetText().MakeUpper();
 
 	// remove empty lines, white spaces and carriage symbols
 	text.erase(remove(text.begin(), text.end(), ' '), text.end());

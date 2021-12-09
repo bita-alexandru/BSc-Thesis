@@ -1,5 +1,6 @@
 #pragma once
 #include "wx/wx.h"
+#include "wx/srchctrl.h"
 
 #include "Ids.h"
 #include "ListRules.h"
@@ -24,5 +25,8 @@ private:
 	std::unordered_map<std::string, std::string> m_States;
 
 	void BuildInterface();
+
+	void Search(wxCommandEvent& evt);
+	void SearchEnter(wxCommandEvent& evt);
 };
 

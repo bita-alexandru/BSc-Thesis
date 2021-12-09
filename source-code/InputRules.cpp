@@ -1,6 +1,6 @@
 #include "InputRules.h"
 
-#define cout(x) wxMessageBox(x, "debug")
+#define cout(x) wxLogDebug(x)
 
 InputRules::InputRules(wxWindow* parent) : wxPanel(parent)
 {
@@ -101,11 +101,90 @@ void InputRules::SetStates(std::unordered_map<std::string, std::string>& states)
 void InputRules::BuildInterface()
 {
 	wxButton* button = new wxButton(this, Ids::ID_EDIT_RULES, wxString("Edit Rules"));
+
+    wxSearchCtrl* search = new wxSearchCtrl(this, wxID_ANY);
+    search->Bind(wxEVT_TEXT, &InputRules::Search, this);
+    search->Bind(wxEVT_SEARCHCTRL_SEARCH_BTN, &InputRules::SearchEnter, this);
+
 	m_List = new ListRules(this);
 
 	wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "Rules");
 	sizer->Add(button, 0, wxEXPAND);
+    sizer->Add(search, 0, wxEXPAND);
 	sizer->Add(m_List, 1, wxEXPAND);
 
 	this->SetSizer(sizer);
+}
+
+void InputRules::Search(wxCommandEvent& evt)
+{
+    std::string query = std::string(evt.GetString().MakeUpper());
+
+    // unselect previous found queries
+    int selection = m_List->GetFirstSelected();
+    while (selection != -1)
+    {
+        m_List->Select(selection, false);
+        selection = m_List->GetNextSelected(selection);
+    }
+
+    if (query.size() < 1) return;
+
+    for (int i = 0; i < m_List->GetItemCount(); i++)
+    {
+        std::string row = m_List->GetCol1(i) + "-" + m_List->GetCol2(i) + "-" + m_List->GetCol3(i);
+
+        if (row.find(query) != row.npos)
+        {
+            m_List->Select(i);
+            m_List->EnsureVisible(i);
+
+            return;
+        }
+    }
+}
+
+void InputRules::SearchEnter(wxCommandEvent& evt)
+{
+    std::string query = std::string(evt.GetString().MakeUpper());
+
+    int selection = m_List->GetFirstSelected();
+
+    if (query.size() < 1) return;
+
+    // continue searching
+    if (wxGetKeyState(WXK_SHIFT))
+    {
+        // search upwards
+        for (int i = selection - 1; i > -1; i--)
+        {
+            std::string row = m_List->GetCol1(i) + "-" + m_List->GetCol2(i) + "-" + m_List->GetCol3(i);
+
+            if (row.find(query) != row.npos)
+            {
+                m_List->Select(selection, false);
+                m_List->Select(i);
+                m_List->EnsureVisible(i);
+
+                return;
+            }
+        }
+
+        return;
+    }
+
+    // search downwards
+    for (int i = selection + 1; i < m_List->GetItemCount(); i++)
+    {
+        std::string row = m_List->GetCol1(i) + "-" + m_List->GetCol2(i) + "-" + m_List->GetCol3(i);
+
+        if (row.find(query) != row.npos)
+        {
+            m_List->Select(selection, false);
+            m_List->Select(i);
+            m_List->EnsureVisible(i);
+
+            return;
+        }
+    }
 }
