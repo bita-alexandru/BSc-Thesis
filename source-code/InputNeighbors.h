@@ -18,8 +18,8 @@ public:
 private:
 	std::unordered_set<std::string> m_Neighbors = std::unordered_set<std::string>();
 
-	std::unordered_map<std::string, wxToggleButton*> m_Buttons = std::unordered_map<std::string, wxToggleButton*>();
-	std::unordered_map<int, std::string> m_Ids = std::unordered_map<int, std::string>();
+	std::unordered_map<std::string, wxToggleButton*> m_Buttons;
+	std::unordered_map<int, std::string> m_Ids;
 
 	void BuildInterface();
 

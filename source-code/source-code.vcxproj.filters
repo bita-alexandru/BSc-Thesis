@@ -129,6 +129,12 @@
     <ClInclude Include="ToolStates.h">
       <Filter>Header Files\Tools</Filter>
     </ClInclude>
+    <ClInclude Include="ListStates.h">
+      <Filter>Header Files\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="ListRules.h">
+      <Filter>Header Files\Misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -193,6 +199,12 @@
     </ClCompile>
     <ClCompile Include="ToolStates.cpp">
       <Filter>Source Files\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="ListStates.cpp">
+      <Filter>Source Files\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="ListRules.cpp">
+      <Filter>Source Files\Misc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

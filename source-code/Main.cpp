@@ -123,6 +123,7 @@ void Main::PrepareInput()
 
 	inputStates->SetToolStates(toolStates);
 	inputStates->SetGrid(grid);
+	inputStates->SetInputRules(inputRules);
 
 	toolZoom->SetGrid(grid);
 	toolStates->SetListStates(inputStates->GetList());

@@ -1,10 +1,11 @@
 #pragma once
 #include "wx/wx.h"
-#include "wx/listctrl.h"
 
 #include "Ids.h"
+#include "ListStates.h"
 #include "ToolStates.h"
 #include "Grid.h"
+#include "InputRules.h"
 
 #include <deque>
 
@@ -14,20 +15,21 @@ public:
 	InputStates(wxWindow* parent);
 	~InputStates();
 
-	wxListView* GetList();
+	ListStates* GetList();
 	std::unordered_map<std::string, std::string>& GetStates();
 
 	void SetStates(std::vector<std::string> states);
 	void SetToolStates(ToolStates* toolModes);
 	void SetGrid(Grid* grid);
+	void SetInputRules(InputRules* inputRules);
 private:
-	wxListView* m_List = nullptr;
+	ListStates* m_List = nullptr;
 	ToolStates* m_ToolStates = nullptr;
 	Grid* m_Grid = nullptr;
-	wxFont m_Font = wxFont(8, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD);
+	InputRules* m_InputRules = nullptr;
 
 	std::deque<std::string> m_Colors = std::deque<std::string>();
-	std::unordered_map<std::string, std::string> m_States = std::unordered_map<std::string, std::string>();
+	std::unordered_map<std::string, std::string> m_States;
 	
 	void BuildInterface();
 	void InitializeColors();

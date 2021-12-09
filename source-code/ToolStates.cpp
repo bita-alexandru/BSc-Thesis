@@ -44,7 +44,7 @@ void ToolStates::SetStates(std::vector<std::pair<std::string, wxColour>> states)
 	UpdateState();
 }
 
-void ToolStates::SetListStates(wxListView* list)
+void ToolStates::SetListStates(ListStates* list)
 {
 	m_ListStates = list;
 }

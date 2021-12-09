@@ -11,7 +11,7 @@ InputRules::~InputRules()
 {
 }
 
-wxListView* InputRules::GetList()
+ListRules* InputRules::GetList()
 {
     return m_List;
 }
@@ -28,7 +28,6 @@ void InputRules::SetRules(std::vector<std::string> rules)
     {
         if (std::find(rules.begin(), rules.end(), it->first) == rules.end())
         {
-            //cout("deleted");
             it = m_Rules.erase(it);
         }
         else
@@ -51,13 +50,23 @@ void InputRules::SetRules(std::vector<std::string> rules)
     int i = 0;
     for (i = 0; i < rules.size(); i++)
     {
-        wxString id = std::to_string(i);
-        wxString rule = rules[i];
+        int id = i;
+        std::string rule = rules[i];
 
         if (i > nOfItems - 1)
         {
-            m_List->InsertItem(i, id);
-            m_List->SetItem(i, 1, rule);
+            wxColour bgColorA("white"), bgColorB("white");
+            wxColour txtColorA("black"), txtColorB("black");
+            // come back later to this [TO DO]
+            if (m_States.find(rule) != m_States.end())
+            {
+                bgColorA = wxColour(m_States[rule]); bgColorB = wxColour(m_States[rule]);
+                txtColorA = (bgColorA.Red() * 0.299 + bgColorA.Green() * 0.587 + bgColorA.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
+                txtColorB = (bgColorB.Red() * 0.299 + bgColorB.Green() * 0.587 + bgColorB.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
+            }
+
+            m_List->PushBack({ id, rule, "", "" }, { bgColorA, txtColorA }, { bgColorB, txtColorB });
+            m_List->ChangeItemStateA(i, rule);
 
             continue;
         }
@@ -68,11 +77,11 @@ void InputRules::SetRules(std::vector<std::string> rules)
 
         if (itmId != id)
         {
-            m_List->SetItem(i, 0, id);
+            m_List->ChangeItemId(i, id);
         }
         if (itmRule != rule)
         {
-            m_List->SetItem(i, 1, rule);
+            m_List->ChangeItemStateA(i, rule);
         }
     }
 
@@ -80,15 +89,19 @@ void InputRules::SetRules(std::vector<std::string> rules)
     {
         m_List->DeleteItem(i);
     }
+
+    m_List->RefreshAfterUpdate();
+}
+
+void InputRules::SetStates(std::unordered_map<std::string, std::string>& states)
+{
+    m_States = states;
 }
 
 void InputRules::BuildInterface()
 {
 	wxButton* button = new wxButton(this, Ids::ID_EDIT_RULES, wxString("Edit Rules"));
-	m_List = new wxListView(this, Ids::ID_LIST_RULES, wxDefaultPosition, wxSize(128, 128));
-
-	m_List->AppendColumn("#", wxLIST_FORMAT_LEFT, 32);
-	m_List->AppendColumn("Rule");
+	m_List = new ListRules(this);
 
 	wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "Rules");
 	sizer->Add(button, 0, wxEXPAND);

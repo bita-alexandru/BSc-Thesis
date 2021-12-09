@@ -1,8 +1,8 @@
 #pragma once
 #include "wx/wx.h"
-#include "wx/listctrl.h"
 
 #include "Ids.h"
+#include "ListRules.h"
 
 #include <any>
 
@@ -12,13 +12,16 @@ public:
 	InputRules(wxWindow* parent);
 	~InputRules();
 
-	wxListView* GetList();
+	ListRules* GetList();
 	std::unordered_map<std::string, std::unordered_map<std::string, std::any>>& GetRules();
+
 	void SetRules(std::vector<std::string> rules);
+	void SetStates(std::unordered_map<std::string, std::string>& states);
 private:
-	wxListView* m_List = nullptr;
-	std::unordered_map<std::string, std::unordered_map<std::string, std::any>> m_Rules = 
-		std::unordered_map<std::string, std::unordered_map<std::string, std::any>>();
+	ListRules* m_List = nullptr;
+
+	std::unordered_map<std::string, std::unordered_map<std::string, std::any>> m_Rules;
+	std::unordered_map<std::string, std::string> m_States;
 
 	void BuildInterface();
 };

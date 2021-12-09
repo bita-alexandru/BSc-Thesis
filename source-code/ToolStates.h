@@ -2,6 +2,8 @@
 #include "wx/wx.h"
 #include "wx/listctrl.h"
 
+#include "ListStates.h"
+
 class ToolStates : public wxPanel
 {
 public:
@@ -12,7 +14,7 @@ public:
 	std::pair<std::string, wxColour> GetState();
 
 	void SetStates(std::vector<std::pair<std::string, wxColour>> states);
-	void SetListStates(wxListView* list);
+	void SetListStates(ListStates* list);
 	void SetState(std::string state);
 
 	void SelectPrevState();
@@ -20,7 +22,7 @@ public:
 private:
 	int m_Index = 0;
 	int m_MaximumIndex = 0;
-	wxListView* m_ListStates = nullptr;
+	ListStates* m_ListStates = nullptr;
 
 	std::vector<std::pair<std::string, wxColour>> m_States = std::vector<std::pair<std::string, wxColor>>({ {"FREE", wxColour("white")} });
 

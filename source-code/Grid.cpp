@@ -7,7 +7,6 @@ wxBEGIN_EVENT_TABLE(Grid, wxHVScrolledWindow)
 	EVT_PAINT(Grid::OnPaint)
 	EVT_MOUSE_EVENTS(Grid::OnMouse)
 	EVT_TIMER(Ids::ID_TIMER_SELECTION, Grid::OnTimerSelection)
-	EVT_TIMER(Ids::ID_TIMER_PANNING, Grid::OnTimerPanning)
 wxEND_EVENT_TABLE()
 
 
@@ -20,7 +19,6 @@ Grid::Grid(wxWindow* parent): wxHVScrolledWindow(parent)
 
 Grid::~Grid()
 {
-	delete m_TimerPanning;
 	delete m_TimerSelection;
 }
 
@@ -191,7 +189,6 @@ void Grid::BuildInterface()
 void Grid::InitializeTimers()
 {
 	m_TimerSelection = new wxTimer(this, Ids::ID_TIMER_SELECTION);
-	m_TimerPanning = new wxTimer(this, Ids::ID_TIMER_PANNING);
 }
 
 std::pair<int, int> Grid::GetHoveredCell(wxMouseEvent& evt)
@@ -281,6 +278,8 @@ bool Grid::ModeDraw(wxMouseEvent& evt, int x, int y, char mode)
 	{
 		if (evt.LeftIsDown() || evt.RightIsDown())
 		{
+			SetFocus();
+
 			std::pair<std::string, wxColour> state = m_ToolStates->GetState();
 
 			// left click -> place a cell
@@ -310,11 +309,15 @@ bool Grid::ModePick(wxMouseEvent& evt, int x, int y, char mode, std::string stat
 	{
 		if (evt.LeftDown())
 		{
+			SetFocus();
+
 			m_ToolStates->SetState(state);
 			m_ToolModes->SetMode('D');
 		}
 		else if (evt.RightDown())
 		{
+			SetFocus();
+
 			m_ToolModes->SetMode('D');
 		}
 
@@ -328,6 +331,8 @@ bool Grid::ModeMove(wxMouseEvent& evt, int x, int y, char mode)
 {
 	if ((mode == 'M' && evt.LeftDown()) || evt.MiddleDown())
 	{
+		SetFocus();
+
 		m_PrevCell = { x,y };
 
 		return true;
@@ -424,14 +429,6 @@ void Grid::OnDraw(wxDC& dc)
 
 void Grid::OnMouse(wxMouseEvent& evt)
 {
-	// gain focus on mouse hover
-	if (evt.Entering())
-	{
-		this->SetFocus();
-
-		return;
-	}
-
 	if (evt.Leaving())
 	{
 		m_ToolCoords->Reset();
@@ -451,9 +448,21 @@ void Grid::OnMouse(wxMouseEvent& evt)
 
 	char mode = m_ToolModes->GetMode();
 	
-	if (ModeMove(evt, x, y, mode)) return;
-	if (ModeDraw(evt, x, y, mode)) return;
-	if (ModePick(evt, x, y, mode, state)) return;
+	if (ModeMove(evt, x, y, mode))
+	{
+		evt.Skip();
+		return;
+	}
+	if (ModeDraw(evt, x, y, mode))
+	{
+		evt.Skip();
+		return;
+	}
+	if (ModePick(evt, x, y, mode, state))
+	{
+		evt.Skip();
+		return;
+	}
 }
 
 void Grid::OnTimerSelection(wxTimerEvent& evt)
@@ -462,19 +471,6 @@ void Grid::OnTimerSelection(wxTimerEvent& evt)
 	if (!wxGetKeyState(WXK_SHIFT) || (!mouseState.LeftIsDown() && !mouseState.RightIsDown()))
 	{
 		m_TimerSelection->Stop();
-		return;
-	}
-
-	if (mouseState.LeftIsDown()) m_ToolStates->SelectPrevState();
-	if (mouseState.RightIsDown()) m_ToolStates->SelectNextState();
-}
-
-void Grid::OnTimerPanning(wxTimerEvent& evt)
-{
-	wxMouseState mouseState = wxGetMouseState();
-	if (!wxGetKeyState(WXK_SHIFT) || (!mouseState.LeftIsDown() && !mouseState.RightIsDown()))
-	{
-		m_TimerPanning->Stop();
 		return;
 	}
 

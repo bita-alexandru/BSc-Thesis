@@ -54,11 +54,10 @@ private:
 			return h;
 		}
 	};
-	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, PairHash> m_Cells = std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, PairHash>();
-	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, PairHash>> m_StatePositions = std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, PairHash>>();
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, PairHash> m_Cells;
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, PairHash>> m_StatePositions;
 
 	wxTimer* m_TimerSelection = nullptr;
-	wxTimer* m_TimerPanning = nullptr;
 	bool m_PrevScrolledCol = false;
 	bool m_PrevScrolledRow = false;
 

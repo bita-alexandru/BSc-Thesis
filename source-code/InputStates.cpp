@@ -19,7 +19,7 @@ InputStates::~InputStates()
 	
 }
 
-wxListView* InputStates::GetList()
+ListStates* InputStates::GetList()
 {
 	return m_List;
 }
@@ -34,10 +34,8 @@ void InputStates::SetStates(std::vector<std::string> states)
     // states appear in our map but not in the given list -> they got recently deleted
     for (auto it = m_States.begin(); it != m_States.end();)
     {
-        //cout(it->first);
         if (std::find(states.begin(), states.end(), it->first) == states.end())
         {
-            //cout("deleted");
             MakeColorAvailable(it->second);
             it = m_States.erase(it);
         }
@@ -62,35 +60,31 @@ void InputStates::SetStates(std::vector<std::string> states)
     int i = 0;
     for (i = 0; i < states.size(); i++)
     {
-        wxString id = std::to_string(i);
-        wxString state = states[i];
+        int id = i;
+        std::string state = states[i];
         wxColour color = wxColour(m_States[states[i]]);
         wxColour blackwhite = (color.Red() * 0.299 + color.Green() * 0.587 + color.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
 
         if (i > nOfItems - 1)
         {
-            m_List->InsertItem(i, id);
-            m_List->SetItem(i, 1, state);
-            m_List->SetItemBackgroundColour(i, color);
-            m_List->SetItemTextColour(i, blackwhite);
-            m_List->SetItemFont(i, m_Font);
+            m_List->PushBack({ id, state }, { color, blackwhite });
+            m_List->ChangeItemState(i, state);
 
             continue;
         }
 
-        wxString itmId = m_List->GetItemText(i, 0);
-        wxString itmState = m_List->GetItemText(i, 1);
+        int itmId = m_List->Get(i).first;
+        std::string itmState = m_List->Get(i).second;
         wxColour itmColor = m_List->GetItemBackgroundColour(i);
 
         if (itmId != id)
         {
-            m_List->SetItem(i, 0, id);
+            m_List->ChangeItemId(i, id);
         }
         if (itmState != state || itmColor != color)
         {
-            m_List->SetItem(i, 1, state);
-            m_List->SetItemBackgroundColour(i, color);
-            m_List->SetItemTextColour(i, blackwhite);
+            m_List->ChangeItemState(i, state);
+            m_List->ChangeItemColor(i, color, blackwhite);
 
             // update color
             if (itmState == state)
@@ -107,12 +101,17 @@ void InputStates::SetStates(std::vector<std::string> states)
 
     while (i < nOfItems--)
     {
-        wxString state = m_List->GetItemText(i, 1);
+        wxString state = m_List->Get(i).second;
         wxColour color = m_List->GetItemBackgroundColour(i);
-        m_List->DeleteItem(i);
+        m_List->Erase(i);
         
         m_Grid->RemoveState(std::string(state), color);
     }
+
+    m_List->RefreshAfterUpdate();
+
+    // notify InputRules about the new states list
+    m_InputRules->SetStates(m_States);
 
     // update ToolModes (state, color) list
     std::vector<std::pair<std::string, wxColour>> statesColors;
@@ -134,18 +133,18 @@ void InputStates::SetGrid(Grid* grid)
     m_Grid = grid;
 }
 
+void InputStates::SetInputRules(InputRules* inputRules)
+{
+    m_InputRules = inputRules;
+}
+
 void InputStates::BuildInterface()
 {
     wxButton* button = new wxButton(this, Ids::ID_EDIT_STATES, wxString("Edit States"));
 
-    m_List = new wxListView(this, Ids::ID_LIST_STATES, wxDefaultPosition, wxSize(128, 128));
-    m_List->AppendColumn("#", wxLIST_FORMAT_LEFT, 32);
-    m_List->AppendColumn("State");
-
-    m_List->InsertItem(0, "0");
-    m_List->SetItem(0, 1, "FREE");
-    m_List->SetItemBackgroundColour(0, wxColour("white"));
-    m_List->SetItemFont(0, m_Font);
+    m_List = new ListStates(this);
+    m_List->PushBack({ 0, "FREE" }, { wxColour("white"), wxColour("black") });
+    m_List->RefreshAfterUpdate();
 
     wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "States");
     sizer->Add(button, 0, wxEXPAND);
