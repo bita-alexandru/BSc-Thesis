@@ -25,6 +25,7 @@
     <ClInclude Include="Grid.h" />
     <ClInclude Include="GridStatus.h" />
     <ClInclude Include="GridTools.h" />
+    <ClInclude Include="Hashes.h" />
     <ClInclude Include="Ids.h" />
     <ClInclude Include="InputNeighbors.h" />
     <ClInclude Include="InputRules.h" />
@@ -43,6 +44,7 @@
     <ClInclude Include="ToolCoords.h" />
     <ClInclude Include="ToolModes.h" />
     <ClInclude Include="ToolStates.h" />
+    <ClInclude Include="ToolUndo.h" />
     <ClInclude Include="ToolZoom.h" />
   </ItemGroup>
   <ItemGroup>
@@ -68,6 +70,7 @@
     <ClCompile Include="ToolCoords.cpp" />
     <ClCompile Include="ToolModes.cpp" />
     <ClCompile Include="ToolStates.cpp" />
+    <ClCompile Include="ToolUndo.cpp" />
     <ClCompile Include="ToolZoom.cpp" />
   </ItemGroup>
   <ItemGroup>

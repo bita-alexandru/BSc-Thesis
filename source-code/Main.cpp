@@ -71,7 +71,7 @@ void Main::BuildInterface()
 
 void Main::SetShortcuts()
 {
-	wxAcceleratorEntry entries[19];
+	wxAcceleratorEntry entries[22];
 	// MenuBar
 	entries[0].Set(wxACCEL_CTRL, (int)'O', Ids::ID_OPEN_C);
 	entries[1].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'O', Ids::ID_OPEN_G);
@@ -90,15 +90,19 @@ void Main::SetShortcuts()
 	// ToolZoom
 	entries[12].Set(wxACCEL_CTRL, (int)'+', Ids::ID_ZOOM_IN);
 	entries[13].Set(wxACCEL_CTRL, (int)'-', Ids::ID_ZOOM_OUT);
+	// ToolUndo
+	entries[14].Set(wxACCEL_CTRL, (int)'Z', Ids::ID_BUTTON_UNDO);
+	entries[15].Set(wxACCEL_CTRL, (int)'Y', Ids::ID_BUTTON_REDO);
+	entries[16].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'Z', Ids::ID_BUTTON_REDO);
 	// ToolModes
-	entries[14].Set(wxACCEL_CTRL, (int)'Q', Ids::ID_MODE_DRAW);
-	entries[15].Set(wxACCEL_CTRL, (int)'W', Ids::ID_MODE_PICK);
-	entries[16].Set(wxACCEL_CTRL, (int)'E', Ids::ID_MODE_MOVE);
+	entries[17].Set(wxACCEL_CTRL, (int)'Q', Ids::ID_MODE_DRAW);
+	entries[18].Set(wxACCEL_CTRL, (int)'W', Ids::ID_MODE_PICK);
+	entries[19].Set(wxACCEL_CTRL, (int)'E', Ids::ID_MODE_MOVE);
 	// ToolStates
-	entries[17].Set(wxACCEL_ALT, WXK_LEFT, Ids::ID_BUTTON_PREV);
-	entries[18].Set(wxACCEL_ALT, WXK_RIGHT, Ids::ID_BUTTON_NEXT);
+	entries[20].Set(wxACCEL_ALT, WXK_LEFT, Ids::ID_BUTTON_PREV);
+	entries[21].Set(wxACCEL_ALT, WXK_RIGHT, Ids::ID_BUTTON_NEXT);
 
-	wxAcceleratorTable accel(19, entries);
+	wxAcceleratorTable accel(22, entries);
 	this->SetAcceleratorTable(accel);
 }
 
@@ -113,6 +117,7 @@ void Main::PrepareInput()
 	GridStatus* gridStatus = m_PanelGrid->GetGridStatus();
 
 	ToolZoom* toolZoom = gridTools->GetToolZoom();
+	ToolUndo* toolUndo = gridTools->GetToolUndo();
 	ToolModes* toolModes = gridTools->GetToolModes();
 	ToolStates* toolStates = gridTools->GetToolStates();
 	ToolCoords* toolCoords = gridTools->GetToolCoords();
@@ -126,9 +131,11 @@ void Main::PrepareInput()
 	inputStates->SetInputRules(inputRules);
 
 	toolZoom->SetGrid(grid);
+	toolUndo->SetGrid(grid);
 	toolStates->SetListStates(inputStates->GetList());
 
 	grid->SetToolZoom(toolZoom);
+	grid->SetToolUndo(toolUndo);
 	grid->SetToolModes(toolModes);
 	grid->SetToolStates(toolStates);
 	grid->SetToolCoords(toolCoords);

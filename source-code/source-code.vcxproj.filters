@@ -135,6 +135,12 @@
     <ClInclude Include="ListRules.h">
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
+    <ClInclude Include="ToolUndo.h">
+      <Filter>Header Files\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Hashes.h">
+      <Filter>Header Files\Misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -205,6 +211,9 @@
     </ClCompile>
     <ClCompile Include="ListRules.cpp">
       <Filter>Source Files\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="ToolUndo.cpp">
+      <Filter>Source Files\Tools</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1,7 +1,6 @@
 #include "Grid.h"
 
 #define cout(x) wxLogDebug(x)
-#define WXDEBUG 1
 
 wxBEGIN_EVENT_TABLE(Grid, wxHVScrolledWindow)
 	EVT_PAINT(Grid::OnPaint)
@@ -19,7 +18,7 @@ Grid::Grid(wxWindow* parent): wxHVScrolledWindow(parent)
 
 Grid::~Grid()
 {
-	delete m_TimerSelection;
+	wxDELETE(m_TimerSelection);
 }
 
 int Grid::GetSize()
@@ -43,7 +42,7 @@ void Grid::SetSize(int size)
 	ScrollToCenter(x , y);
 }
 
-void Grid::ScrollToCenter(int x = Sizes::TOTAL_CELLS/2, int y = Sizes::TOTAL_CELLS/2)
+void Grid::ScrollToCenter(int x, int y)
 {
 	wxPosition visibleBegin = GetVisibleBegin();
 	wxPosition visibleEnd = GetVisibleEnd();
@@ -60,9 +59,25 @@ void Grid::ScrollToCenter(int x = Sizes::TOTAL_CELLS/2, int y = Sizes::TOTAL_CEL
 	ScrollToRowColumn(row, column);
 }
 
+void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> cells, std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> statePositions)
+{
+
+	m_Cells = cells;
+	m_StatePositions = statePositions;
+	m_PrevCells = m_Cells;
+	m_PrevStatePositions = m_StatePositions;
+
+	Refresh(false);
+}
+
 void Grid::SetToolZoom(ToolZoom* toolZoom)
 {
 	m_ToolZoom = toolZoom;
+}
+
+void Grid::SetToolUndo(ToolUndo* toolUndo)
+{
+	m_ToolUndo = toolUndo;
 }
 
 void Grid::SetToolModes(ToolModes* toolModes)
@@ -89,10 +104,14 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color)
 		RemoveCell(x, y, state, color);
 	}
 	// position is available
-	else
+	else if (color != wxColour("white"))
 	{
 		m_Cells[{x, y}] = { state, color };
 		m_StatePositions[state].insert({ x,y });
+
+		Refresh(false);
+		//wxClientDC dc(this);
+		//DrawCell(dc, x, y, color);
 	}
 }
 
@@ -108,6 +127,10 @@ void Grid::RemoveCell(int x, int y, std::string state, wxColour color)
 		{
 			m_StatePositions.erase(state);
 		}
+
+		Refresh(false);
+		//wxClientDC dc(this);
+		//DrawCell(dc, x, y, wxColour("white"));
 	}
 }
 
@@ -173,8 +196,8 @@ wxCoord Grid::OnGetColumnWidth(size_t row) const
 void Grid::OnPaint(wxPaintEvent& evt)
 {
 	wxBufferedPaintDC dc(this);
-	this->PrepareDC(dc);
-	this->OnDraw(dc);
+	PrepareDC(dc);
+	OnDraw(dc);
 }
 
 void Grid::BuildInterface()
@@ -278,8 +301,7 @@ bool Grid::ModeDraw(wxMouseEvent& evt, int x, int y, char mode)
 	{
 		if (evt.LeftIsDown() || evt.RightIsDown())
 		{
-			SetFocus();
-
+			//SetFocus();
 			std::pair<std::string, wxColour> state = m_ToolStates->GetState();
 
 			// left click -> place a cell
@@ -288,12 +310,19 @@ bool Grid::ModeDraw(wxMouseEvent& evt, int x, int y, char mode)
 				InsertCell(x, y, state.first, state.second);
 			}
 			// right click -> remove a cell
-			else
+			else if (evt.RightIsDown())
 			{
 				RemoveCell(x, y, state.first, state.second);
 			}
-
-			this->Refresh(false);
+		}
+		else if (evt.LeftUp() || evt.RightUp())
+		{
+			if (m_Cells != m_PrevCells)
+			{
+				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
+				m_PrevCells = m_Cells;
+				m_PrevStatePositions = m_StatePositions;
+			}
 		}
 
 		return true;
@@ -381,6 +410,27 @@ bool Grid::ModeMove(wxMouseEvent& evt, int x, int y, char mode)
 	return false;
 }
 
+void Grid::DrawCell(wxDC& dc, int x, int y, wxColour color)
+{
+	wxBrush brush = dc.GetBrush();
+	wxPen pen = dc.GetPen();
+	if (m_Size == Sizes::CELL_SIZE_MIN) dc.SetPen(*wxTRANSPARENT_PEN);
+
+	brush.SetColour(color);
+
+	pen.SetStyle(wxPENSTYLE_SOLID);
+	pen.SetColour(wxColour(200, 200, 200));
+
+	dc.SetPen(pen);
+	dc.SetBrush(brush);
+
+	wxRect rect(x * m_Size, y * m_Size, m_Size, m_Size);
+	dc.DrawRectangle(rect);
+
+	//RefreshRect(rect, false);
+	//Update();
+}
+
 void Grid::OnDraw(wxDC& dc)
 {
 	dc.Clear();
@@ -399,6 +449,23 @@ void Grid::OnDraw(wxDC& dc)
 	wxPosition visibleBegin = GetVisibleBegin();
 	wxPosition visibleEnd = GetVisibleEnd();
 
+	//for (int y = visibleBegin.GetRow(); y < visibleEnd.GetRow(); y++)
+	//	for (int x = visibleBegin.GetCol(); x < visibleEnd.GetCol(); x++)
+	//		dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
+
+	//for (auto it : m_Cells)
+	//{
+	//	int x = it.first.first;
+	//	int y = it.first.second;
+
+	//	wxColour color = it.second.second;
+
+	//	brush.SetColour(color);
+	//	dc.SetBrush(brush);
+
+	//	dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
+	//}
+
 	for (int y = visibleBegin.GetRow(); y < visibleEnd.GetRow(); y++)
 	{
 		for (int x = visibleBegin.GetCol(); x < visibleEnd.GetCol(); x++)
@@ -409,21 +476,23 @@ void Grid::OnDraw(wxDC& dc)
 				brush.SetColour(color);
 				dc.SetBrush(brush);
 
+				//DrawCell(dc, x, y, color);
+
 				dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
 
 				brush.SetColour(wxColour("white"));
 				dc.SetBrush(brush);
 				continue;
 			}
-
+			//DrawCell(dc, x, y, wxColour("white"));
 			dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
 		}
 	}
 
 	if (!m_Centered)
 	{
-		ScrollToCenter();
 		m_Centered = true;
+		ScrollToCenter();
 	}
 }
 

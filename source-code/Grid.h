@@ -9,12 +9,15 @@
 
 #include "Ids.h"
 #include "Sizes.h"
+#include "Hashes.h"
 #include "ToolZoom.h"
+#include "ToolUndo.h"
 #include "ToolModes.h"
 #include "ToolStates.h"
 #include "ToolCoords.h"
 
 class ToolZoom;
+class ToolUndo;
 
 class Grid: public wxHVScrolledWindow
 {
@@ -24,9 +27,15 @@ public:
 
 	int GetSize();
 	void SetSize(int size);
-	void ScrollToCenter(int x, int y);
+	void ScrollToCenter(int x = Sizes::TOTAL_CELLS / 2, int y = Sizes::TOTAL_CELLS / 2);
+
+	void SetCells(
+		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> cells,
+		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> statePositions
+	);
 
 	void SetToolZoom(ToolZoom* toolZoom);
+	void SetToolUndo(ToolUndo* toolUndo);
 	void SetToolModes(ToolModes* toolModes);
 	void SetToolStates(ToolStates* toolStates);
 	void SetToolCoords(ToolCoords* toolCoords);
@@ -41,25 +50,20 @@ private:
 	bool m_Centered = false;
 
 	ToolZoom* m_ToolZoom = nullptr;
+	ToolUndo* m_ToolUndo = nullptr;
 	ToolModes* m_ToolModes = nullptr;
 	ToolStates* m_ToolStates = nullptr;
 	ToolCoords* m_ToolCoords = nullptr;
 	
-	struct PairHash {
-		template <class x, class y>
-		std::size_t operator() (const std::pair<x, y>& p) const {
-			size_t index = p.second * Sizes::TOTAL_CELLS + p.first;
-			auto h = std::hash<x>{}(index);
-
-			return h;
-		}
-	};
-	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, PairHash> m_Cells;
-	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, PairHash>> m_StatePositions;
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> m_Cells;
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> m_StatePositions;
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> m_PrevCells;
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> m_PrevStatePositions;
 
 	wxTimer* m_TimerSelection = nullptr;
 	bool m_PrevScrolledCol = false;
 	bool m_PrevScrolledRow = false;
+	bool m_PrevUpdated = false;
 
 	std::pair<int, int> m_PrevCell;
 
@@ -79,10 +83,11 @@ private:
 	bool ModePick(wxMouseEvent& evt, int x, int y, char mode, std::string state);
 	bool ModeMove(wxMouseEvent& evt, int x, int y, char mode);
 
+	void DrawCell(wxDC& dc, int x, int y, wxColour color);
+
 	wxDECLARE_EVENT_TABLE();
 	void OnDraw(wxDC& dc);
 	void OnMouse(wxMouseEvent& evt);
 	void OnTimerSelection(wxTimerEvent& evt);
-	void OnTimerPanning(wxTimerEvent& evt);
 };
 
