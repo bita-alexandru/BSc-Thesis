@@ -65,6 +65,8 @@ private:
 	bool m_PrevScrolledRow = false;
 	bool m_PrevUpdated = false;
 
+	std::pair<int, int> m_MouseXY;
+
 	std::pair<int, int> m_PrevCell;
 
 	virtual wxCoord OnGetRowHeight(size_t row) const;
@@ -74,11 +76,10 @@ private:
 	void BuildInterface();
 	void InitializeTimers();
 
-	std::pair<int, int> GetHoveredCell(wxMouseEvent& evt);
+	std::pair<int, int> GetHoveredCell(int X, int Y);
 	bool ControlSelectState(wxMouseEvent& evt);
-	void ControlScroll(wxMouseEvent& evt);
 	bool ControlZoom(wxMouseEvent& evt, int x, int y);
-	std::string ControlUpdateCoords(wxMouseEvent& evt, int x, int y);
+	std::string ControlUpdateCoords(int x, int y);
 	bool ModeDraw(wxMouseEvent& evt, int x, int y, char mode);
 	bool ModePick(wxMouseEvent& evt, int x, int y, char mode, std::string state);
 	bool ModeMove(wxMouseEvent& evt, int x, int y, char mode);
@@ -89,5 +90,6 @@ private:
 	void OnDraw(wxDC& dc);
 	void OnMouse(wxMouseEvent& evt);
 	void OnTimerSelection(wxTimerEvent& evt);
+	void OnKeyDown(wxKeyEvent& evt);
 };
 

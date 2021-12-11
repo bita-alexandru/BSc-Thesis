@@ -1,11 +1,10 @@
 #include "Grid.h"
 
-#define cout(x) wxLogDebug(x)
-
 wxBEGIN_EVENT_TABLE(Grid, wxHVScrolledWindow)
 	EVT_PAINT(Grid::OnPaint)
 	EVT_MOUSE_EVENTS(Grid::OnMouse)
 	EVT_TIMER(Ids::ID_TIMER_SELECTION, Grid::OnTimerSelection)
+	EVT_KEY_DOWN(Grid::OnKeyDown)
 wxEND_EVENT_TABLE()
 
 
@@ -214,13 +213,13 @@ void Grid::InitializeTimers()
 	m_TimerSelection = new wxTimer(this, Ids::ID_TIMER_SELECTION);
 }
 
-std::pair<int, int> Grid::GetHoveredCell(wxMouseEvent& evt)
+std::pair<int, int> Grid::GetHoveredCell(int X, int Y)
 {
 	// get hovered cell information 
 	wxPosition visible = GetVisibleBegin();
-
-	int x = evt.GetX() / m_Size + visible.GetCol();
-	int y = evt.GetY() / m_Size + visible.GetRow();
+	
+	int x = X / m_Size + visible.GetCol();
+	int y = Y / m_Size + visible.GetRow();
 
 	return { x, y };
 }
@@ -241,20 +240,6 @@ bool Grid::ControlSelectState(wxMouseEvent& evt)
 	return false;
 }
 
-void Grid::ControlScroll(wxMouseEvent& evt)
-{
-	int wheelRotation = evt.GetWheelRotation();
-
-	if (wheelRotation > 0)
-	{
-		ScrollColumns(-1);
-	}
-	else if (wheelRotation < 0)
-	{
-		ScrollColumns(1);
-	}
-}
-
 bool Grid::ControlZoom(wxMouseEvent& evt, int x, int y)
 {
 	// shortcut for zooming in/out with focus on hovered cell
@@ -263,7 +248,6 @@ bool Grid::ControlZoom(wxMouseEvent& evt, int x, int y)
 		int wheelRotation = evt.GetWheelRotation();
 		if (wheelRotation > 0 && m_ToolZoom->GetSize() < Sizes::CELL_SIZE_MAX)
 		{
-
 			ScrollToCenter(x, y);
 			m_ToolZoom->ZoomIn();
 		}
@@ -279,7 +263,7 @@ bool Grid::ControlZoom(wxMouseEvent& evt, int x, int y)
 	return false;
 }
 
-std::string Grid::ControlUpdateCoords(wxMouseEvent& evt, int x, int y)
+std::string Grid::ControlUpdateCoords(int x, int y)
 {
 	std::string name = "FREE";
 
@@ -301,7 +285,6 @@ bool Grid::ModeDraw(wxMouseEvent& evt, int x, int y, char mode)
 	{
 		if (evt.LeftIsDown() || evt.RightIsDown())
 		{
-			//SetFocus();
 			std::pair<std::string, wxColour> state = m_ToolStates->GetState();
 
 			// left click -> place a cell
@@ -338,15 +321,11 @@ bool Grid::ModePick(wxMouseEvent& evt, int x, int y, char mode, std::string stat
 	{
 		if (evt.LeftDown())
 		{
-			SetFocus();
-
 			m_ToolStates->SetState(state);
 			m_ToolModes->SetMode('D');
 		}
 		else if (evt.RightDown())
 		{
-			SetFocus();
-
 			m_ToolModes->SetMode('D');
 		}
 
@@ -507,13 +486,15 @@ void Grid::OnMouse(wxMouseEvent& evt)
 
 	if (ControlSelectState(evt)) return;
 
-	std::pair<int, int> hoveredCell = GetHoveredCell(evt);
+	m_MouseXY = { evt.GetX(), evt.GetY() };
+
+	std::pair<int, int> hoveredCell = GetHoveredCell(evt.GetX(), evt.GetY());
 	int x = hoveredCell.first;
 	int y = hoveredCell.second;
 
 	if (ControlZoom(evt, x, y)) return;
 
-	std::string state = ControlUpdateCoords(evt, x, y);
+	std::string state = ControlUpdateCoords(x, y);
 
 	char mode = m_ToolModes->GetMode();
 	
@@ -545,4 +526,46 @@ void Grid::OnTimerSelection(wxTimerEvent& evt)
 
 	if (mouseState.LeftIsDown()) m_ToolStates->SelectPrevState();
 	if (mouseState.RightIsDown()) m_ToolStates->SelectNextState();
+}
+
+void Grid::OnKeyDown(wxKeyEvent& evt)
+{
+	if (evt.GetKeyCode() == (int)'W')
+	{
+		ScrollRows(-1);
+	}
+	else if (evt.GetKeyCode() == (int)'A')
+	{
+		ScrollColumns(-1);
+	}
+	else if (evt.GetKeyCode() == (int)'S')
+	{
+		ScrollRows(1);
+	}
+	else if (evt.GetKeyCode() == (int)'D')
+	{
+		ScrollColumns(1);
+	}
+	else
+	{
+		evt.Skip();
+		return;
+	}
+
+	if (m_ToolModes->GetMode() == 'D')
+	{
+		wxMouseState mouseState = wxGetMouseState();
+
+		std::pair<int, int> hoveredCell = GetHoveredCell(m_MouseXY.first, m_MouseXY.second);
+		int x = hoveredCell.first;
+		int y = hoveredCell.second;
+
+		ControlUpdateCoords(x, y);
+
+		std::pair<std::string, wxColour> state = m_ToolStates->GetState();
+		if (mouseState.LeftIsDown()) InsertCell(x, y, state.first, state.second);
+		else if (mouseState.RightIsDown()) RemoveCell(x, y, state.first, state.second);
+	}
+
+	evt.Skip();
 }

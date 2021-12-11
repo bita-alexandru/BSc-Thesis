@@ -139,6 +139,8 @@ void Main::PrepareInput()
 	grid->SetToolModes(toolModes);
 	grid->SetToolStates(toolStates);
 	grid->SetToolCoords(toolCoords);
+
+	statusControls->SetGrid(grid);
 }
 
 void Main::EditStates(wxCommandEvent& evt)
