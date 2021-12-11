@@ -45,6 +45,38 @@ void ToolUndo::PushBack(
 	if (m_UndoCells.size()) m_Undo->Enable();
 }
 
+void ToolUndo::Reset()
+{
+	m_Undo->Disable();
+	m_Redo->Disable();
+
+	m_RedoCells = std::stack<
+		std::pair<
+		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash>,
+		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash>
+		>
+	>();
+	m_RedoStatePositions = std::stack<
+		std::pair<
+		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>>,
+		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>>
+		>
+	>();
+
+	m_UndoCells = std::stack<
+		std::pair<
+		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash>,
+		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash>
+		>
+	>();
+	m_UndoStatePositions = std::stack<
+		std::pair<
+		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>>,
+		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>>
+		>
+	>();
+}
+
 void ToolUndo::Undo(wxCommandEvent& evt)
 {
 	if (m_UndoCells.empty()) return;

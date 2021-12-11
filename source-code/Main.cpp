@@ -67,6 +67,9 @@ void Main::BuildInterface()
 	m_SplitterInputGrid->SplitVertically(m_PanelInput, m_SplitterGridAlgorithm);
 	m_SplitterInputGrid->SetMinimumPaneSize(1);
 	m_SplitterInputGrid->SetSashGravity(0.2);
+
+	m_EditorStates = new EditorStates(this);
+	m_EditorRules = new EditorRules(this);
 }
 
 void Main::SetShortcuts()
@@ -145,30 +148,14 @@ void Main::PrepareInput()
 
 void Main::EditStates(wxCommandEvent& evt)
 {
-	if (m_EditorStates == nullptr)
-	{
-		m_EditorStates = new EditorStates(this);
-		m_EditorStates->Show();
-	}
-	else
-	{
-		m_EditorStates->Show();
-		m_EditorStates->SetFocus();
-	}
+	m_EditorStates->Show();
+	m_EditorStates->SetFocus();
 }
 
 void Main::EditRules(wxCommandEvent& evt)
 {
-	if (m_EditorRules == nullptr)
-	{
-		m_EditorRules = new EditorRules(this);
-		m_EditorRules->Show();
-	}
-	else
-	{
-		m_EditorRules->Show();
-		m_EditorRules->SetFocus();
-	}
+	m_EditorRules->Show();
+	m_EditorRules->SetFocus();
 }
 
 void Main::SaveStates(wxCommandEvent& evt)

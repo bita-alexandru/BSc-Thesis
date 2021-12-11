@@ -23,6 +23,8 @@ public:
 	void Erase(int index);
 
 	std::pair<int, std::string> Get(int index);
+
+	void SetItemColor(int index, wxColour color);
 private:
 	std::vector<std::pair<int, std::string>> items;
 	std::vector<wxListItemAttr*> attrs;

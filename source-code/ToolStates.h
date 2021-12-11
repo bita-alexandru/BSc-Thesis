@@ -13,7 +13,9 @@ public:
 	int GetIndex();
 	std::pair<std::string, wxColour> GetState();
 
+	void SetIndex(int index);
 	void SetStates(std::vector<std::pair<std::string, wxColour>> states);
+	void SetStateColor(int index, wxColour color);
 	void SetListStates(ListStates* list);
 	void SetState(std::string state);
 

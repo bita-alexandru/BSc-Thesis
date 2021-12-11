@@ -96,11 +96,27 @@ void Grid::SetToolCoords(ToolCoords* toolCoords)
 
 void Grid::InsertCell(int x, int y, std::string state, wxColour color)
 {
-	// current cell is of state "FREE" but there's already a cell of another state
-	// on this exact position -> remove it
-	if (m_Cells.find({ x, y }) != m_Cells.end() && color == wxColour("white"))
+	if (m_Cells.find({ x, y }) != m_Cells.end())
 	{
-		RemoveCell(x, y, state, color);
+		// current cell is of state "FREE" but there's already a cell of another state
+		// on this exact position -> remove it
+		if (color == wxColour("white")) RemoveCell(x, y, state, color);
+		// position is occupied
+		else
+		{
+			std::string oldState = m_Cells[{x, y}].first;
+			m_StatePositions[oldState].erase({ x,y });
+			// there are no more cells of this state anymore -> remove it from our map
+			if (m_StatePositions[oldState].size() == 0)
+			{
+				m_StatePositions.erase(oldState);
+			}
+
+			m_Cells[{x, y}] = { state, color };
+			m_StatePositions[state].insert({ x,y });
+
+			Refresh(false);
+		}
 	}
 	// position is available
 	else if (color != wxColour("white"))
@@ -112,6 +128,7 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color)
 		//wxClientDC dc(this);
 		//DrawCell(dc, x, y, color);
 	}
+	
 }
 
 void Grid::RemoveCell(int x, int y, std::string state, wxColour color)
@@ -143,11 +160,13 @@ void Grid::RemoveState(std::string state, wxColour color)
 		{
 			// remove from m_Cells, one by one
 			m_Cells.erase(it);
-			Refresh(false);
 		}
+		Refresh(false);
 
 		// remove the corresponding map
 		m_StatePositions.erase(state);
+
+		m_ToolUndo->Reset();
 	}
 }
 
@@ -162,23 +181,23 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 			for (auto it : m_StatePositions[oldState])
 			{
 				m_Cells[it].second = newColor;
-				Refresh(false);
 			}
+			Refresh(false);
 		}
-		// just a regular update
-		else
-		{
-			// update both the name and the color + make a new map
-			for (auto it : m_StatePositions[oldState])
-			{
-				m_Cells[it] = { newState, newColor };
-				Refresh(false);
-				m_StatePositions[newState].insert(it);
-			}
+		//// just a regular update
+		//else
+		//{
+		//	// update both the name and the color + make a new map
+		//	for (auto it : m_StatePositions[oldState])
+		//	{
+		//		m_Cells[it] = { newState, newColor };
+		//		m_StatePositions[newState].insert(it);
+		//	}
+		//	Refresh(false);
 
-			// remove the old map
-			m_StatePositions.erase(oldState);
-		}
+		//	// remove the old map
+		//	m_StatePositions.erase(oldState);
+		//}
 	}
 }
 
@@ -227,12 +246,9 @@ std::pair<int, int> Grid::GetHoveredCell(int X, int Y)
 bool Grid::ControlSelectState(wxMouseEvent& evt)
 {
 	// shortcut for alternating between states: ALT + L/R Click
-	if (wxGetKeyState(WXK_SHIFT))
+	if ((evt.LeftIsDown() || evt.RightIsDown()) && wxGetKeyState(WXK_SHIFT))
 	{
-		if (evt.LeftIsDown() || evt.RightIsDown())
-		{
-			if (!m_TimerSelection->IsRunning()) m_TimerSelection->Start(80);
-		}
+		if (!m_TimerSelection->IsRunning()) m_TimerSelection->Start(80);
 
 		return true;
 	}
@@ -243,9 +259,10 @@ bool Grid::ControlSelectState(wxMouseEvent& evt)
 bool Grid::ControlZoom(wxMouseEvent& evt, int x, int y)
 {
 	// shortcut for zooming in/out with focus on hovered cell
-	if (wxGetKeyState(WXK_CONTROL))
+	int wheelRotation = evt.GetWheelRotation();
+
+	if (wheelRotation && wxGetKeyState(WXK_CONTROL))
 	{
-		int wheelRotation = evt.GetWheelRotation();
 		if (wheelRotation > 0 && m_ToolZoom->GetSize() < Sizes::CELL_SIZE_MAX)
 		{
 			ScrollToCenter(x, y);
@@ -283,20 +300,34 @@ bool Grid::ModeDraw(wxMouseEvent& evt, int x, int y, char mode)
 	// "draw" mode
 	if (mode == 'D')
 	{
-		if (evt.LeftIsDown() || evt.RightIsDown())
+		// left click -> place a cell
+		if (evt.LeftIsDown())
 		{
 			std::pair<std::string, wxColour> state = m_ToolStates->GetState();
+			InsertCell(x, y, state.first, state.second);
+		}
+		// right click -> remove a cell
+		else if (evt.RightIsDown())
+		{
+			if (m_Cells.find({ x,y }) == m_Cells.end()) return false;
 
-			// left click -> place a cell
-			if (evt.LeftIsDown())
+			std::pair<std::string, wxColour> state = m_Cells[{x, y}];
+
+			if (wxGetKeyState(WXK_CONTROL))
 			{
-				InsertCell(x, y, state.first, state.second);
+				if (wxGetKeyState(WXK_ALT))
+				{
+					DeleteStructure(x, y, std::unordered_set<std::pair<int, int>, Hashes::PairHash>(), "");
+				}
+				else
+				{
+					DeleteStructure(x, y, std::unordered_set<std::pair<int, int>, Hashes::PairHash>(), state.first);
+				}
+
+				Refresh(false);
 			}
-			// right click -> remove a cell
-			else if (evt.RightIsDown())
-			{
-				RemoveCell(x, y, state.first, state.second);
-			}
+
+			RemoveCell(x, y, state.first, state.second);
 		}
 		else if (evt.LeftUp() || evt.RightUp())
 		{
@@ -562,10 +593,70 @@ void Grid::OnKeyDown(wxKeyEvent& evt)
 
 		ControlUpdateCoords(x, y);
 
-		std::pair<std::string, wxColour> state = m_ToolStates->GetState();
-		if (mouseState.LeftIsDown()) InsertCell(x, y, state.first, state.second);
-		else if (mouseState.RightIsDown()) RemoveCell(x, y, state.first, state.second);
+		if (mouseState.LeftIsDown())
+		{
+			std::pair<std::string, wxColour> state = m_ToolStates->GetState();
+			InsertCell(x, y, state.first, state.second);
+		}
+		else if (mouseState.RightIsDown())
+		{
+			if (m_Cells.find({ x,y }) == m_Cells.end()) return;
+
+			std::pair<std::string, wxColour> state = m_Cells[{x, y}];
+			RemoveCell(x, y, state.first, state.second);
+		}
 	}
 
 	evt.Skip();
+}
+
+void Grid::DeleteStructure(int X, int Y, std::unordered_set<std::pair<int,int>, Hashes::PairHash> visited, std::string state)
+{
+	visited.insert({ X,Y });
+
+	int dx[8] = {0, 1, 1, 1, 0, -1, -1 ,-1};
+	int dy[8] = {-1, -1, 0, 1, 1, 1, 0, -1};
+
+	//wxLogDebug("%i,%i %s", X, Y, state);
+
+	// delete a whole structure no matter the states it is composed of
+	if (state.empty())
+	{
+		for (int d = 0; d < 8; d++)
+		{
+			int x = X + dx[d];
+			int y = Y + dy[d];
+
+			if (m_Cells.find({ x,y }) != m_Cells.end() && visited.find({ x, y }) == visited.end())
+			{
+				DeleteStructure(x, y, visited, "");
+			}
+		}
+	}
+	// otherwise, make sure to respect the given input
+	else
+	{
+		for (int d = 0; d < 8; d++)
+		{
+			int x = X + dx[d];
+			int y = Y + dy[d];
+
+			if (m_StatePositions[state].find({ x,y }) != m_StatePositions[state].end() && visited.find({ x, y }) == visited.end())
+			{
+				DeleteStructure(x, y, visited, state);
+			}
+		}
+	}
+
+	if (state.empty()) state = m_Cells[{X, Y}].first;
+	
+	// TO DO, add function EraseCell(x,y,state,color) for dealing with this
+	m_Cells.erase({ X,Y });
+	m_StatePositions[state].erase({ X,Y });
+
+	// there are no more cells of this state anymore -> remove it from our map
+	if (m_StatePositions[state].size() == 0)
+	{
+		m_StatePositions.erase(state);
+	}
 }

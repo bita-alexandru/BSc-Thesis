@@ -91,5 +91,7 @@ private:
 	void OnMouse(wxMouseEvent& evt);
 	void OnTimerSelection(wxTimerEvent& evt);
 	void OnKeyDown(wxKeyEvent& evt);
+
+	void DeleteStructure(int x, int y, std::unordered_set<std::pair<int, int>, Hashes::PairHash> visited, std::string state = "");
 };
 

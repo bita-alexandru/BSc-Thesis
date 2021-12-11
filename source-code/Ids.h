@@ -19,8 +19,10 @@ public:
 
 		// InputStates
 		ID_EDIT_STATES,
-		ID_DELETE_STATE,
+		ID_SELECT_STATE,
 		ID_GOTO_STATE,
+		ID_COLOR_STATE,
+		ID_DELETE_STATE,
 		ID_LIST_STATES,
 
 		// InputNeighbors
@@ -30,8 +32,9 @@ public:
 
 		// InputRules
 		ID_EDIT_RULES,
-		ID_DELETE_RULE,
+		ID_SELECT_RULE,
 		ID_GOTO_RULE,
+		ID_DELETE_RULE,
 		ID_LIST_RULES,
 
 		// ToolZoom

@@ -101,3 +101,14 @@ std::pair<int, std::string> ListStates::Get(int index)
 
 	return {};
 }
+
+void ListStates::SetItemColor(int index, wxColour color)
+{
+	if (index >= 0 && index < items.size())
+	{
+		attrs[index]->SetBackgroundColour(color);
+
+		wxColour blackwhite = (color.Red() * 0.299 + color.Green() * 0.587 + color.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
+		attrs[index]->SetTextColour(blackwhite);
+	}
+}

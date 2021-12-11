@@ -29,6 +29,16 @@ std::pair<std::string, wxColour> ToolStates::GetState()
     return m_States[m_Index];
 }
 
+void ToolStates::SetIndex(int index)
+{
+	if (index >= 0 && index <= m_MaximumIndex)
+	{
+		m_Index = index;
+		UpdateTextIndex();
+		UpdateState();
+	}
+}
+
 void ToolStates::SetStates(std::vector<std::pair<std::string, wxColour>> states)
 {
 	m_States = states;
@@ -42,6 +52,13 @@ void ToolStates::SetStates(std::vector<std::pair<std::string, wxColour>> states)
 
 	UpdateTextIndex();
 	UpdateState();
+}
+
+void ToolStates::SetStateColor(int index, wxColour color)
+{
+	m_States[index].second = color;
+
+	if (index == m_Index) UpdateState();
 }
 
 void ToolStates::SetListStates(ListStates* list)

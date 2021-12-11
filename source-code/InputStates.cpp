@@ -11,12 +11,15 @@ InputStates::InputStates(wxWindow* parent) : wxPanel(parent)
 {
     BuildInterface();
 
+    BuildMenu();
+
     InitializeColors();
 }
 
 InputStates::~InputStates()
 {
-	
+    wxDELETE(m_Menu);
+    wxDELETE(m_ColorDialog);
 }
 
 ListStates* InputStates::GetList()
@@ -58,10 +61,14 @@ void InputStates::SetStates(std::vector<std::string> states)
     // update list display
     int nOfItems = m_List->GetItemCount();
     int i = 0;
+    std::unordered_set<std::string> alreadyUpdated;
     for (i = 0; i < states.size(); i++)
     {
         int id = i;
         std::string state = states[i];
+
+        if (alreadyUpdated.find(state) != alreadyUpdated.end()) continue;
+
         wxColour color = wxColour(m_States[states[i]]);
         wxColour blackwhite = (color.Red() * 0.299 + color.Green() * 0.587 + color.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
 
@@ -89,23 +96,31 @@ void InputStates::SetStates(std::vector<std::string> states)
             // update color
             if (itmState == state)
             {
-                m_Grid->UpdateState(std::string(itmState), itmColor, std::string(state), color);
+                m_Grid->UpdateState(itmState, itmColor, state, color);
             }
             // old state deleted -> update on grid (if necessary)
-            else if (m_States.find(std::string(itmState)) == m_States.end())
+            else if (m_States.find(itmState) == m_States.end())
             {
-                m_Grid->UpdateState(std::string(itmState), itmColor, std::string(state), color);
+                m_Grid->RemoveState(itmState, itmColor);
+            }
+            else // this state still exists but the orders got changed
+            {
+                //m_Grid->UpdateState(itmState, itmColor, state, color);
             }
         }
+
+        alreadyUpdated.insert(state);
     }
 
     while (i < nOfItems--)
     {
-        wxString state = m_List->Get(i).second;
-        wxColour color = m_List->GetItemBackgroundColour(i);
+        std::string state = m_List->Get(i).second;
+
         m_List->Erase(i);
-        
-        m_Grid->RemoveState(std::string(state), color);
+        if (alreadyUpdated.find(state) != alreadyUpdated.end()) continue;
+
+        wxColour color = m_List->GetItemBackgroundColour(i);
+        m_Grid->RemoveState(state, color);
     }
 
     m_List->RefreshAfterUpdate();
@@ -149,6 +164,9 @@ void InputStates::BuildInterface()
     m_List = new ListStates(this);
     m_List->PushBack({ 0, "FREE" }, { wxColour("white"), wxColour("black") });
     m_List->RefreshAfterUpdate();
+
+    m_List->Bind(wxEVT_CONTEXT_MENU, &InputStates::OnItemRightClick, this);
+    m_List->Bind(wxEVT_LIST_ITEM_ACTIVATED, &InputStates::OnItemActivated, this);
 
     wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "States");
     sizer->Add(button, 0, wxEXPAND);
@@ -195,8 +213,8 @@ void InputStates::InitializeColors()
         "#DFFB71", "#868E7E", "#98D058", "#6C8F7D", "#D7BFC2", "#3C3E6E", "#D83D66"
         });
 
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    shuffle(m_Colors.begin(), m_Colors.end(), std::default_random_engine(seed));
+    //unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    shuffle(m_Colors.begin(), m_Colors.end(), std::default_random_engine(0));
     m_Colors.push_back("#FFFFFF");
 
     m_States.insert({ "FREE", "#FFFFFF" });
@@ -292,4 +310,148 @@ void InputStates::SearchEnter(wxCommandEvent& evt)
             return;
         }
     }
+}
+
+void InputStates::BuildMenu()
+{
+    m_Menu = new wxMenu();
+
+    m_Menu->Append(Ids::ID_SELECT_STATE, "Select", "xddddd");
+    m_Menu->AppendSeparator();
+    m_Menu->Append(Ids::ID_GOTO_STATE, "Go To");
+    m_Menu->Append(Ids::ID_COLOR_STATE, "Change Color");
+    m_Menu->AppendSeparator();
+    m_Menu->Append(Ids::ID_DELETE_STATE, "Delete");
+
+    m_Menu->Bind(wxEVT_COMMAND_MENU_SELECTED, &InputStates::OnMenuSelected, this);
+
+    m_ColorDialog = new wxColourDialog(this);
+}
+
+void InputStates::OnItemActivated(wxListEvent& evt)
+{
+    if (m_List->GetSelectedItemCount() != 1) return;
+
+    StateSelect();
+}
+
+void InputStates::OnItemRightClick(wxContextMenuEvent& evt)
+{
+    int itemCount = m_List->GetSelectedItemCount();
+    if (itemCount != 1)
+    {
+        m_Menu->Enable(Ids::ID_SELECT_STATE, false);
+        m_Menu->Enable(Ids::ID_GOTO_STATE, false);
+        m_Menu->Enable(Ids::ID_COLOR_STATE, false);
+        
+        if (itemCount) m_Menu->Enable(Ids::ID_DELETE_STATE, true);
+        else m_Menu->Enable(Ids::ID_DELETE_STATE, false);
+    }
+    else
+    {
+        m_Menu->Enable(Ids::ID_SELECT_STATE, true);
+        m_Menu->Enable(Ids::ID_GOTO_STATE, true);
+        m_Menu->Enable(Ids::ID_COLOR_STATE, true);
+        m_Menu->Enable(Ids::ID_DELETE_STATE, true);
+
+        // state "FREE" -> invalidate any action
+        if (m_List->GetFirstSelected() == 0)
+        {
+            m_Menu->Enable(Ids::ID_GOTO_STATE, false);
+            m_Menu->Enable(Ids::ID_COLOR_STATE, false);
+            m_Menu->Enable(Ids::ID_DELETE_STATE, false);
+        }
+    }
+
+    PopupMenu(m_Menu);
+}
+
+void InputStates::OnMenuSelected(wxCommandEvent& evt)
+{
+    switch (evt.GetId())
+    {
+    case Ids::ID_SELECT_STATE:
+        StateSelect();
+        break;
+    case Ids::ID_GOTO_STATE:
+        StateGoTo();
+        break;
+    case Ids::ID_COLOR_STATE:
+        StateChangeColor();
+        break;
+    case Ids::ID_DELETE_STATE:
+        StateDelete();
+        break;
+    default:
+        break;
+    }
+}
+
+void InputStates::StateSelect()
+{
+    m_ToolStates->SetIndex(m_List->GetFirstSelected());
+}
+
+void InputStates::StateGoTo()
+{
+    
+}
+
+void InputStates::StateChangeColor()
+{
+    int selection = m_List->GetFirstSelected();
+
+    std::string state = m_List->Get(selection).second;
+    std::string color = m_States[state];
+
+    int availableColors = m_Colors.size() - m_States.size();
+    if (!availableColors)
+    {
+        m_List->Select(selection, false);
+        return;
+    }
+
+    int randInt = std::rand() % availableColors;
+    std::string newColor = m_Colors[randInt];
+
+    m_States[state] = newColor;
+    MakeColorUnavailable(newColor);
+    MakeColorAvailable(color);
+
+    m_List->SetItemColor(selection, wxColour(newColor));
+    m_List->RefreshAfterUpdate();
+
+    m_Grid->UpdateState(state, wxColour(color), state, wxColour(newColor));
+
+    m_ToolStates->SetStateColor(selection, wxColour(newColor));
+
+    m_List->Select(selection, false);
+}
+
+void InputStates::StateDelete()
+{
+    int selection = m_List->GetFirstSelected();
+    std::unordered_set<std::string> toBeDeleted;
+
+    while (selection != -1)
+    {
+        std::string state = m_List->Get(selection).second;
+        selection = m_List->GetNextSelected(selection);
+
+        if (state == "FREE") continue;
+
+        toBeDeleted.insert(state);
+    }
+
+    std::vector<std::string> states;
+    for (int i = 0; i < m_List->GetItemCount(); i++)
+    {
+        std::string state = m_List->Get(i).second;
+
+        if (toBeDeleted.find(state) == toBeDeleted.end()) states.push_back(state);
+    }
+
+    SetStates(states);
+
+    // TO DO, update the editors textbox
 }

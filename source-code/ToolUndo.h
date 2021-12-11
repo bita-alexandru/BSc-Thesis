@@ -25,6 +25,8 @@ public:
 		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> prevCells,
 		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> prevStatePositions
 	);
+
+	void Reset();
 private:
 	Grid* m_Grid = nullptr;
 

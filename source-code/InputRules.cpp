@@ -57,7 +57,7 @@ void InputRules::SetRules(std::vector<std::string> rules)
         {
             wxColour bgColorA("white"), bgColorB("white");
             wxColour txtColorA("black"), txtColorB("black");
-            // come back later to this [TO DO]
+            // TO DO, actually separate the <stateA> <stateB> <condition>
             if (m_States.find(rule) != m_States.end())
             {
                 bgColorA = wxColour(m_States[rule]); bgColorB = wxColour(m_States[rule]);

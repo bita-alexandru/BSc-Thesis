@@ -1,6 +1,7 @@
 #pragma once
 #include "wx/wx.h"
 #include "wx/srchctrl.h"
+#include "wx/colordlg.h"
 
 #include "Ids.h"
 #include "ListStates.h"
@@ -29,6 +30,9 @@ private:
 	Grid* m_Grid = nullptr;
 	InputRules* m_InputRules = nullptr;
 
+	wxMenu* m_Menu = nullptr;
+	wxColourDialog* m_ColorDialog = nullptr;
+
 	std::deque<std::string> m_Colors = std::deque<std::string>();
 	std::unordered_map<std::string, std::string> m_States;
 	
@@ -39,5 +43,15 @@ private:
 
 	void Search(wxCommandEvent& evt);
 	void SearchEnter(wxCommandEvent& evt);
+
+	void BuildMenu();
+	void OnItemActivated(wxListEvent& evt);
+	void OnItemRightClick(wxContextMenuEvent& evt);
+	void OnMenuSelected(wxCommandEvent& evt);
+
+	void StateSelect();
+	void StateGoTo();
+	void StateChangeColor();
+	void StateDelete();
 };
 

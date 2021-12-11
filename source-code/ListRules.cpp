@@ -6,6 +6,11 @@ ListRules::ListRules(wxWindow* parent) : wxListCtrl(parent, wxID_ANY, wxDefaultP
 	AppendColumn("State A");
 	AppendColumn("State B");
 	AppendColumn("Condition");
+
+	SetColumnWidth(0, wxLIST_AUTOSIZE);
+	SetColumnWidth(1, wxLIST_AUTOSIZE_USEHEADER);
+	SetColumnWidth(2, wxLIST_AUTOSIZE_USEHEADER);
+	SetColumnWidth(3, wxLIST_AUTOSIZE_USEHEADER);
 }
 
 ListRules::~ListRules()
