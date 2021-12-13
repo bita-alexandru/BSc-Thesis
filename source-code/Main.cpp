@@ -1,29 +1,5 @@
 #include "Main.h"
 
-wxBEGIN_EVENT_TABLE(Main, wxFrame)
-	// MenuBar
-	EVT_MENU(Ids::ID_OPEN_C, Main::OnOpenAutomaton)
-	EVT_MENU(Ids::ID_OPEN_G, Main::OnOpenAlgorithm)
-	EVT_MENU(Ids::ID_SAVE_C, Main::OnSaveAutomaton)
-	EVT_MENU(Ids::ID_SAVE_G, Main::OnSaveAlgorithm)
-	EVT_MENU(Ids::ID_EXIT, Main::OnExit)
-	EVT_MENU(Ids::ID_CLEAR_C, Main::OnResetAutomaton)
-	EVT_MENU(Ids::ID_CLEAR_G, Main::OnResetAlgorithm)
-	EVT_MENU(Ids::ID_USERMANUAL, Main::OnDocumentation)
-
-	// ToolZoom
-	EVT_BUTTON(Ids::ID_ZOOM_IN, Main::OnZoomIn)
-	EVT_BUTTON(Ids::ID_ZOOM_OUT, Main::OnZoomOut)
-
-	// Editors
-	EVT_BUTTON(Ids::ID_EDIT_STATES, Main::EditStates)
-	EVT_BUTTON(Ids::ID_EDIT_RULES, Main::EditRules)
-
-	// Save Buttons
-	EVT_BUTTON(Ids::ID_SAVE_STATES, Main::SaveStates)
-	EVT_BUTTON(Ids::ID_SAVE_RULES, Main::SaveRules)
-wxEND_EVENT_TABLE()
-
 Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(Sizes::MAIN_WIDTH, Sizes::MAIN_HEIGHT))
 {
 	SetIcon(wxICON(aaaIcon));
@@ -129,9 +105,15 @@ void Main::PrepareInput()
 	StatusControls* statusControls = gridStatus->GetStatusControls();
 	StatusCells* statusCells = gridStatus->GetStatusCells();
 
+	m_EditorStates->SetInputStates(inputStates);
+	m_EditorRules->SetInputRules(inputRules);
+
 	inputStates->SetToolStates(toolStates);
 	inputStates->SetGrid(grid);
 	inputStates->SetInputRules(inputRules);
+	inputStates->SetEditorStates(m_EditorStates);
+
+	inputRules->SetEditorRules(m_EditorRules);
 
 	toolZoom->SetGrid(grid);
 	toolUndo->SetGrid(grid);
@@ -145,80 +127,4 @@ void Main::PrepareInput()
 
 	statusControls->SetGrid(grid);
 }
-
-void Main::EditStates(wxCommandEvent& evt)
-{
-	m_EditorStates->Show();
-	m_EditorStates->SetFocus();
-}
-
-void Main::EditRules(wxCommandEvent& evt)
-{
-	m_EditorRules->Show();
-	m_EditorRules->SetFocus();
-}
-
-void Main::SaveStates(wxCommandEvent& evt)
-{
-	m_EditorStates->Hide();
-	m_PanelInput->GetInputStates()->SetStates(m_EditorStates->GetData());
-}
-
-void Main::SaveRules(wxCommandEvent& evt)
-{
-	m_EditorRules->Hide();
-	m_PanelInput->GetInputRules()->SetRules(m_EditorRules->GetData());
-}
-
-void Main::OnZoomIn(wxCommandEvent& evt)
-{
-	m_PanelGrid->GetGridTools()->GetToolZoom()->ZoomIn();
-}
-
-void Main::OnZoomOut(wxCommandEvent& evt)
-{
-	m_PanelGrid->GetGridTools()->GetToolZoom()->ZoomOut();
-}
-
-void Main::OnOpenAutomaton(wxCommandEvent& evt)
-{
-	wxMessageBox("This is a wxWidgets Hello World example", "OnOpenAutomata", wxOK | wxICON_INFORMATION);
-}
-
-void Main::OnOpenAlgorithm(wxCommandEvent& evt)
-{
-	wxMessageBox("This is a wxWidgets Hello World example", "OnOpenAlgorithm", wxOK | wxICON_INFORMATION);
-}
-
-void Main::OnSaveAutomaton(wxCommandEvent& evt)
-{
-	wxMessageBox("This is a wxWidgets Hello World example", "OnSaveAutomata", wxOK | wxICON_INFORMATION);
-}
-
-void Main::OnSaveAlgorithm(wxCommandEvent& evt)
-{
-	wxMessageBox("This is a wxWidgets Hello World example", "OnSaveAlgorithm", wxOK | wxICON_INFORMATION);
-}
-
-void Main::OnExit(wxCommandEvent& evt)
-{
-	Close();
-	evt.Skip();
-}
-
-void Main::OnResetAutomaton(wxCommandEvent& evt)
-{
-	wxMessageBox("This is a wxWidgets Hello World example", "OnResetAutomata", wxOK | wxICON_INFORMATION);
-}
-
-void Main::OnResetAlgorithm(wxCommandEvent& evt)
-{
-	wxMessageBox("This is a wxWidgets Hello World example", "OnResetAlgorithm", wxOK | wxICON_INFORMATION);
-}
-
-void Main::OnDocumentation(wxCommandEvent& evt)
-{
-	wxMessageBox("This is a wxWidgets Hello World example", "OnDocumentation", wxOK | wxICON_INFORMATION);
-}
-
 

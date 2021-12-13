@@ -28,6 +28,11 @@ EditorRules::~EditorRules()
 {
 }
 
+void EditorRules::SetInputRules(InputRules* inputRules)
+{
+	m_InputRules = inputRules;
+}
+
 std::vector<std::string> EditorRules::GetData()
 {
 	std::string text = (std::string)m_TextCtrl->GetText().MakeUpper();
@@ -94,8 +99,8 @@ void EditorRules::BuildMenuBar()
 {
 	wxMenu* menu = new wxMenu();
 
-	menu->Append(Ids::ID_FIND, "&Find\tCtrl-F");
-	menu->Append(Ids::ID_REPLACE, "&Replace\tCtrl-R");
+	menu->Append(Ids::ID_FIND_RULES, "&Find\tCtrl-F");
+	menu->Append(Ids::ID_REPLACE_RULES, "&Replace\tCtrl-R");
 	menu->AppendSeparator();
 	menu->Append(Ids::ID_EXIT, "E&xit");
 
@@ -118,12 +123,13 @@ void EditorRules::BuildInputPanel()
 	wxFont font = wxFont(16, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false);
 	m_TextCtrl->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
 
-	wxButton* close = new wxButton(this, Ids::ID_SAVE_RULES, wxString("Close"));
+	wxButton* save = new wxButton(this, Ids::ID_SAVE_RULES, wxString("Save"));
+	save->Bind(wxEVT_BUTTON, &EditorRules::OnSave, this);
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 	sizer->Add(help, 0, wxALL, 6);
-	sizer->Add(m_TextCtrl, 1, wxEXPAND | wxLEFT | wxRIGHT, 6);
-	sizer->Add(close, 0, wxALIGN_RIGHT | wxALL, 6);
+	sizer->Add(m_TextCtrl, 1, wxEXPAND, 6);
+	sizer->Add(save, 0, wxALIGN_RIGHT | wxALL, 6);
 
 	this->SetSizer(sizer);
 }
@@ -147,4 +153,11 @@ void EditorRules::OnShow(wxShowEvent& evt)
 	{
 		m_TextCtrl->SetFocus();
 	}
+}
+
+void EditorRules::OnSave(wxCommandEvent& evt)
+{
+	m_InputRules->SetRules(GetData());
+
+	Hide();
 }

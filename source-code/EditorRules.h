@@ -5,6 +5,9 @@
 
 #include "Ids.h"
 #include "Sizes.h"
+#include "InputRules.h"
+
+class InputRules;
 
 class EditorRules: public wxFrame
 {
@@ -12,17 +15,20 @@ public:
 	EditorRules(wxFrame* parent);
 	~EditorRules();
 
+	void SetInputRules(InputRules* inputRules);
 	std::vector<std::string> GetData();
 private:
+	InputRules* m_InputRules = nullptr;
+
 	wxStyledTextCtrl* m_TextCtrl = nullptr;
 
 	void BuildMenuBar();
 	void BuildInputPanel();
 	void LoadData(wxListView* list);
 
+	wxDECLARE_EVENT_TABLE();
 	void OnClose(wxCloseEvent& evt);
 	void OnShow(wxShowEvent& evt);
-
-	wxDECLARE_EVENT_TABLE();
+	void OnSave(wxCommandEvent& evt);
 };
 

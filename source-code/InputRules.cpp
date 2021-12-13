@@ -21,6 +21,11 @@ std::unordered_map<std::string, std::unordered_map<std::string, std::any>>& Inpu
 	return m_Rules;
 }
 
+void InputRules::SetEditorRules(EditorRules* editorRules)
+{
+    m_EditorRules = editorRules;
+}
+
 void InputRules::SetRules(std::vector<std::string> rules)
 {
     // rules appear in our list but not in the given list -> they got recently deleted
@@ -100,7 +105,8 @@ void InputRules::SetStates(std::unordered_map<std::string, std::string>& states)
 
 void InputRules::BuildInterface()
 {
-	wxButton* button = new wxButton(this, Ids::ID_EDIT_RULES, wxString("Edit Rules"));
+	wxButton* edit = new wxButton(this, Ids::ID_EDIT_RULES, wxString("Edit Rules"));
+    edit->Bind(wxEVT_BUTTON, &InputRules::OnEdit, this);
 
     wxSearchCtrl* search = new wxSearchCtrl(this, wxID_ANY);
     search->Bind(wxEVT_TEXT, &InputRules::Search, this);
@@ -109,7 +115,7 @@ void InputRules::BuildInterface()
 	m_List = new ListRules(this);
 
 	wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "Rules");
-	sizer->Add(button, 0, wxEXPAND);
+	sizer->Add(edit, 0, wxEXPAND);
     sizer->Add(search, 0, wxEXPAND);
 	sizer->Add(m_List, 1, wxEXPAND);
 
@@ -187,4 +193,10 @@ void InputRules::SearchEnter(wxCommandEvent& evt)
             return;
         }
     }
+}
+
+void InputRules::OnEdit(wxCommandEvent& evt)
+{
+    m_EditorRules->Show();
+    m_EditorRules->SetFocus();
 }

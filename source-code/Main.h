@@ -14,6 +14,8 @@
 #include "EditorStates.h"
 #include "EditorRules.h"
 
+class MenuBar;
+
 class Main: public wxFrame
 {
 public:
@@ -33,28 +35,4 @@ private:
 	void BuildInterface();
 	void SetShortcuts();
 	void PrepareInput();
-
-	wxDECLARE_EVENT_TABLE();
-
-	// Editors
-	void EditStates(wxCommandEvent& evt);
-	void EditRules(wxCommandEvent& evt);
-
-	// Save Buttons
-	void SaveStates(wxCommandEvent& evt);
-	void SaveRules(wxCommandEvent& evt);
-
-	// ToolZoom
-	void OnZoomIn(wxCommandEvent& evt);
-	void OnZoomOut(wxCommandEvent& evt);
-
-	// MenuBar
-	void OnOpenAutomaton(wxCommandEvent& evt);
-	void OnOpenAlgorithm(wxCommandEvent& evt);
-	void OnSaveAutomaton(wxCommandEvent& evt);
-	void OnSaveAlgorithm(wxCommandEvent& evt);
-	void OnExit(wxCommandEvent& evt);
-	void OnResetAutomaton(wxCommandEvent& evt);
-	void OnResetAlgorithm(wxCommandEvent& evt);
-	void OnDocumentation(wxCommandEvent& evt);
 };

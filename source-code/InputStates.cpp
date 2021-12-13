@@ -153,9 +153,15 @@ void InputStates::SetInputRules(InputRules* inputRules)
     m_InputRules = inputRules;
 }
 
+void InputStates::SetEditorStates(EditorStates* editorStates)
+{
+    m_EditorStates = editorStates;
+}
+
 void InputStates::BuildInterface()
 {
-    wxButton* button = new wxButton(this, Ids::ID_EDIT_STATES, wxString("Edit States"));
+    wxButton* edit = new wxButton(this, Ids::ID_EDIT_STATES, wxString("Edit States"));
+    edit->Bind(wxEVT_BUTTON, &InputStates::OnEdit, this);
     
     wxSearchCtrl* search = new wxSearchCtrl(this, wxID_ANY);
     search->Bind(wxEVT_TEXT, &InputStates::Search, this);
@@ -169,7 +175,7 @@ void InputStates::BuildInterface()
     m_List->Bind(wxEVT_LIST_ITEM_ACTIVATED, &InputStates::OnItemActivated, this);
 
     wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "States");
-    sizer->Add(button, 0, wxEXPAND);
+    sizer->Add(edit, 0, wxEXPAND);
     sizer->Add(search, 0, wxEXPAND);
     sizer->Add(m_List, 1, wxEXPAND);
 
@@ -394,7 +400,10 @@ void InputStates::StateSelect()
 
 void InputStates::StateGoTo()
 {
-    
+    int selection = m_List->GetFirstSelected();
+    std::string state = m_List->Get(selection).second;
+
+    m_EditorStates->GoTo(state);
 }
 
 void InputStates::StateChangeColor()
@@ -454,4 +463,10 @@ void InputStates::StateDelete()
     SetStates(states);
 
     // TO DO, update the editors textbox
+}
+
+void InputStates::OnEdit(wxCommandEvent& evt)
+{
+    m_EditorStates->Show();
+    m_EditorStates->SetFocus();
 }

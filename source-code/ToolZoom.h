@@ -29,5 +29,8 @@ private:
 
 	void BuildInterface();
 	void UpdateTextScale();
+
+	void OnZoomIn(wxCommandEvent& evt);
+	void OnZoomOut(wxCommandEvent& evt);
 };
 

@@ -3,6 +3,8 @@
 MenuBar::MenuBar(): wxMenuBar()
 {
 	BuildInterface();
+
+	SetFunctions();
 }
 
 MenuBar::~MenuBar()
@@ -48,3 +50,12 @@ void MenuBar::BuildInterface()
 	this->Append(menuHelp, "&Help");
 }
 
+void MenuBar::SetFunctions()
+{
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &MenuBar::OnExit, this, Ids::ID_EXIT);
+}
+
+void MenuBar::OnExit(wxCommandEvent& evt)
+{
+	GetParent()->Close();
+}

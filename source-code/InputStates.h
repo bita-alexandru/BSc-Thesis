@@ -8,8 +8,11 @@
 #include "ToolStates.h"
 #include "Grid.h"
 #include "InputRules.h"
+#include "EditorStates.h"
 
 #include <deque>
+
+class EditorStates;
 
 class InputStates : public wxPanel
 {
@@ -24,11 +27,13 @@ public:
 	void SetToolStates(ToolStates* toolModes);
 	void SetGrid(Grid* grid);
 	void SetInputRules(InputRules* inputRules);
+	void SetEditorStates(EditorStates* editorStates);
 private:
 	ListStates* m_List = nullptr;
 	ToolStates* m_ToolStates = nullptr;
 	Grid* m_Grid = nullptr;
 	InputRules* m_InputRules = nullptr;
+	EditorStates* m_EditorStates = nullptr;
 
 	wxMenu* m_Menu = nullptr;
 	wxColourDialog* m_ColorDialog = nullptr;
@@ -53,5 +58,7 @@ private:
 	void StateGoTo();
 	void StateChangeColor();
 	void StateDelete();
+
+	void OnEdit(wxCommandEvent& evt);
 };
 

@@ -58,6 +58,9 @@ void ToolZoom::BuildInterface()
 
 	zoomIn->SetToolTip("Zoom in");
 	zoomOut->SetToolTip("Zoom out");
+	
+	zoomIn->Bind(wxEVT_BUTTON, &ToolZoom::OnZoomIn, this);
+	zoomOut->Bind(wxEVT_BUTTON, &ToolZoom::OnZoomOut, this);
 
 	std::string label = "Scale=1:" + std::to_string(m_Size);
 	m_TextScale = new wxStaticText(this, wxID_ANY, label);
@@ -75,4 +78,14 @@ void ToolZoom::UpdateTextScale()
 	std::string label = "Scale=1:" + std::to_string(m_Size);
 	m_TextScale->SetLabel(label);
 	//Layout();
+}
+
+void ToolZoom::OnZoomIn(wxCommandEvent& evt)
+{
+	ZoomIn();
+}
+
+void ToolZoom::OnZoomOut(wxCommandEvent& evt)
+{
+	ZoomOut();
 }
