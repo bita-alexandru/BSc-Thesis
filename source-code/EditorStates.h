@@ -19,29 +19,41 @@ public:
 	void SetInputStates(InputStates* inputStates);
 
 	std::vector<std::string> GetData();
-	void LoadData();
 
 	void GoTo(std::string state);
 	void DeleteState(std::string state);
 private:
 	InputStates* m_InputStates = nullptr;
 
-	wxStyledTextCtrl* m_TextCtrl = nullptr;
+	wxMenuBar* m_MenuBar = nullptr;
 	wxFindReplaceData* m_FindData = nullptr;
+	wxStyledTextCtrl* m_TextCtrl = nullptr;
 	wxFindReplaceDialog* m_FindDialog = nullptr;
+
+	wxString m_PrevText;
 
 	void BuildMenuBar();
 	void BuildInputPanel();
+	void BuildDialogFind(std::string title, long style);
 	
 	wxDECLARE_EVENT_TABLE();
-	void OnClose(wxCloseEvent& evt);
-	void OnShow(wxShowEvent& evt);
+	void OnCloseEvent(wxCloseEvent& evt);
+	void OnShowEvent(wxShowEvent& evt);
+
+	void OnClose(wxCommandEvent& evt);
 	void OnSave(wxCommandEvent& evt);
+	void OnSaveClose(wxCommandEvent& evt);
+
 	void OnMenuFind(wxCommandEvent& evt);
 	void OnMenuReplace(wxCommandEvent& evt);
+
 	void OnFind(wxFindDialogEvent& evt);
 	void OnFindNext(wxFindDialogEvent& evt);
 	void OnReplace(wxFindDialogEvent& evt);
 	void OnReplaceAll(wxFindDialogEvent& evt);
+
+	void OnFormat(wxCommandEvent& evt);
+
+	void AddMarker(wxStyledTextEvent& evt);
 };
 

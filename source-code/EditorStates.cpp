@@ -5,8 +5,8 @@
 #include <unordered_set>
 
 wxBEGIN_EVENT_TABLE(EditorStates, wxFrame)
-	EVT_CLOSE(EditorStates::OnClose)
-	EVT_SHOW(EditorStates::OnShow)
+	EVT_CLOSE(EditorStates::OnCloseEvent)
+	EVT_SHOW(EditorStates::OnShowEvent)
 wxEND_EVENT_TABLE()
 
 EditorStates::EditorStates(wxFrame* parent) : wxFrame(parent, wxID_ANY, "CellyGen::States", wxDefaultPosition, wxSize(Sizes::EDITOR_WIDTH, Sizes::EDITOR_HEIGHT))
@@ -94,16 +94,6 @@ std::vector<std::string> EditorStates::GetData()
 	return states;
 }
 
-void EditorStates::LoadData()
-{
-	ListStates* list = m_InputStates->GetList();
-
-	for (int i = 1; i < list->GetItemCount(); i++)
-	{
-		m_TextCtrl->WriteText(list->GetItemText(i, 1) + "\n");
-	}
-}
-
 void EditorStates::GoTo(std::string state)
 {
 	int result = m_TextCtrl->SearchNext(wxSTC_FIND_WHOLEWORD, state);
@@ -135,21 +125,34 @@ void EditorStates::BuildMenuBar()
 	wxMenu* menuFile = new wxMenu();
 	wxMenu* menuEdit = new wxMenu();
 
-	menuFile->Append(Ids::ID_IMPORT_STATES, "&Import\tCtrl-O");
-	menuFile->Append(Ids::ID_EXPORT_STATES, "&Export\tCtrl-S");
+	menuFile->Append(Ids::ID_IMPORT_STATES, "&Import\tCtrl-I");
+	menuFile->Append(Ids::ID_EXPORT_STATES, "E&xport\tCtrl-X");
 	menuFile->AppendSeparator();
-	menuFile->Append(Ids::ID_EXIT, "E&xit");
+	menuFile->Append(Ids::ID_SAVE_STATES, "&Save\tCtrl-S");
+	menuFile->Append(Ids::ID_SAVE_CLOSE_STATES, "Sa&ve && Close\tCtrl-Shift-S");
+	menuFile->AppendSeparator();
+	menuFile->Append(Ids::ID_CLOSE_STATES, "&Close\tAlt-F4");
 	menuEdit->Append(Ids::ID_FIND_STATES, "&Find\tCtrl-F");
 	menuEdit->Append(Ids::ID_REPLACE_STATES, "&Replace\tCtrl-H");
+	menuEdit->AppendSeparator();
+	menuEdit->Append(Ids::ID_MARK_PREV_STATES, "&Previous Mark\tCtrl-Q");
+	menuEdit->Append(Ids::ID_MARK_NEXT_STATES, "&Next Mark\tCtrl-E");
+	menuEdit->Append(Ids::ID_MARK_CLEAR_STATES, "&Clear Marks\tCtrl-B");
+	menuEdit->AppendSeparator();
+	menuEdit->Append(Ids::ID_FORMAT_STATES, "Forma&t\tCtrl-T");
 
-	wxMenuBar* menuBar = new wxMenuBar();
-	menuBar->Append(menuFile, "&File");
-	menuBar->Append(menuEdit, "&Edit");
+	m_MenuBar = new wxMenuBar();
+	m_MenuBar->Append(menuFile, "&File");
+	m_MenuBar->Append(menuEdit, "&Edit");
 
-	this->SetMenuBar(menuBar);
+	this->SetMenuBar(m_MenuBar);
 
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnClose, this, Ids::ID_CLOSE_STATES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnSave, this, Ids::ID_SAVE_STATES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnSaveClose, this, Ids::ID_SAVE_CLOSE_STATES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnMenuFind, this, Ids::ID_FIND_STATES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnMenuReplace, this, Ids::ID_REPLACE_STATES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnFormat, this, Ids::ID_FORMAT_STATES);
 }
 
 void EditorStates::BuildInputPanel()
@@ -157,39 +160,96 @@ void EditorStates::BuildInputPanel()
 	std::string labelHelp = "so basically yeah, plz no more than 256 states lol ok ? thx.";
 	wxStaticText* help = new wxStaticText(this, wxID_ANY, labelHelp);
 
-	m_TextCtrl = new wxStyledTextCtrl(this);
-	m_TextCtrl->SetMarginWidth(wxSTC_MARGIN_NUMBER, 48);
+	m_TextCtrl = new wxStyledTextCtrl(this, 7777);
+	m_TextCtrl->SetMarginWidth(wxSTC_MARGIN_NUMBER, 80);
 	m_TextCtrl->SetMarginType(wxSTC_MARGINOPTION_SUBLINESELECT, wxSTC_MARGIN_NUMBER);
 	m_TextCtrl->SetScrollWidth(1);
+	m_TextCtrl->SetMarginSensitive(wxSTC_MARGIN_NUMBER, true);
+
+	m_TextCtrl->Bind(wxEVT_STC_MARGINCLICK, &EditorStates::AddMarker, this);
+	//m_TextCtrl->Bind(wxEVT_STC_DOUBLECLICK, &EditorStates::AddMarker, this);
 
 	wxFont font = wxFont(16, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false);
 	m_TextCtrl->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
 
-	wxButton* save = new wxButton(this, Ids::ID_SAVE_STATES, wxString("Save"));
+	wxPanel* panelButtons = new wxPanel(this);
+	wxButton* close = new wxButton(panelButtons, Ids::ID_CLOSE_STATES, wxString("Close"));
+	wxButton* save = new wxButton(panelButtons, Ids::ID_SAVE_STATES, wxString("Save"));
+	wxButton* saveClose = new wxButton(panelButtons, Ids::ID_SAVE_CLOSE_STATES, wxString("Save && Close"));
+
+	close->Bind(wxEVT_BUTTON, &EditorStates::OnClose, this);
 	save->Bind(wxEVT_BUTTON, &EditorStates::OnSave, this);
+	saveClose->Bind(wxEVT_BUTTON, &EditorStates::OnSaveClose, this);
+
+	wxBoxSizer* sizerButtons = new wxBoxSizer(wxHORIZONTAL);
+	panelButtons->SetSizerAndFit(new wxBoxSizer(wxHORIZONTAL));
+	sizerButtons->Add(close, 0);
+	sizerButtons->Add(save, 0, wxLEFT, 6);
+	sizerButtons->Add(saveClose, 0);
+
+	panelButtons->SetSizerAndFit(sizerButtons);
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 	sizer->Add(help, 0, wxALL, 6);
-	sizer->Add(m_TextCtrl, 1, wxEXPAND, 6);
-	sizer->Add(save, 0, wxALIGN_RIGHT | wxALL, 6);
+	sizer->Add(m_TextCtrl, 1, wxEXPAND);
+	sizer->Add(panelButtons, 0, wxALIGN_RIGHT | wxALL, 6);
 
 	this->SetSizer(sizer);
 }
 
-void EditorStates::OnClose(wxCloseEvent& evt)
+void EditorStates::BuildDialogFind(std::string title, long style)
 {
-	m_InputStates->SetStates(GetData());
+	wxDELETE(m_FindDialog);
+	wxDELETE(m_FindData);
+
+	m_FindData = new wxFindReplaceData(wxFR_DOWN);
+	m_FindDialog = new wxFindReplaceDialog(this, m_FindData, title, style);
+
+	m_FindDialog->Bind(wxEVT_FIND, &EditorStates::OnFind, this);
+	m_FindDialog->Bind(wxEVT_FIND_NEXT, &EditorStates::OnFindNext, this);
+	m_FindDialog->Bind(wxEVT_FIND_REPLACE, &EditorStates::OnReplace, this);
+	m_FindDialog->Bind(wxEVT_FIND_REPLACE_ALL, &EditorStates::OnReplaceAll, this);
+}
+
+void EditorStates::OnCloseEvent(wxCloseEvent& evt)
+{
+	wxDELETE(m_FindData); wxDELETE(m_FindDialog);
+
+	// undo modifications
+	m_TextCtrl->SetText(m_PrevText);
 
 	Hide();
 }
 
-void EditorStates::OnShow(wxShowEvent& evt)
+void EditorStates::OnShowEvent(wxShowEvent& evt)
 {
+	if (!IsShown())
+	{
+		m_PrevText = m_TextCtrl->GetText();
+	}
+
 	m_TextCtrl->SetFocus();
+}
+
+void EditorStates::OnClose(wxCommandEvent& evt)
+{
+	wxDELETE(m_FindData); wxDELETE(m_FindDialog);
+
+	// undo modifications
+	m_TextCtrl->SetText(m_PrevText);
+
+	Hide();
 }
 
 void EditorStates::OnSave(wxCommandEvent& evt)
 {
+	m_InputStates->SetStates(GetData());
+}
+
+void EditorStates::OnSaveClose(wxCommandEvent& evt)
+{
+	wxDELETE(m_FindData); wxDELETE(m_FindDialog);
+
 	m_InputStates->SetStates(GetData());
 
 	Hide();
@@ -197,34 +257,16 @@ void EditorStates::OnSave(wxCommandEvent& evt)
 
 void EditorStates::OnMenuFind(wxCommandEvent& evt)
 {
-	wxDELETE(m_FindDialog);
-	wxDELETE(m_FindData);
-
-	m_FindData = new wxFindReplaceData(wxFR_DOWN);
-	m_FindDialog = new wxFindReplaceDialog(this, m_FindData, "Find");
+	BuildDialogFind("Find", 0);
 
 	m_FindDialog->Show();
-
-	m_FindDialog->Bind(wxEVT_FIND, &EditorStates::OnFind, this);
-	m_FindDialog->Bind(wxEVT_FIND_NEXT, &EditorStates::OnFindNext, this);
-	m_FindDialog->Bind(wxEVT_FIND_REPLACE, &EditorStates::OnReplace, this);
-	m_FindDialog->Bind(wxEVT_FIND_REPLACE_ALL, &EditorStates::OnReplaceAll, this);
 }
 
 void EditorStates::OnMenuReplace(wxCommandEvent& evt)
 {
-	wxDELETE(m_FindDialog);
-	wxDELETE(m_FindData);
-
-	m_FindData = new wxFindReplaceData(wxFR_DOWN);
-	m_FindDialog = new wxFindReplaceDialog(this, m_FindData, "Find & Replace", wxFR_REPLACEDIALOG);
+	BuildDialogFind("Find & Replace", wxFR_REPLACEDIALOG);
 
 	m_FindDialog->Show();
-
-	m_FindDialog->Bind(wxEVT_FIND, &EditorStates::OnFind, this);
-	m_FindDialog->Bind(wxEVT_FIND_NEXT, &EditorStates::OnFindNext, this);
-	m_FindDialog->Bind(wxEVT_FIND_REPLACE, &EditorStates::OnReplace, this);
-	m_FindDialog->Bind(wxEVT_FIND_REPLACE_ALL, &EditorStates::OnReplaceAll, this);
 }
 
 void EditorStates::OnFind(wxFindDialogEvent& evt)
@@ -288,4 +330,30 @@ void EditorStates::OnReplaceAll(wxFindDialogEvent& evt)
 	}
 
 	// to do, messagebox occurences
+}
+
+void EditorStates::OnFormat(wxCommandEvent& evt)
+{
+	std::string text = (std::string)m_TextCtrl->GetText().Upper();
+
+	// remove empty lines, white spaces and carriage symbols
+	text.erase(remove(text.begin(), text.end(), ' '), text.end());
+	text.erase(remove(text.begin(), text.end(), '\r'), text.end());
+	text.erase(std::unique(text.begin(), text.end(), [](char a, char b) {return a == '\n' && b == '\n'; }), text.end());
+
+	m_TextCtrl->SetText(text);
+}
+
+void EditorStates::AddMarker(wxStyledTextEvent& evt)
+{
+	int line = m_TextCtrl->LineFromPosition(evt.GetPosition());
+
+	if (m_TextCtrl->MarkerGet(line)) m_TextCtrl->MarkerDelete(line, wxSTC_MARK_CIRCLE);
+	else
+	{
+		m_TextCtrl->MarkerAdd(line, wxSTC_MARK_CIRCLE);
+		m_TextCtrl->MarkerSetBackground(line, wxColour("blue"));
+	}
+
+	evt.Skip();
 }

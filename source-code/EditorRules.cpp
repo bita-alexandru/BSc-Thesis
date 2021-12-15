@@ -102,11 +102,11 @@ void EditorRules::GoTo(std::string rule)
 		return;
 	}
 
-	int selectionEnd = m_TextCtrl->GetLineEndPosition(result);
-	m_TextCtrl->ShowPosition(selectionEnd);
+	int position = m_TextCtrl->PositionFromLine(result);
+	m_TextCtrl->ShowPosition(position);
 
 	m_TextCtrl->SetSelectionMode(wxSTC_SEL_LINES);
-	m_TextCtrl->SetSelection(selectionEnd, selectionEnd);
+	m_TextCtrl->SetSelection(position, position);
 	m_TextCtrl->SetSelectionMode(wxSTC_SEL_STREAM);
 
 	Show();
@@ -166,14 +166,6 @@ void EditorRules::BuildInputPanel()
 	sizer->Add(save, 0, wxALIGN_RIGHT | wxALL, 6);
 
 	this->SetSizer(sizer);
-}
-
-void EditorRules::LoadData(wxListView* list)
-{
-	for (int i = 0; i < list->GetItemCount(); i++)
-	{
-		m_TextCtrl->WriteText(list->GetItemText(i, 1) + "\n");
-	}
 }
 
 void EditorRules::OnClose(wxCloseEvent& evt)

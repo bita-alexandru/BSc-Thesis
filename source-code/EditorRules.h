@@ -27,7 +27,6 @@ private:
 
 	void BuildMenuBar();
 	void BuildInputPanel();
-	void LoadData(wxListView* list);
 
 	wxDECLARE_EVENT_TABLE();
 	void OnClose(wxCloseEvent& evt);
