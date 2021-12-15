@@ -5,8 +5,6 @@
 #include <chrono>
 #include <unordered_set>
 
-#define cout(x) wxLogDebug(x)
-
 InputStates::InputStates(wxWindow* parent) : wxPanel(parent)
 {
     BuildInterface();
@@ -19,7 +17,6 @@ InputStates::InputStates(wxWindow* parent) : wxPanel(parent)
 InputStates::~InputStates()
 {
     wxDELETE(m_Menu);
-    wxDELETE(m_ColorDialog);
 }
 
 ListStates* InputStates::GetList()
@@ -322,7 +319,7 @@ void InputStates::BuildMenu()
 {
     m_Menu = new wxMenu();
 
-    m_Menu->Append(Ids::ID_SELECT_STATE, "Select", "xddddd");
+    m_Menu->Append(Ids::ID_SELECT_STATE, "Select");
     m_Menu->AppendSeparator();
     m_Menu->Append(Ids::ID_GOTO_STATE, "Go To");
     m_Menu->Append(Ids::ID_COLOR_STATE, "Change Color");
@@ -330,8 +327,6 @@ void InputStates::BuildMenu()
     m_Menu->Append(Ids::ID_DELETE_STATE, "Delete");
 
     m_Menu->Bind(wxEVT_COMMAND_MENU_SELECTED, &InputStates::OnMenuSelected, this);
-
-    m_ColorDialog = new wxColourDialog(this);
 }
 
 void InputStates::OnItemActivated(wxListEvent& evt)
@@ -450,6 +445,8 @@ void InputStates::StateDelete()
         if (state == "FREE") continue;
 
         toBeDeleted.insert(state);
+
+        m_EditorStates->DeleteState(state);
     }
 
     std::vector<std::string> states;

@@ -36,7 +36,6 @@ private:
 	EditorStates* m_EditorStates = nullptr;
 
 	wxMenu* m_Menu = nullptr;
-	wxColourDialog* m_ColorDialog = nullptr;
 
 	std::deque<std::string> m_Colors = std::deque<std::string>();
 	std::unordered_map<std::string, std::string> m_States;

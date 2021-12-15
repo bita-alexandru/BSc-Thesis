@@ -17,6 +17,9 @@ public:
 
 	void SetInputRules(InputRules* inputRules);
 	std::vector<std::string> GetData();
+
+	void GoTo(std::string rule);
+	void DeleteRule(std::string rule);
 private:
 	InputRules* m_InputRules = nullptr;
 
@@ -30,5 +33,7 @@ private:
 	void OnClose(wxCloseEvent& evt);
 	void OnShow(wxShowEvent& evt);
 	void OnSave(wxCommandEvent& evt);
+
+	int FindRule(std::string rule);
 };
 

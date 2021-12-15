@@ -1,14 +1,17 @@
 #include "InputRules.h"
 
-#define cout(x) wxLogDebug(x)
+#include <unordered_set>
 
 InputRules::InputRules(wxWindow* parent) : wxPanel(parent)
 {
 	BuildInterface();
+
+    BuildMenu();
 }
 
 InputRules::~InputRules()
 {
+    wxDELETE(m_Menu);
 }
 
 ListRules* InputRules::GetList()
@@ -53,10 +56,13 @@ void InputRules::SetRules(std::vector<std::string> rules)
     // update list display
     int nOfItems = m_List->GetItemCount();
     int i = 0;
+    std::unordered_set<std::string> alreadyUpdated;
     for (i = 0; i < rules.size(); i++)
     {
-        int id = i;
+        int id = i + 1;
         std::string rule = rules[i];
+
+        if (alreadyUpdated.find(rule) != alreadyUpdated.end()) continue;
 
         if (i > nOfItems - 1)
         {
@@ -71,7 +77,7 @@ void InputRules::SetRules(std::vector<std::string> rules)
             }
 
             m_List->PushBack({ id, rule, "", "" }, { bgColorA, txtColorA }, { bgColorB, txtColorB });
-            m_List->ChangeItemStateA(i, rule);
+            m_List->ChangeItemState1(i, rule);
 
             continue;
         }
@@ -86,13 +92,24 @@ void InputRules::SetRules(std::vector<std::string> rules)
         }
         if (itmRule != rule)
         {
-            m_List->ChangeItemStateA(i, rule);
+            m_List->ChangeItemState1(i, rule);
         }
+
+        alreadyUpdated.insert(rule);
     }
 
     while (i < nOfItems--)
     {
-        m_List->DeleteItem(i);
+        std::string state1 = m_List->GetState1(i);
+        std::string state2 = m_List->GetState2(i);
+        std::string cond = m_List->GetCond(i);
+
+        // to do, come back when items are inserted properly
+        std::string rule = state1;// +"->" + state2;
+        if (!cond.empty()) rule += ":" + cond;
+
+        m_List->Erase(i);
+        if (alreadyUpdated.find(rule) != alreadyUpdated.end()) continue;
     }
 
     m_List->RefreshAfterUpdate();
@@ -113,6 +130,7 @@ void InputRules::BuildInterface()
     search->Bind(wxEVT_SEARCHCTRL_SEARCH_BTN, &InputRules::SearchEnter, this);
 
 	m_List = new ListRules(this);
+    m_List->Bind(wxEVT_CONTEXT_MENU, &InputRules::OnItemRightClick, this);
 
 	wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "Rules");
 	sizer->Add(edit, 0, wxEXPAND);
@@ -138,7 +156,8 @@ void InputRules::Search(wxCommandEvent& evt)
 
     for (int i = 0; i < m_List->GetItemCount(); i++)
     {
-        std::string row = m_List->GetCol1(i) + "-" + m_List->GetCol2(i) + "-" + m_List->GetCol3(i);
+        // to do, come back here when the items are inserted properly
+        std::string row = m_List->GetState1(i) + "-" + m_List->GetState2(i) + "-" + m_List->GetCond(i);
 
         if (row.find(query) != row.npos)
         {
@@ -164,7 +183,7 @@ void InputRules::SearchEnter(wxCommandEvent& evt)
         // search upwards
         for (int i = selection - 1; i > -1; i--)
         {
-            std::string row = m_List->GetCol1(i) + "-" + m_List->GetCol2(i) + "-" + m_List->GetCol3(i);
+            std::string row = m_List->GetState1(i) + "-" + m_List->GetState2(i) + "-" + m_List->GetCond(i);
 
             if (row.find(query) != row.npos)
             {
@@ -182,7 +201,7 @@ void InputRules::SearchEnter(wxCommandEvent& evt)
     // search downwards
     for (int i = selection + 1; i < m_List->GetItemCount(); i++)
     {
-        std::string row = m_List->GetCol1(i) + "-" + m_List->GetCol2(i) + "-" + m_List->GetCol3(i);
+        std::string row = m_List->GetState1(i) + "-" + m_List->GetState2(i) + "-" + m_List->GetCond(i);
 
         if (row.find(query) != row.npos)
         {
@@ -193,6 +212,106 @@ void InputRules::SearchEnter(wxCommandEvent& evt)
             return;
         }
     }
+}
+
+void InputRules::BuildMenu()
+{
+    m_Menu = new wxMenu();
+
+    m_Menu->Append(Ids::ID_GOTO_RULE, "Go To");
+    m_Menu->AppendSeparator();
+    m_Menu->Append(Ids::ID_DELETE_RULE, "Delete");
+
+    m_Menu->Bind(wxEVT_COMMAND_MENU_SELECTED, &InputRules::OnMenuSelected, this);
+}
+
+void InputRules::OnItemRightClick(wxContextMenuEvent& evt)
+{
+    int itemCount = m_List->GetSelectedItemCount();
+    if (itemCount != 1)
+    {
+        m_Menu->Enable(Ids::ID_GOTO_RULE, false);
+
+        if (itemCount) m_Menu->Enable(Ids::ID_DELETE_RULE, true);
+        else m_Menu->Enable(Ids::ID_DELETE_RULE, false);
+    }
+    else
+    {
+        m_Menu->Enable(Ids::ID_GOTO_RULE, true);
+        m_Menu->Enable(Ids::ID_DELETE_RULE, true);
+    }
+
+    PopupMenu(m_Menu);
+}
+
+void InputRules::OnMenuSelected(wxCommandEvent& evt)
+{
+    switch (evt.GetId())
+    {
+    case Ids::ID_GOTO_RULE:
+        RuleGoTo();
+        break;
+    case Ids::ID_DELETE_RULE:
+        RuleDelete();
+        break;
+    default:
+        break;
+    }
+}
+
+void InputRules::RuleGoTo()
+{
+    int selection = m_List->GetFirstSelected();
+    std::string state1 = m_List->GetState1(selection);
+    std::string state2 = m_List->GetState2(selection);
+    std::string cond = m_List->GetCond(selection);
+
+    // to do, come back when items are inserted properly
+    std::string rule = state1;// +"->" + state2;
+    if (!cond.empty()) rule += ":" + cond;
+
+    m_EditorRules->GoTo(rule);
+}
+
+void InputRules::RuleDelete()
+{
+    int selection = m_List->GetFirstSelected();
+    std::unordered_set<std::string> toBeDeleted;
+
+    while (selection != -1)
+    {
+        std::string state1 = m_List->GetState1(selection);
+        std::string state2 = m_List->GetState2(selection);
+        std::string cond = m_List->GetCond(selection);
+
+        // to do, come back when items are inserted properly
+        std::string rule = state1;// +"->" + state2;
+        if (!cond.empty()) rule += ":" + cond;
+
+        selection = m_List->GetNextSelected(selection);
+
+        toBeDeleted.insert(rule);
+
+        m_EditorRules->DeleteRule(rule);
+    }
+
+    std::vector<std::string> rules;
+    for (int i = 0; i < m_List->GetItemCount(); i++)
+    {
+        std::string state1 = m_List->GetState1(i);
+        std::string state2 = m_List->GetState2(i);
+        std::string cond = m_List->GetCond(i);
+
+        // to do, come back when items are inserted properly
+        std::string rule = state1;// +"->" + state2;
+        if (!cond.empty()) rule += ":" + cond;
+
+        if (toBeDeleted.find(rule) == toBeDeleted.end()) rules.push_back(rule);
+    }
+
+    SetRules(rules);
+
+    // TO DO, update the editors textbox
 }
 
 void InputRules::OnEdit(wxCommandEvent& evt)

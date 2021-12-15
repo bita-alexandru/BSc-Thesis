@@ -4,8 +4,6 @@
 #include <sstream>
 #include <unordered_set>
 
-#define cout(x) wxLogDebug(x)
-
 wxBEGIN_EVENT_TABLE(EditorStates, wxFrame)
 	EVT_CLOSE(EditorStates::OnClose)
 	EVT_SHOW(EditorStates::OnShow)
@@ -37,7 +35,7 @@ void EditorStates::SetInputStates(InputStates* inputStates)
 
 std::vector<std::string> EditorStates::GetData()
 {
-	std::string text = (std::string)m_TextCtrl->GetText().MakeUpper();
+	std::string text = (std::string)m_TextCtrl->GetText().Upper();
 
 	// remove empty lines, white spaces and carriage symbols
 	text.erase(remove(text.begin(), text.end(), ' '), text.end());
@@ -89,8 +87,7 @@ std::vector<std::string> EditorStates::GetData()
 
 	if (states.size() > Sizes::STATES_MAX || indexDuplicates.size() || indexInvalid.size())
 	{
-		// error
-		//cout(text);
+		// to do, messagebox options: "mark&resolve", "ignore", "cancel"
 		return std::vector<std::string>({ "FREE" });
 	}
 
@@ -107,9 +104,9 @@ void EditorStates::LoadData()
 	}
 }
 
-void EditorStates::GoTo(std::string row)
+void EditorStates::GoTo(std::string state)
 {
-	int result = m_TextCtrl->SearchNext(wxSTC_FIND_WHOLEWORD, row);
+	int result = m_TextCtrl->SearchNext(wxSTC_FIND_WHOLEWORD, state);
 
 	// not found
 	if (result == -1)
@@ -119,11 +116,18 @@ void EditorStates::GoTo(std::string row)
 	else
 	{
 		m_TextCtrl->ShowPosition(result);
-		m_TextCtrl->SetSelection(result, result + row.size());
+		m_TextCtrl->SetSelection(result, result + state.size());
 
 		Show();
 		SetFocus();
 	}
+}
+
+void EditorStates::DeleteState(std::string state)
+{
+	int result = m_TextCtrl->SearchNext(wxSTC_FIND_WHOLEWORD, state);
+
+	if (result != -1) m_TextCtrl->LineDelete();
 }
 
 void EditorStates::BuildMenuBar()

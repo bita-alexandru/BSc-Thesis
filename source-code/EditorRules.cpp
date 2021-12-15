@@ -4,8 +4,6 @@
 #include <sstream>
 #include <unordered_set>
 
-#define cout(x) wxLogDebug(x)
-
 wxBEGIN_EVENT_TABLE(EditorRules, wxFrame)
 	EVT_CLOSE(EditorRules::OnClose)
 	EVT_SHOW(EditorRules::OnShow)
@@ -35,7 +33,7 @@ void EditorRules::SetInputRules(InputRules* inputRules)
 
 std::vector<std::string> EditorRules::GetData()
 {
-	std::string text = (std::string)m_TextCtrl->GetText().MakeUpper();
+	std::string text = (std::string)m_TextCtrl->GetText().Upper();
 
 	// remove empty lines, white spaces and carriage symbols
 	text.erase(remove(text.begin(), text.end(), ' '), text.end());
@@ -87,12 +85,48 @@ std::vector<std::string> EditorRules::GetData()
 
 	if (rules.size() > Sizes::RULES_MAX || indexDuplicates.size() || indexInvalid.size())
 	{
-		// error
-		//cout(text);
+		// to do, messagebox options: mark&resolve, ignore, cancel
 		return std::vector<std::string>();
 	}
 	
 	return rules;
+}
+
+void EditorRules::GoTo(std::string rule)
+{
+	int result = FindRule(rule);
+
+	// not found
+	if (result == -1)
+	{
+		return;
+	}
+
+	int selectionEnd = m_TextCtrl->GetLineEndPosition(result);
+	m_TextCtrl->ShowPosition(selectionEnd);
+
+	m_TextCtrl->SetSelectionMode(wxSTC_SEL_LINES);
+	m_TextCtrl->SetSelection(selectionEnd, selectionEnd);
+	m_TextCtrl->SetSelectionMode(wxSTC_SEL_STREAM);
+
+	Show();
+	SetFocus();
+}
+
+void EditorRules::DeleteRule(std::string rule)
+{	
+	int result = FindRule(rule);
+
+	if (result != -1)
+	{
+		int selectionEnd = m_TextCtrl->GetLineEndPosition(result);
+
+		m_TextCtrl->SetSelectionMode(wxSTC_SEL_LINES);
+		m_TextCtrl->SetSelection(selectionEnd, selectionEnd);
+		m_TextCtrl->SetSelectionMode(wxSTC_SEL_STREAM);
+
+		m_TextCtrl->LineDelete();
+	}
 }
 
 void EditorRules::BuildMenuBar()
@@ -116,7 +150,7 @@ void EditorRules::BuildInputPanel()
 	wxStaticText* help = new wxStaticText(this, wxID_ANY, labelHelp);
 
 	m_TextCtrl = new wxStyledTextCtrl(this);
-	m_TextCtrl->SetMarginWidth(wxSTC_MARGIN_NUMBER, 32);
+	m_TextCtrl->SetMarginWidth(wxSTC_MARGIN_NUMBER, 48);
 	m_TextCtrl->SetMarginType(wxSTC_MARGINOPTION_SUBLINESELECT, wxSTC_MARGIN_NUMBER);
 	m_TextCtrl->SetScrollWidth(1);
 
@@ -160,4 +194,19 @@ void EditorRules::OnSave(wxCommandEvent& evt)
 	m_InputRules->SetRules(GetData());
 
 	Hide();
+}
+
+int EditorRules::FindRule(std::string rule)
+{
+	for (int i = 0; i < m_TextCtrl->GetLineCount(); i++)
+	{
+		std::string line = std::string(m_TextCtrl->GetLine(i).Upper());
+		line.erase(remove(line.begin(), line.end(), ' '), line.end());
+		line.erase(remove(line.begin(), line.end(), '\r'), line.end());
+		line.erase(remove(line.begin(), line.end(), '\n'), line.end());
+
+		if (rule == line) return i;
+	}
+
+	return -1;
 }

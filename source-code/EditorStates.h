@@ -21,7 +21,8 @@ public:
 	std::vector<std::string> GetData();
 	void LoadData();
 
-	void GoTo(std::string row);
+	void GoTo(std::string state);
+	void DeleteState(std::string state);
 private:
 	InputStates* m_InputStates = nullptr;
 

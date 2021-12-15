@@ -104,12 +104,12 @@ void ListRules::ChangeItemId(int index, int id)
 	if (index < items.size()) std::get<0>(items[index]) = id;
 }
 
-void ListRules::ChangeItemStateA(int index, std::string state)
+void ListRules::ChangeItemState1(int index, std::string state)
 {
 	if (index < items.size()) std::get<1>(items[index]) = state;
 }
 
-void ListRules::ChangeItemStateB(int index, std::string state)
+void ListRules::ChangeItemState2(int index, std::string state)
 {
 	if (index < items.size()) std::get<2>(items[index]) = state;
 }
@@ -141,28 +141,28 @@ void ListRules::Erase(int index)
 	}
 }
 
-int ListRules::GetCol0(int index)
+int ListRules::GetIndex(int index)
 {
 	if (index < items.size()) return std::get<0>(items[index]);
 
 	return 0;
 }
 
-std::string ListRules::GetCol1(int index)
+std::string ListRules::GetState1(int index)
 {
 	if (index < items.size()) return std::get<1>(items[index]);
 
 	return "";
 }
 
-std::string ListRules::GetCol2(int index)
+std::string ListRules::GetState2(int index)
 {
 	if (index < items.size()) return std::get<2>(items[index]);
 
 	return "";
 }
 
-std::string ListRules::GetCol3(int index)
+std::string ListRules::GetCond(int index)
 {
 	if (index < items.size()) return std::get<3>(items[index]);
 

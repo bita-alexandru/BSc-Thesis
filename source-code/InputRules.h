@@ -27,6 +27,8 @@ private:
 	ListRules* m_List = nullptr;
 	EditorRules* m_EditorRules = nullptr;
 
+	wxMenu* m_Menu = nullptr;
+
 	std::unordered_map<std::string, std::unordered_map<std::string, std::any>> m_Rules;
 	std::unordered_map<std::string, std::string> m_States;
 
@@ -34,6 +36,13 @@ private:
 
 	void Search(wxCommandEvent& evt);
 	void SearchEnter(wxCommandEvent& evt);
+
+	void BuildMenu();
+	void OnItemRightClick(wxContextMenuEvent& evt);
+	void OnMenuSelected(wxCommandEvent& evt);
+
+	void RuleGoTo();
+	void RuleDelete();
 
 	void OnEdit(wxCommandEvent& evt);
 };

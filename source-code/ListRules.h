@@ -19,16 +19,16 @@ public:
 
 	void PushBack(std::tuple<int, std::string, std::string, std::string> item, std::pair<wxColour, wxColour> colorsA, std::pair<wxColour, wxColour> colorsB);
 	void ChangeItemId(int index, int id);
-	void ChangeItemStateA(int index, std::string state);
-	void ChangeItemStateB(int index, std::string state);
+	void ChangeItemState1(int index, std::string state);
+	void ChangeItemState2(int index, std::string state);
 	void ChangeItemCond(int index, std::string cond);
 	void ChangeItemColor(long index, std::pair<wxColour, wxColour> colorsA, std::pair<wxColour, wxColour> colorsB);
 	void Erase(int index);
 
-	int GetCol0(int index);
-	std::string GetCol1(int index);
-	std::string GetCol2(int index);
-	std::string GetCol3(int index);
+	int GetIndex(int index);
+	std::string GetState1(int index);
+	std::string GetState2(int index);
+	std::string GetCond(int index);
 
 	wxColour GetColorA(int index);
 	wxColour GetColorB(int index);

@@ -42,7 +42,6 @@ public:
 
 		// InputRules
 		ID_EDIT_RULES,
-		ID_SELECT_RULE,
 		ID_GOTO_RULE,
 		ID_DELETE_RULE,
 		ID_LIST_RULES,

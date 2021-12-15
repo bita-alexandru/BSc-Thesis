@@ -1,7 +1,5 @@
 #include "InputNeighbors.h"
 
-#define cout(x) wxLogDebug(x)
-
 InputNeighbors::InputNeighbors(wxWindow* parent) : wxPanel(parent)
 {
 	BuildInterface();

@@ -1,8 +1,6 @@
 #include "ToolStates.h"
 #include "Ids.h"
 
-#define cout(x) wxMessageBox(std::to_string(x), "debug")
-
 wxBEGIN_EVENT_TABLE(ToolStates, wxPanel)
     EVT_BUTTON(Ids::ID_BUTTON_PREV, ToolStates::OnPrev)
     EVT_BUTTON(Ids::ID_BUTTON_NEXT, ToolStates::OnNext)
