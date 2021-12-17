@@ -31,6 +31,7 @@ private:
 	wxFindReplaceDialog* m_FindDialog = nullptr;
 
 	wxString m_PrevText;
+	int m_MarkLine = -1;
 
 	void BuildMenuBar();
 	void BuildInputPanel();
@@ -53,6 +54,12 @@ private:
 	void OnReplaceAll(wxFindDialogEvent& evt);
 
 	void OnFormat(wxCommandEvent& evt);
+	void OnPrevMark(wxCommandEvent& evt);
+	void OnNextMark(wxCommandEvent& evt);
+	void OnClearMark(wxCommandEvent& evt);
+
+	void OnImport(wxCommandEvent& evt);
+	void OnExport(wxCommandEvent& evt);
 
 	void AddMarker(wxStyledTextEvent& evt);
 };

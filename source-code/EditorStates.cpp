@@ -145,13 +145,22 @@ void EditorStates::BuildMenuBar()
 	m_MenuBar->Append(menuFile, "&File");
 	m_MenuBar->Append(menuEdit, "&Edit");
 
+	m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, false);
+	m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, false);
+	m_MenuBar->Enable(Ids::ID_MARK_CLEAR_STATES, false);
+
 	this->SetMenuBar(m_MenuBar);
 
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnImport, this, Ids::ID_IMPORT_STATES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnExport, this, Ids::ID_EXPORT_STATES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnClose, this, Ids::ID_CLOSE_STATES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnSave, this, Ids::ID_SAVE_STATES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnSaveClose, this, Ids::ID_SAVE_CLOSE_STATES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnMenuFind, this, Ids::ID_FIND_STATES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnMenuReplace, this, Ids::ID_REPLACE_STATES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnPrevMark, this, Ids::ID_MARK_PREV_STATES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnNextMark, this, Ids::ID_MARK_NEXT_STATES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnClearMark, this, Ids::ID_MARK_CLEAR_STATES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnFormat, this, Ids::ID_FORMAT_STATES);
 }
 
@@ -165,9 +174,9 @@ void EditorStates::BuildInputPanel()
 	m_TextCtrl->SetMarginType(wxSTC_MARGINOPTION_SUBLINESELECT, wxSTC_MARGIN_NUMBER);
 	m_TextCtrl->SetScrollWidth(1);
 	m_TextCtrl->SetMarginSensitive(wxSTC_MARGIN_NUMBER, true);
+	m_TextCtrl->MarkerSetBackground(wxSTC_MARK_CIRCLE, wxColour("blue"));
 
 	m_TextCtrl->Bind(wxEVT_STC_MARGINCLICK, &EditorStates::AddMarker, this);
-	//m_TextCtrl->Bind(wxEVT_STC_DOUBLECLICK, &EditorStates::AddMarker, this);
 
 	wxFont font = wxFont(16, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false);
 	m_TextCtrl->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
@@ -344,16 +353,76 @@ void EditorStates::OnFormat(wxCommandEvent& evt)
 	m_TextCtrl->SetText(text);
 }
 
+void EditorStates::OnPrevMark(wxCommandEvent& evt)
+{
+	int line = m_TextCtrl->MarkerPrevious(--m_MarkLine, 1);
+
+	if (line == -1) line = m_TextCtrl->MarkerPrevious(m_TextCtrl->GetLineCount(), 1);
+	m_MarkLine = line;// -1;
+
+	int position = m_TextCtrl->PositionFromLine(line);
+	m_TextCtrl->ShowPosition(position);
+
+	m_TextCtrl->SetSelectionMode(wxSTC_SEL_LINES);
+	m_TextCtrl->SetSelection(position, position);
+	m_TextCtrl->SetSelectionMode(wxSTC_SEL_STREAM);
+}
+
+void EditorStates::OnNextMark(wxCommandEvent& evt)
+{
+	int line = m_TextCtrl->MarkerNext(++m_MarkLine, 1);
+
+	if (line == -1) line = m_TextCtrl->MarkerNext(0, 1);
+	m_MarkLine = line;// +1;
+
+	int position = m_TextCtrl->PositionFromLine(line);
+	m_TextCtrl->ShowPosition(position);
+
+	m_TextCtrl->SetSelectionMode(wxSTC_SEL_LINES);
+	m_TextCtrl->SetSelection(position, position);
+	m_TextCtrl->SetSelectionMode(wxSTC_SEL_STREAM);
+}
+
+void EditorStates::OnClearMark(wxCommandEvent& evt)
+{
+	m_TextCtrl->MarkerDeleteAll(wxSTC_MARK_CIRCLE);
+
+	m_MarkLine = -1;
+
+	m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, false);
+	m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, false);
+	m_MenuBar->Enable(Ids::ID_MARK_CLEAR_STATES, false);
+}
+
+void EditorStates::OnImport(wxCommandEvent& evt)
+{
+}
+
+void EditorStates::OnExport(wxCommandEvent& evt)
+{
+}
+
 void EditorStates::AddMarker(wxStyledTextEvent& evt)
 {
 	int line = m_TextCtrl->LineFromPosition(evt.GetPosition());
 
-	if (m_TextCtrl->MarkerGet(line)) m_TextCtrl->MarkerDelete(line, wxSTC_MARK_CIRCLE);
+	if (m_TextCtrl->MarkerGet(line))
+	{
+		m_TextCtrl->MarkerDelete(line, wxSTC_MARK_CIRCLE);
+
+		if (m_TextCtrl->MarkerNext(0, 1)  == -1)
+		{
+			m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, false);
+			m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, false);
+			m_MenuBar->Enable(Ids::ID_MARK_CLEAR_STATES, false);
+		}
+	}
 	else
 	{
 		m_TextCtrl->MarkerAdd(line, wxSTC_MARK_CIRCLE);
-		m_TextCtrl->MarkerSetBackground(line, wxColour("blue"));
-	}
 
-	evt.Skip();
+		m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, true);
+		m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, true);
+		m_MenuBar->Enable(Ids::ID_MARK_CLEAR_STATES, true);
+	}
 }
