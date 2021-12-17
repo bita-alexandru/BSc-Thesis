@@ -5,8 +5,8 @@
 #include <unordered_set>
 
 wxBEGIN_EVENT_TABLE(EditorRules, wxFrame)
-	EVT_CLOSE(EditorRules::OnClose)
-	EVT_SHOW(EditorRules::OnShow)
+	EVT_CLOSE(EditorRules::OnCloseEvent)
+	EVT_SHOW(EditorRules::OnShowEvent)
 wxEND_EVENT_TABLE()
 
 EditorRules::EditorRules(wxFrame* parent) : wxFrame(parent, wxID_ANY, "CellyGen::Rules", wxDefaultPosition, wxSize(Sizes::EDITOR_WIDTH, Sizes::EDITOR_HEIGHT))
@@ -24,6 +24,8 @@ EditorRules::EditorRules(wxFrame* parent) : wxFrame(parent, wxID_ANY, "CellyGen:
 
 EditorRules::~EditorRules()
 {
+	wxDELETE(m_FindData);
+	wxDELETE(m_FindDialog);
 }
 
 void EditorRules::SetInputRules(InputRules* inputRules)
@@ -131,17 +133,43 @@ void EditorRules::DeleteRule(std::string rule)
 
 void EditorRules::BuildMenuBar()
 {
-	wxMenu* menu = new wxMenu();
+	wxMenu* menuFile = new wxMenu();
+	wxMenu* menuEdit = new wxMenu();
 
-	menu->Append(Ids::ID_FIND_RULES, "&Find\tCtrl-F");
-	menu->Append(Ids::ID_REPLACE_RULES, "&Replace\tCtrl-R");
-	menu->AppendSeparator();
-	menu->Append(Ids::ID_EXIT, "E&xit");
+	menuFile->Append(Ids::ID_IMPORT_RULES, "&Import\tCtrl-I");
+	menuFile->Append(Ids::ID_EXPORT_RULES, "Ex&port\tCtrl-P");
+	menuFile->AppendSeparator();
+	menuFile->Append(Ids::ID_SAVE_RULES, "&Save\tCtrl-S");
+	menuFile->Append(Ids::ID_SAVE_CLOSE_RULES, "Sa&ve && Close\tCtrl-Shift-S");
+	menuFile->AppendSeparator();
+	menuFile->Append(Ids::ID_CLOSE_RULES, "&Close\tAlt-F4");
+	menuEdit->Append(Ids::ID_FIND_RULES, "&Find\tCtrl-F");
+	menuEdit->Append(Ids::ID_REPLACE_RULES, "&Replace\tCtrl-H");
+	menuEdit->AppendSeparator();
+	menuEdit->Append(Ids::ID_MARK_NEXT_RULES, "&Next Mark\tCtrl-E");
+	menuEdit->Append(Ids::ID_MARK_PREV_RULES, "&Previous Mark\tCtrl-Q");
+	menuEdit->AppendSeparator();
+	menuEdit->Append(Ids::ID_FORMAT_RULES, "Forma&t\tCtrl-T");
 
-	wxMenuBar* menuBar = new wxMenuBar();
-	menuBar->Append(menu, "&File");
+	m_MenuBar = new wxMenuBar();
+	m_MenuBar->Append(menuFile, "&File");
+	m_MenuBar->Append(menuEdit, "&Edit");
 
-	this->SetMenuBar(menuBar);
+	m_MenuBar->Enable(Ids::ID_MARK_NEXT_RULES, false);
+	m_MenuBar->Enable(Ids::ID_MARK_PREV_RULES, false);
+
+	this->SetMenuBar(m_MenuBar);
+
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorRules::OnImport, this, Ids::ID_IMPORT_RULES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorRules::OnExport, this, Ids::ID_EXPORT_RULES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorRules::OnClose, this, Ids::ID_CLOSE_RULES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorRules::OnSave, this, Ids::ID_SAVE_RULES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorRules::OnSaveClose, this, Ids::ID_SAVE_CLOSE_RULES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorRules::OnMenuFind, this, Ids::ID_FIND_RULES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorRules::OnMenuReplace, this, Ids::ID_REPLACE_RULES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorRules::OnPrevMark, this, Ids::ID_MARK_PREV_RULES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorRules::OnNextMark, this, Ids::ID_MARK_NEXT_RULES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorRules::OnFormat, this, Ids::ID_FORMAT_RULES);
 }
 
 void EditorRules::BuildInputPanel()
@@ -153,39 +181,218 @@ void EditorRules::BuildInputPanel()
 	m_TextCtrl->SetMarginWidth(wxSTC_MARGIN_NUMBER, 48);
 	m_TextCtrl->SetMarginType(wxSTC_MARGINOPTION_SUBLINESELECT, wxSTC_MARGIN_NUMBER);
 	m_TextCtrl->SetScrollWidth(1);
+	m_TextCtrl->MarkerSetBackground(wxSTC_MARK_CIRCLE, wxColour("red"));
 
 	wxFont font = wxFont(16, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false);
 	m_TextCtrl->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
 
-	wxButton* save = new wxButton(this, Ids::ID_SAVE_RULES, wxString("Save"));
+	wxPanel* panelButtons = new wxPanel(this);
+	wxButton* close = new wxButton(panelButtons, Ids::ID_CLOSE_RULES, wxString("Close"));
+	wxButton* save = new wxButton(panelButtons, Ids::ID_SAVE_RULES, wxString("Save"));
+	wxButton* saveClose = new wxButton(panelButtons, Ids::ID_SAVE_CLOSE_RULES, wxString("Save && Close"));
+
+	close->Bind(wxEVT_BUTTON, &EditorRules::OnClose, this);
 	save->Bind(wxEVT_BUTTON, &EditorRules::OnSave, this);
+	saveClose->Bind(wxEVT_BUTTON, &EditorRules::OnSaveClose, this);
+
+	wxBoxSizer* sizerButtons = new wxBoxSizer(wxHORIZONTAL);
+	panelButtons->SetSizerAndFit(new wxBoxSizer(wxHORIZONTAL));
+	sizerButtons->Add(close, 0);
+	sizerButtons->Add(save, 0, wxLEFT, 6);
+	sizerButtons->Add(saveClose, 0);
+
+	panelButtons->SetSizerAndFit(sizerButtons);
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 	sizer->Add(help, 0, wxALL, 6);
-	sizer->Add(m_TextCtrl, 1, wxEXPAND, 6);
-	sizer->Add(save, 0, wxALIGN_RIGHT | wxALL, 6);
+	sizer->Add(m_TextCtrl, 1, wxEXPAND);
+	sizer->Add(panelButtons, 0, wxALIGN_RIGHT | wxALL, 6);
 
 	this->SetSizer(sizer);
 }
 
-void EditorRules::OnClose(wxCloseEvent& evt)
+void EditorRules::BuildDialogFind(std::string title, long style)
 {
-	this->Hide();
+	wxDELETE(m_FindDialog);
+	wxDELETE(m_FindData);
+
+	m_FindData = new wxFindReplaceData(wxFR_DOWN);
+	m_FindDialog = new wxFindReplaceDialog(this, m_FindData, title, style);
+
+	m_FindDialog->Bind(wxEVT_FIND, &EditorRules::OnFind, this);
+	m_FindDialog->Bind(wxEVT_FIND_NEXT, &EditorRules::OnFindNext, this);
+	m_FindDialog->Bind(wxEVT_FIND_REPLACE, &EditorRules::OnReplace, this);
+	m_FindDialog->Bind(wxEVT_FIND_REPLACE_ALL, &EditorRules::OnReplaceAll, this);
 }
 
-void EditorRules::OnShow(wxShowEvent& evt)
+void EditorRules::OnCloseEvent(wxCloseEvent& evt)
 {
-	if (evt.IsShown())
-	{
-		m_TextCtrl->SetFocus();
-	}
+	wxDELETE(m_FindData); wxDELETE(m_FindDialog);
+
+	// undo modifications
+	m_TextCtrl->SetText(m_PrevText);
+
+	Hide();
+}
+
+void EditorRules::OnShowEvent(wxShowEvent& evt)
+{
+	m_TextCtrl->SetFocus();
+}
+
+void EditorRules::OnClose(wxCommandEvent& evt)
+{
+	wxDELETE(m_FindData); wxDELETE(m_FindDialog);
+
+	// undo modifications
+	m_TextCtrl->SetText(m_PrevText);
+
+	Hide();
 }
 
 void EditorRules::OnSave(wxCommandEvent& evt)
 {
+	m_PrevText = m_TextCtrl->GetText();
+
+	m_InputRules->SetRules(GetData());
+}
+
+void EditorRules::OnSaveClose(wxCommandEvent& evt)
+{
+	wxDELETE(m_FindData); wxDELETE(m_FindDialog);
+
+	m_PrevText = m_TextCtrl->GetText();
+
 	m_InputRules->SetRules(GetData());
 
 	Hide();
+}
+
+void EditorRules::OnMenuFind(wxCommandEvent& evt)
+{
+	BuildDialogFind("Find", 0);
+
+	m_FindDialog->Show();
+}
+
+void EditorRules::OnMenuReplace(wxCommandEvent& evt)
+{
+	BuildDialogFind("Find & Replace", wxFR_REPLACEDIALOG);
+
+	m_FindDialog->Show();
+}
+
+void EditorRules::OnFind(wxFindDialogEvent& evt)
+{
+	wxString find = m_FindData->GetFindString();
+
+	int flags = m_FindData->GetFlags();
+	int result = m_TextCtrl->FindText(0, m_TextCtrl->GetLastPosition(), find, flags);
+
+	if (result == -1)
+	{
+		// to do, messagebox
+		return;
+	}
+
+	m_TextCtrl->ShowPosition(result);
+	m_TextCtrl->SetSelection(result, result + find.size());
+}
+
+void EditorRules::OnFindNext(wxFindDialogEvent& evt)
+{
+	wxString find = m_FindData->GetFindString();
+
+	int flags = m_FindData->GetFlags();
+	int result;
+
+	if (flags & wxFR_DOWN) result = m_TextCtrl->FindText(m_TextCtrl->GetAnchor() + 1, m_TextCtrl->GetLastPosition(), find, flags);
+	else result = m_TextCtrl->FindText(m_TextCtrl->GetAnchor(), 0, find, flags);
+
+	if (result == -1)
+	{
+		// to do, messagebox
+		return;
+	}
+
+	m_TextCtrl->ShowPosition(result);
+	m_TextCtrl->SetSelection(result, result + find.size());
+}
+
+void EditorRules::OnReplace(wxFindDialogEvent& evt)
+{
+	wxString replace = m_FindData->GetReplaceString();
+	m_TextCtrl->ReplaceSelection(replace);
+}
+
+void EditorRules::OnReplaceAll(wxFindDialogEvent& evt)
+{
+	wxString find = m_FindData->GetFindString();
+	wxString replace = m_FindData->GetReplaceString();
+
+	int flags = m_FindData->GetFlags();
+
+	int occurences = 0;
+	int result;
+	while ((result = m_TextCtrl->FindText(0, m_TextCtrl->GetLastPosition(), find, flags)) != -1)
+	{
+		occurences++;
+
+		m_TextCtrl->SetSelection(result, result + find.size());
+		m_TextCtrl->ReplaceSelection(replace);
+	}
+
+	// to do, messagebox occurences
+}
+
+void EditorRules::OnFormat(wxCommandEvent& evt)
+{
+	std::string text = (std::string)m_TextCtrl->GetText().Upper();
+
+	// remove empty lines, white spaces and carriage symbols
+	text.erase(remove(text.begin(), text.end(), ' '), text.end());
+	text.erase(remove(text.begin(), text.end(), '\r'), text.end());
+	text.erase(std::unique(text.begin(), text.end(), [](char a, char b) {return a == '\n' && b == '\n'; }), text.end());
+
+	m_TextCtrl->SetText(text);
+}
+
+void EditorRules::OnPrevMark(wxCommandEvent& evt)
+{
+	int line = m_TextCtrl->MarkerPrevious(--m_MarkLine, 1);
+
+	if (line == -1) line = m_TextCtrl->MarkerPrevious(m_TextCtrl->GetLineCount(), 1);
+	m_MarkLine = line;// -1;
+
+	int position = m_TextCtrl->PositionFromLine(line);
+	m_TextCtrl->ShowPosition(position);
+
+	m_TextCtrl->SetSelectionMode(wxSTC_SEL_LINES);
+	m_TextCtrl->SetSelection(position, position);
+	m_TextCtrl->SetSelectionMode(wxSTC_SEL_STREAM);
+}
+
+void EditorRules::OnNextMark(wxCommandEvent& evt)
+{
+	int line = m_TextCtrl->MarkerNext(++m_MarkLine, 1);
+
+	if (line == -1) line = m_TextCtrl->MarkerNext(0, 1);
+	m_MarkLine = line;// +1;
+
+	int position = m_TextCtrl->PositionFromLine(line);
+	m_TextCtrl->ShowPosition(position);
+
+	m_TextCtrl->SetSelectionMode(wxSTC_SEL_LINES);
+	m_TextCtrl->SetSelection(position, position);
+	m_TextCtrl->SetSelectionMode(wxSTC_SEL_STREAM);
+}
+
+void EditorRules::OnImport(wxCommandEvent& evt)
+{
+}
+
+void EditorRules::OnExport(wxCommandEvent& evt)
+{
 }
 
 int EditorRules::FindRule(std::string rule)

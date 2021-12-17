@@ -126,7 +126,7 @@ void EditorStates::BuildMenuBar()
 	wxMenu* menuEdit = new wxMenu();
 
 	menuFile->Append(Ids::ID_IMPORT_STATES, "&Import\tCtrl-I");
-	menuFile->Append(Ids::ID_EXPORT_STATES, "E&xport\tCtrl-X");
+	menuFile->Append(Ids::ID_EXPORT_STATES, "Ex&port\tCtrl-P");
 	menuFile->AppendSeparator();
 	menuFile->Append(Ids::ID_SAVE_STATES, "&Save\tCtrl-S");
 	menuFile->Append(Ids::ID_SAVE_CLOSE_STATES, "Sa&ve && Close\tCtrl-Shift-S");
@@ -135,9 +135,8 @@ void EditorStates::BuildMenuBar()
 	menuEdit->Append(Ids::ID_FIND_STATES, "&Find\tCtrl-F");
 	menuEdit->Append(Ids::ID_REPLACE_STATES, "&Replace\tCtrl-H");
 	menuEdit->AppendSeparator();
-	menuEdit->Append(Ids::ID_MARK_PREV_STATES, "&Previous Mark\tCtrl-Q");
 	menuEdit->Append(Ids::ID_MARK_NEXT_STATES, "&Next Mark\tCtrl-E");
-	menuEdit->Append(Ids::ID_MARK_CLEAR_STATES, "&Clear Marks\tCtrl-B");
+	menuEdit->Append(Ids::ID_MARK_PREV_STATES, "&Previous Mark\tCtrl-Q");
 	menuEdit->AppendSeparator();
 	menuEdit->Append(Ids::ID_FORMAT_STATES, "Forma&t\tCtrl-T");
 
@@ -145,9 +144,8 @@ void EditorStates::BuildMenuBar()
 	m_MenuBar->Append(menuFile, "&File");
 	m_MenuBar->Append(menuEdit, "&Edit");
 
-	m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, false);
 	m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, false);
-	m_MenuBar->Enable(Ids::ID_MARK_CLEAR_STATES, false);
+	m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, false);
 
 	this->SetMenuBar(m_MenuBar);
 
@@ -160,7 +158,6 @@ void EditorStates::BuildMenuBar()
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnMenuReplace, this, Ids::ID_REPLACE_STATES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnPrevMark, this, Ids::ID_MARK_PREV_STATES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnNextMark, this, Ids::ID_MARK_NEXT_STATES);
-	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnClearMark, this, Ids::ID_MARK_CLEAR_STATES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnFormat, this, Ids::ID_FORMAT_STATES);
 }
 
@@ -169,14 +166,11 @@ void EditorStates::BuildInputPanel()
 	std::string labelHelp = "so basically yeah, plz no more than 256 states lol ok ? thx.";
 	wxStaticText* help = new wxStaticText(this, wxID_ANY, labelHelp);
 
-	m_TextCtrl = new wxStyledTextCtrl(this, 7777);
+	m_TextCtrl = new wxStyledTextCtrl(this);
 	m_TextCtrl->SetMarginWidth(wxSTC_MARGIN_NUMBER, 80);
 	m_TextCtrl->SetMarginType(wxSTC_MARGINOPTION_SUBLINESELECT, wxSTC_MARGIN_NUMBER);
 	m_TextCtrl->SetScrollWidth(1);
-	m_TextCtrl->SetMarginSensitive(wxSTC_MARGIN_NUMBER, true);
-	m_TextCtrl->MarkerSetBackground(wxSTC_MARK_CIRCLE, wxColour("blue"));
-
-	m_TextCtrl->Bind(wxEVT_STC_MARGINCLICK, &EditorStates::AddMarker, this);
+	m_TextCtrl->MarkerSetBackground(wxSTC_MARK_CIRCLE, wxColour("red"));
 
 	wxFont font = wxFont(16, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false);
 	m_TextCtrl->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
@@ -232,11 +226,6 @@ void EditorStates::OnCloseEvent(wxCloseEvent& evt)
 
 void EditorStates::OnShowEvent(wxShowEvent& evt)
 {
-	if (!IsShown())
-	{
-		m_PrevText = m_TextCtrl->GetText();
-	}
-
 	m_TextCtrl->SetFocus();
 }
 
@@ -252,12 +241,16 @@ void EditorStates::OnClose(wxCommandEvent& evt)
 
 void EditorStates::OnSave(wxCommandEvent& evt)
 {
+	m_PrevText = m_TextCtrl->GetText();
+
 	m_InputStates->SetStates(GetData());
 }
 
 void EditorStates::OnSaveClose(wxCommandEvent& evt)
 {
 	wxDELETE(m_FindData); wxDELETE(m_FindDialog);
+
+	m_PrevText = m_TextCtrl->GetText();
 
 	m_InputStates->SetStates(GetData());
 
@@ -383,46 +376,10 @@ void EditorStates::OnNextMark(wxCommandEvent& evt)
 	m_TextCtrl->SetSelectionMode(wxSTC_SEL_STREAM);
 }
 
-void EditorStates::OnClearMark(wxCommandEvent& evt)
-{
-	m_TextCtrl->MarkerDeleteAll(wxSTC_MARK_CIRCLE);
-
-	m_MarkLine = -1;
-
-	m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, false);
-	m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, false);
-	m_MenuBar->Enable(Ids::ID_MARK_CLEAR_STATES, false);
-}
-
 void EditorStates::OnImport(wxCommandEvent& evt)
 {
 }
 
 void EditorStates::OnExport(wxCommandEvent& evt)
 {
-}
-
-void EditorStates::AddMarker(wxStyledTextEvent& evt)
-{
-	int line = m_TextCtrl->LineFromPosition(evt.GetPosition());
-
-	if (m_TextCtrl->MarkerGet(line))
-	{
-		m_TextCtrl->MarkerDelete(line, wxSTC_MARK_CIRCLE);
-
-		if (m_TextCtrl->MarkerNext(0, 1)  == -1)
-		{
-			m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, false);
-			m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, false);
-			m_MenuBar->Enable(Ids::ID_MARK_CLEAR_STATES, false);
-		}
-	}
-	else
-	{
-		m_TextCtrl->MarkerAdd(line, wxSTC_MARK_CIRCLE);
-
-		m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, true);
-		m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, true);
-		m_MenuBar->Enable(Ids::ID_MARK_CLEAR_STATES, true);
-	}
 }

@@ -56,11 +56,8 @@ private:
 	void OnFormat(wxCommandEvent& evt);
 	void OnPrevMark(wxCommandEvent& evt);
 	void OnNextMark(wxCommandEvent& evt);
-	void OnClearMark(wxCommandEvent& evt);
 
 	void OnImport(wxCommandEvent& evt);
 	void OnExport(wxCommandEvent& evt);
-
-	void AddMarker(wxStyledTextEvent& evt);
 };
 

@@ -51,37 +51,22 @@ void Main::BuildInterface()
 void Main::SetShortcuts()
 {
 	wxAcceleratorEntry entries[22];
-	// MenuBar
-	entries[0].Set(wxACCEL_CTRL, (int)'O', Ids::ID_OPEN_C);
-	entries[1].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'O', Ids::ID_OPEN_G);
-	entries[2].Set(wxACCEL_CTRL, (int)'S', Ids::ID_SAVE_C);
-	entries[3].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'S', Ids::ID_SAVE_G);
-	entries[4].Set(wxACCEL_CTRL, (int)'L', Ids::ID_CLEAR_C);
-	entries[5].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'L', Ids::ID_CLEAR_G);
-
-	entries[6].Set(wxACCEL_CTRL, (int)'1', Ids::ID_VIEW_DEFAULT);
-	entries[7].Set(wxACCEL_CTRL, (int)'2', Ids::ID_VIEW_INPUT);
-	entries[8].Set(wxACCEL_CTRL, (int)'3', Ids::ID_VIEW_GRID);
-	entries[9].Set(wxACCEL_CTRL, (int)'4', Ids::ID_VIEW_ALGORITHM);
-
-	entries[10].Set(wxACCEL_CTRL, (int)'U', Ids::ID_USERMANUAL);
-	entries[11].Set(wxACCEL_CTRL, (int)'J', Ids::ID_SHORTCUTS);
 	// ToolZoom
-	entries[12].Set(wxACCEL_CTRL, (int)'+', Ids::ID_ZOOM_IN);
-	entries[13].Set(wxACCEL_CTRL, (int)'-', Ids::ID_ZOOM_OUT);
+	entries[0].Set(wxACCEL_CTRL, (int)'+', Ids::ID_ZOOM_IN);
+	entries[1].Set(wxACCEL_CTRL, (int)'-', Ids::ID_ZOOM_OUT);
 	// ToolUndo
-	entries[14].Set(wxACCEL_CTRL, (int)'Z', Ids::ID_BUTTON_UNDO);
-	entries[15].Set(wxACCEL_CTRL, (int)'Y', Ids::ID_BUTTON_REDO);
-	entries[16].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'Z', Ids::ID_BUTTON_REDO);
+	entries[2].Set(wxACCEL_CTRL, (int)'Z', Ids::ID_BUTTON_UNDO);
+	entries[3].Set(wxACCEL_CTRL, (int)'Y', Ids::ID_BUTTON_REDO);
+	entries[4].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'Z', Ids::ID_BUTTON_REDO);
 	// ToolModes
-	entries[17].Set(wxACCEL_CTRL, (int)'Q', Ids::ID_MODE_DRAW);
-	entries[18].Set(wxACCEL_CTRL, (int)'W', Ids::ID_MODE_PICK);
-	entries[19].Set(wxACCEL_CTRL, (int)'E', Ids::ID_MODE_MOVE);
+	entries[5].Set(wxACCEL_CTRL, (int)'Q', Ids::ID_MODE_DRAW);
+	entries[6].Set(wxACCEL_CTRL, (int)'W', Ids::ID_MODE_PICK);
+	entries[7].Set(wxACCEL_CTRL, (int)'E', Ids::ID_MODE_MOVE);
 	// ToolStates
-	entries[20].Set(wxACCEL_ALT, WXK_LEFT, Ids::ID_BUTTON_PREV);
-	entries[21].Set(wxACCEL_ALT, WXK_RIGHT, Ids::ID_BUTTON_NEXT);
+	entries[8].Set(wxACCEL_ALT, WXK_LEFT, Ids::ID_BUTTON_PREV);
+	entries[9].Set(wxACCEL_ALT, WXK_RIGHT, Ids::ID_BUTTON_NEXT);
 
-	wxAcceleratorTable accel(22, entries);
+	wxAcceleratorTable accel(10, entries);
 	this->SetAcceleratorTable(accel);
 }
 

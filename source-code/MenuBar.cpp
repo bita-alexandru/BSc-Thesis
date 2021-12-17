@@ -31,7 +31,7 @@ void MenuBar::BuildInterface()
 	menuFile->AppendSeparator();
 	menuFile->AppendSubMenu(menuClear, "&Clear");
 	menuFile->AppendSeparator();
-	menuFile->Append(Ids::ID_EXIT, "E&xit");
+	menuFile->Append(Ids::ID_EXIT, "E&xit\tAlt-F4");
 
 	menuClear->Append(Ids::ID_CLEAR_C, "&Cellular Automaton Input\tCtrl-L");
 	menuClear->Append(Ids::ID_CLEAR_G, "&Genetic Algorithm Input\tCtrl-Shift-L");
