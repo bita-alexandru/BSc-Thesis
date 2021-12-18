@@ -31,6 +31,7 @@ public:
 
 		// InputStates
 		ID_EDIT_STATES,
+		ID_SEARCH_STATES,
 		ID_SELECT_STATE,
 		ID_GOTO_STATE,
 		ID_COLOR_STATE,
@@ -43,6 +44,7 @@ public:
 
 		// InputRules
 		ID_EDIT_RULES,
+		ID_SEARCH_RULES,
 		ID_GOTO_RULE,
 		ID_DELETE_RULE,
 

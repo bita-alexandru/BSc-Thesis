@@ -35,7 +35,6 @@ private:
 	void UpdateTextIndex();
 	void UpdateState();
 
-	wxDECLARE_EVENT_TABLE();
 	void OnPrev(wxCommandEvent& evt);
 	void OnNext(wxCommandEvent& evt);
 };

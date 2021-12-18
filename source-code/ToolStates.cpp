@@ -1,11 +1,6 @@
 #include "ToolStates.h"
 #include "Ids.h"
 
-wxBEGIN_EVENT_TABLE(ToolStates, wxPanel)
-    EVT_BUTTON(Ids::ID_BUTTON_PREV, ToolStates::OnPrev)
-    EVT_BUTTON(Ids::ID_BUTTON_NEXT, ToolStates::OnNext)
-wxEND_EVENT_TABLE()
-
 ToolStates::ToolStates(wxWindow* parent) : wxPanel(parent)
 {
     SetBackgroundColour(wxColour(242, 204, 143));
@@ -128,6 +123,9 @@ void ToolStates::BuildInterface()
 	wxButton* next = new wxButton(this, Ids::ID_BUTTON_NEXT, ">", wxDefaultPosition, wxSize(32, 32));
 	previous->SetToolTip("Previous");
 	next->SetToolTip("Next");
+
+	previous->Bind(wxEVT_BUTTON, &ToolStates::OnPrev, this);
+	next->Bind(wxEVT_BUTTON, &ToolStates::OnPrev, this);
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 	sizer->Add(previous, 0, wxALIGN_CENTER_VERTICAL);

@@ -125,7 +125,7 @@ void InputRules::BuildInterface()
 	wxButton* edit = new wxButton(this, Ids::ID_EDIT_RULES, wxString("Edit Rules"));
     edit->Bind(wxEVT_BUTTON, &InputRules::OnEdit, this);
 
-    wxSearchCtrl* search = new wxSearchCtrl(this, wxID_ANY);
+    wxSearchCtrl* search = new wxSearchCtrl(this, Ids::ID_SEARCH_RULES);
     search->Bind(wxEVT_TEXT, &InputRules::Search, this);
     search->Bind(wxEVT_SEARCHCTRL_SEARCH_BTN, &InputRules::SearchEnter, this);
 
