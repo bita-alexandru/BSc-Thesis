@@ -50,7 +50,7 @@ void Main::BuildInterface()
 
 void Main::SetShortcuts()
 {
-	wxAcceleratorEntry entries[9];
+	wxAcceleratorEntry entries[11];
 	// ToolZoom
 	entries[0].Set(wxACCEL_CTRL, (int)'+', Ids::ID_ZOOM_IN);
 	entries[1].Set(wxACCEL_CTRL, (int)'-', Ids::ID_ZOOM_OUT);
@@ -64,8 +64,11 @@ void Main::SetShortcuts()
 	// ToolStates
 	entries[7].Set(wxACCEL_CTRL, WXK_LEFT, Ids::ID_BUTTON_PREV);
 	entries[8].Set(wxACCEL_CTRL, WXK_RIGHT, Ids::ID_BUTTON_NEXT);
+	// Editors and their Searchbars
+	entries[9].Set(wxACCEL_CTRL, (int)'[', Ids::ID_EDIT_STATES);
+	entries[10].Set(wxACCEL_CTRL, (int)']', Ids::ID_EDIT_RULES);
 
-	wxAcceleratorTable accel(9, entries);
+	wxAcceleratorTable accel(11, entries);
 	this->SetAcceleratorTable(accel);
 }
 

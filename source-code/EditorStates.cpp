@@ -44,14 +44,13 @@ std::vector<std::string> EditorStates::GetData()
 
 	// count lines (states) and mark duplicates/invalid states
 	std::unordered_set<std::string> setStates;
-	std::vector<int> indexDuplicates;
 	std::vector<int> indexInvalid;
 
 	std::stringstream ssText(text);
 	std::string state;
 	std::vector<std::string> states({ "FREE" });
 
-	int cntLine = 0;
+	int cntLine = -1;
 	while (std::getline(ssText, state, '\n'))
 	{
 		cntLine++;
@@ -72,23 +71,66 @@ std::vector<std::string> EditorStates::GetData()
 			continue;
 		}
 
-		states.push_back(state);
-
 		// duplicate found
 		if (setStates.find(state) != setStates.end())
 		{
-			indexDuplicates.push_back(cntLine);
+			indexInvalid.push_back(cntLine);
+			continue;
 		}
 		else
 		{
 			setStates.insert(state);
 		}
+
+		states.push_back(state);
 	}
 
-	if (states.size() > Sizes::STATES_MAX || indexDuplicates.size() || indexInvalid.size())
+	if (states.size() > Sizes::STATES_MAX)
 	{
-		// to do, messagebox options: "mark&resolve", "ignore", "cancel"
-		return std::vector<std::string>({ "FREE" });
+		wxMessageDialog* dialog = new wxMessageDialog(
+			this, "The maximum allowed number of states has been surpassed.\nMake sure you're within the given limit before saving.", "Error",
+			wxOK | wxICON_ERROR
+		);
+		dialog->SetExtendedMessage(
+			"Limit: " + std::to_string(Sizes::STATES_MAX - 1) + "\nCurrent number: " + std::to_string(states.size() - 1)
+		);
+		int answer = dialog->ShowModal();
+
+		return {};
+	}
+	else if (indexInvalid.size())
+	{
+		wxMessageDialog* dialog = new wxMessageDialog(
+			this, "Some of the states appear to be invalid.", "Warning",
+			wxYES_NO | wxCANCEL | wxICON_EXCLAMATION
+		);
+		dialog->SetYesNoLabels("Mark && Resolve", "Ignore");
+		dialog->SetExtendedMessage(
+			"Make sure you don't have any duplicates and that you're respecting the naming conventions."
+		);
+		int answer = dialog->ShowModal();
+
+		if (answer == wxID_YES)
+		{
+			m_TextCtrl->MarkerDeleteAll(wxSTC_MARK_CIRCLE);
+
+			for (int i = 0; i < indexInvalid.size(); i++)
+			{
+				m_TextCtrl->MarkerAdd(indexInvalid[i], wxSTC_MARK_CIRCLE);
+			}
+			m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, true);
+			m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, true);
+
+			return {};
+		}
+		if (answer == wxID_NO)
+		{
+			return states;
+		}
+		if (answer == wxID_CANCEL)
+		{
+			return {};
+		}
 	}
 
 	return states;
@@ -176,18 +218,15 @@ void EditorStates::BuildInputPanel()
 	m_TextCtrl->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
 
 	wxPanel* panelButtons = new wxPanel(this);
-	wxButton* close = new wxButton(panelButtons, Ids::ID_CLOSE_STATES, wxString("Close"));
 	wxButton* save = new wxButton(panelButtons, Ids::ID_SAVE_STATES, wxString("Save"));
 	wxButton* saveClose = new wxButton(panelButtons, Ids::ID_SAVE_CLOSE_STATES, wxString("Save && Close"));
 
-	close->Bind(wxEVT_BUTTON, &EditorStates::OnClose, this);
 	save->Bind(wxEVT_BUTTON, &EditorStates::OnSave, this);
 	saveClose->Bind(wxEVT_BUTTON, &EditorStates::OnSaveClose, this);
 
 	wxBoxSizer* sizerButtons = new wxBoxSizer(wxHORIZONTAL);
 	panelButtons->SetSizerAndFit(new wxBoxSizer(wxHORIZONTAL));
-	sizerButtons->Add(close, 0);
-	sizerButtons->Add(save, 0, wxLEFT, 6);
+	sizerButtons->Add(save, 0);
 	sizerButtons->Add(saveClose, 0);
 
 	panelButtons->SetSizerAndFit(sizerButtons);
@@ -216,12 +255,28 @@ void EditorStates::BuildDialogFind(std::string title, long style)
 
 void EditorStates::OnCloseEvent(wxCloseEvent& evt)
 {
-	wxDELETE(m_FindData); wxDELETE(m_FindDialog);
+	// changes unsaved -> show dialog
+	if (m_PrevText != m_TextCtrl->GetText())
+	{
+		wxMessageDialog* dialog = new wxMessageDialog(
+			this, "Do you want to save the changes?", "Save",
+			wxYES_NO | wxCANCEL | wxICON_INFORMATION
+		);
+		int answer = dialog->ShowModal();
 
-	// undo modifications
-	m_TextCtrl->SetText(m_PrevText);
-
-	Hide();
+		if (answer == wxID_YES)
+		{
+			CloseEditor(true);
+			return;
+		}
+		if (answer == wxID_NO)
+		{
+			CloseEditor(false);
+			return;
+		}
+		if (answer == wxID_CANCEL) return;
+	}
+	else CloseEditor(false);
 }
 
 void EditorStates::OnShowEvent(wxShowEvent& evt)
@@ -231,30 +286,46 @@ void EditorStates::OnShowEvent(wxShowEvent& evt)
 
 void EditorStates::OnClose(wxCommandEvent& evt)
 {
-	wxDELETE(m_FindData); wxDELETE(m_FindDialog);
+	// changes unsaved -> show dialog
+	if (m_PrevText != m_TextCtrl->GetText())
+	{
+		wxMessageDialog* dialog = new wxMessageDialog(
+			this, "Do you want to save the changes?", "Save",
+			wxYES_NO | wxCANCEL | wxICON_INFORMATION
+		);
+		int answer = dialog->ShowModal();
 
-	// undo modifications
-	m_TextCtrl->SetText(m_PrevText);
-
-	Hide();
+		if (answer == wxID_YES)
+		{
+			CloseEditor(true);
+			return;
+		}
+		if (answer == wxID_NO)
+		{
+			CloseEditor(false);
+			return;
+		}
+		if (answer == wxID_CANCEL) return;
+	}
+	else CloseEditor(false);
 }
 
 void EditorStates::OnSave(wxCommandEvent& evt)
 {
-	m_PrevText = m_TextCtrl->GetText();
+	std::vector<std::string> data = GetData();
+	if (data.empty()) return;
 
-	m_InputStates->SetStates(GetData());
+	m_TextCtrl->MarkerDeleteAll(wxSTC_MARK_CIRCLE);
+	m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, false);
+	m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, false);
+
+	m_PrevText = m_TextCtrl->GetText();
+	m_InputStates->SetStates(data);
 }
 
 void EditorStates::OnSaveClose(wxCommandEvent& evt)
 {
-	wxDELETE(m_FindData); wxDELETE(m_FindDialog);
-
-	m_PrevText = m_TextCtrl->GetText();
-
-	m_InputStates->SetStates(GetData());
-
-	Hide();
+	CloseEditor(true);
 }
 
 void EditorStates::OnMenuFind(wxCommandEvent& evt)
@@ -330,8 +401,13 @@ void EditorStates::OnReplaceAll(wxFindDialogEvent& evt)
 		m_TextCtrl->SetSelection(result, result + find.size());
 		m_TextCtrl->ReplaceSelection(replace);
 	}
-
-	// to do, messagebox occurences
+	std::string message = std::to_string(occurences);
+	message += (occurences == 1) ? " occurence has been replaced." : " occurences have been replaced.";
+	wxMessageDialog* dialog = new wxMessageDialog(
+		this, message, "Replace All",
+		wxOK | wxICON_INFORMATION
+	);
+	int answer = dialog->ShowModal();
 }
 
 void EditorStates::OnFormat(wxCommandEvent& evt)
@@ -382,4 +458,25 @@ void EditorStates::OnImport(wxCommandEvent& evt)
 
 void EditorStates::OnExport(wxCommandEvent& evt)
 {
+}
+
+void EditorStates::CloseEditor(bool save)
+{
+	wxDELETE(m_FindData); wxDELETE(m_FindDialog);
+
+	if (save)
+	{
+		std::vector<std::string> data = GetData();
+		if (data.empty()) return;
+
+		m_TextCtrl->MarkerDeleteAll(wxSTC_MARK_CIRCLE);
+		m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, false);
+		m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, false);
+
+		m_PrevText = m_TextCtrl->GetText();
+		m_InputStates->SetStates(data);
+	}
+	else m_TextCtrl->SetText(m_PrevText);
+
+	Hide();
 }

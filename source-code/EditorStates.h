@@ -59,5 +59,7 @@ private:
 
 	void OnImport(wxCommandEvent& evt);
 	void OnExport(wxCommandEvent& evt);
+
+	void CloseEditor(bool save = false);
 };
 
