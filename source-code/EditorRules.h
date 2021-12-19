@@ -31,6 +31,7 @@ private:
 
 	wxString m_PrevText;
 	int m_MarkLine = -1;
+	bool m_InvalidInput = false;
 
 	void BuildMenuBar();
 	void BuildInputPanel();
@@ -60,5 +61,7 @@ private:
 
 	void OnImport(wxCommandEvent& evt);
 	void OnExport(wxCommandEvent& evt);
+
+	void CloseEditor(bool save = false);
 };
 

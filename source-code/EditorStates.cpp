@@ -96,6 +96,7 @@ std::vector<std::string> EditorStates::GetData()
 		);
 		int answer = dialog->ShowModal();
 
+		m_InvalidInput = true;
 		return {};
 	}
 	else if (indexInvalid.size())
@@ -121,18 +122,22 @@ std::vector<std::string> EditorStates::GetData()
 			m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, true);
 			m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, true);
 
+			m_InvalidInput = true;
 			return {};
 		}
 		if (answer == wxID_NO)
 		{
+			m_InvalidInput = false;
 			return states;
 		}
 		if (answer == wxID_CANCEL)
 		{
+			m_InvalidInput = true;
 			return {};
 		}
 	}
 
+	m_InvalidInput = false;
 	return states;
 }
 
@@ -143,7 +148,12 @@ void EditorStates::GoTo(std::string state)
 	// not found
 	if (result == -1)
 	{
-		// to do, message box informing the text was not found
+		wxMessageDialog* dialog = new wxMessageDialog(
+			this, "No occurence found.", "Go To",
+			wxOK | wxICON_INFORMATION
+		);
+		int answer = dialog->ShowModal();
+		return;
 	}
 	else
 	{
@@ -159,7 +169,11 @@ void EditorStates::DeleteState(std::string state)
 {
 	int result = m_TextCtrl->SearchNext(wxSTC_FIND_WHOLEWORD, state);
 
-	if (result != -1) m_TextCtrl->LineDelete();
+	if (result != -1)
+	{
+		m_TextCtrl->LineDelete();
+		m_PrevText = m_TextCtrl->GetText();
+	}
 }
 
 void EditorStates::BuildMenuBar()
@@ -313,7 +327,7 @@ void EditorStates::OnClose(wxCommandEvent& evt)
 void EditorStates::OnSave(wxCommandEvent& evt)
 {
 	std::vector<std::string> data = GetData();
-	if (data.empty()) return;
+	if (m_InvalidInput) return;
 
 	m_TextCtrl->MarkerDeleteAll(wxSTC_MARK_CIRCLE);
 	m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, false);
@@ -347,11 +361,18 @@ void EditorStates::OnFind(wxFindDialogEvent& evt)
 	wxString find = m_FindData->GetFindString();
 
 	int flags = m_FindData->GetFlags();
-	int result = m_TextCtrl->FindText(0, m_TextCtrl->GetLastPosition(), find, flags);
+	int result;
+
+	if (flags & wxFR_DOWN) result = m_TextCtrl->FindText(0, m_TextCtrl->GetLastPosition(), find, flags);
+	else result = m_TextCtrl->FindText(m_TextCtrl->GetLastPosition(), 0, find, flags);
 
 	if (result == -1)
 	{
-		// to do, messagebox
+		wxMessageDialog* dialog = new wxMessageDialog(
+			this, "No occurences found.", "Find",
+			wxOK | wxICON_INFORMATION
+		);
+		int answer = dialog->ShowModal();
 		return;
 	}
 
@@ -366,12 +387,16 @@ void EditorStates::OnFindNext(wxFindDialogEvent& evt)
 	int flags = m_FindData->GetFlags();
 	int result;
 
-	if (flags & wxFR_DOWN) result = m_TextCtrl->FindText(m_TextCtrl->GetAnchor() + 1, m_TextCtrl->GetLastPosition(), find, flags);
+	if (flags & wxFR_DOWN) result = m_TextCtrl->FindText(m_TextCtrl->GetAnchor(), m_TextCtrl->GetLastPosition(), find, flags);
 	else result = m_TextCtrl->FindText(m_TextCtrl->GetAnchor(), 0, find, flags);
 
 	if (result == -1)
 	{
-		// to do, messagebox
+		wxMessageDialog* dialog = new wxMessageDialog(
+			this, "No more occurences found.", "Find",
+			wxOK | wxICON_INFORMATION
+		);
+		int answer = dialog->ShowModal();
 		return;
 	}
 
@@ -382,6 +407,10 @@ void EditorStates::OnFindNext(wxFindDialogEvent& evt)
 void EditorStates::OnReplace(wxFindDialogEvent& evt)
 {
 	wxString replace = m_FindData->GetReplaceString();
+	wxString find = m_FindData->GetFindString();
+
+	if (m_TextCtrl->GetSelectedText() != find) return;
+
 	m_TextCtrl->ReplaceSelection(replace);
 }
 
@@ -401,6 +430,7 @@ void EditorStates::OnReplaceAll(wxFindDialogEvent& evt)
 		m_TextCtrl->SetSelection(result, result + find.size());
 		m_TextCtrl->ReplaceSelection(replace);
 	}
+
 	std::string message = std::to_string(occurences);
 	message += (occurences == 1) ? " occurence has been replaced." : " occurences have been replaced.";
 	wxMessageDialog* dialog = new wxMessageDialog(
@@ -427,7 +457,7 @@ void EditorStates::OnPrevMark(wxCommandEvent& evt)
 	int line = m_TextCtrl->MarkerPrevious(--m_MarkLine, 1);
 
 	if (line == -1) line = m_TextCtrl->MarkerPrevious(m_TextCtrl->GetLineCount(), 1);
-	m_MarkLine = line;// -1;
+	m_MarkLine = line;
 
 	int position = m_TextCtrl->PositionFromLine(line);
 	m_TextCtrl->ShowPosition(position);
@@ -442,7 +472,7 @@ void EditorStates::OnNextMark(wxCommandEvent& evt)
 	int line = m_TextCtrl->MarkerNext(++m_MarkLine, 1);
 
 	if (line == -1) line = m_TextCtrl->MarkerNext(0, 1);
-	m_MarkLine = line;// +1;
+	m_MarkLine = line;
 
 	int position = m_TextCtrl->PositionFromLine(line);
 	m_TextCtrl->ShowPosition(position);
@@ -467,7 +497,7 @@ void EditorStates::CloseEditor(bool save)
 	if (save)
 	{
 		std::vector<std::string> data = GetData();
-		if (data.empty()) return;
+		if (m_InvalidInput) return;
 
 		m_TextCtrl->MarkerDeleteAll(wxSTC_MARK_CIRCLE);
 		m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, false);
