@@ -108,9 +108,6 @@
     <ClInclude Include="PanelInput.h">
       <Filter>Header Files\Panels</Filter>
     </ClInclude>
-    <ClInclude Include="MenuBar.h">
-      <Filter>Header Files\Misc</Filter>
-    </ClInclude>
     <ClInclude Include="App.h">
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
@@ -163,9 +160,6 @@
     </ClCompile>
     <ClCompile Include="InputStates.cpp">
       <Filter>Source Files\Inputs</Filter>
-    </ClCompile>
-    <ClCompile Include="MenuBar.cpp">
-      <Filter>Source Files\Misc</Filter>
     </ClCompile>
     <ClCompile Include="App.cpp">
       <Filter>Source Files\Misc</Filter>

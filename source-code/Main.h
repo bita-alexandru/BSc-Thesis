@@ -7,7 +7,6 @@
 
 #include "Ids.h"
 #include "Sizes.h"
-#include "MenuBar.h"
 #include "PanelInput.h"
 #include "PanelGrid.h"
 #include "PanelAlgorithm.h"
@@ -33,6 +32,13 @@ private:
 	wxSplitterWindow* m_SplitterGridAlgorithm = nullptr;
 
 	void BuildInterface();
+	void BuildMenubar();
 	void SetShortcuts();
 	void PrepareInput();
+
+	void MenuExit(wxCommandEvent& evt);
+	void MenuPerspectiveDefault(wxCommandEvent& evt);
+	void MenuPerspectiveInput(wxCommandEvent& evt);
+	void MenuPerspectiveGrid(wxCommandEvent& evt);
+	void MenuPerspectiveAlgorithm(wxCommandEvent& evt);
 };

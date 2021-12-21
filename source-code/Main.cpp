@@ -4,9 +4,13 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(
 {
 	SetIcon(wxICON(aaaIcon));
 
+	SetClientSize(Sizes::MAIN_WIDTH, Sizes::MAIN_HEIGHT);
+
 	Center();
 
     SetBackgroundColour(wxColour(255, 255, 255));
+
+	BuildMenubar();
 
 	BuildInterface();
 
@@ -21,9 +25,6 @@ Main::~Main()
 
 void Main::BuildInterface()
 {
-	m_MenuBar = new MenuBar();
-	this->SetMenuBar(m_MenuBar);
-
 	m_SplitterInputGrid = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_BORDER | wxSP_LIVE_UPDATE);
 	m_PanelInput = new PanelInput(m_SplitterInputGrid);
 
@@ -32,8 +33,8 @@ void Main::BuildInterface()
 	m_PanelAlgorithm = new PanelAlgorithm(m_SplitterGridAlgorithm);
 
 	wxBoxSizer* sizerGridAlgorithm = new wxBoxSizer(wxVERTICAL);
-	sizerGridAlgorithm->Add(m_PanelGrid, 3, wxEXPAND | wxBOTTOM, 6);
-	sizerGridAlgorithm->Add(m_PanelAlgorithm, 1, wxEXPAND);
+	sizerGridAlgorithm->Add(m_PanelGrid, 0);
+	sizerGridAlgorithm->Add(m_PanelAlgorithm, 0);
 
 	m_SplitterGridAlgorithm->SetSizer(sizerGridAlgorithm);
 	m_SplitterGridAlgorithm->SplitHorizontally(m_PanelGrid, m_PanelAlgorithm);
@@ -44,8 +45,59 @@ void Main::BuildInterface()
 	m_SplitterInputGrid->SetMinimumPaneSize(1);
 	m_SplitterInputGrid->SetSashGravity(0.2);
 
+	m_SplitterInputGrid->SetSashPosition(GetClientSize().GetX() * 0.2);
+	m_SplitterGridAlgorithm->SetSashPosition(GetClientSize().GetY() * 0.75);
+
 	m_EditorStates = new EditorStates(this);
 	m_EditorRules = new EditorRules(this);
+}
+
+void Main::BuildMenubar()
+{
+	wxMenu* menuFile = new wxMenu();
+	wxMenu* menuOpen = new wxMenu();
+	wxMenu* menuSave = new wxMenu();
+	wxMenu* menuClear = new wxMenu();
+	wxMenu* menuView = new wxMenu();
+	wxMenu* menuHelp = new wxMenu();
+
+	menuOpen->Append(Ids::ID_OPEN_C, "&Cellular Automaton Configuration\tCtrl-O");
+	menuOpen->Append(Ids::ID_OPEN_G, "&Genetic Algorithm Configuration\tCtrl-Shift-O");
+
+	menuSave->Append(Ids::ID_SAVE_C, "&Cellular Automaton Configuration\tCtrl-S");
+	menuSave->Append(Ids::ID_SAVE_G, "&Genetic Algorithm Configuration\tCtrl-Shift-S");
+
+	menuFile->AppendSubMenu(menuOpen, "&Open");
+	menuFile->AppendSubMenu(menuSave, "&Save");
+	menuFile->AppendSeparator();
+	menuFile->AppendSubMenu(menuClear, "&Clear");
+	menuFile->AppendSeparator();
+	menuFile->Append(Ids::ID_EXIT, "E&xit\tAlt-F4");
+
+	menuClear->Append(Ids::ID_CLEAR_C, "&Cellular Automaton Input\tCtrl-L");
+	menuClear->Append(Ids::ID_CLEAR_G, "&Genetic Algorithm Input\tCtrl-Shift-L");
+
+	menuView->Append(Ids::ID_VIEW_DEFAULT, "&Default Perspective\tF1");
+	menuView->AppendSeparator();
+	menuView->Append(Ids::ID_VIEW_INPUT, "&Input Perspective\tF2");
+	menuView->Append(Ids::ID_VIEW_GRID, "&Grid Perspective\tF3");
+	menuView->Append(Ids::ID_VIEW_ALGORITHM, "&Algorithm Perspective\tF4");
+
+	menuHelp->Append(Ids::ID_USERMANUAL, "&User Manual\tCtrl-U");
+	menuHelp->Append(Ids::ID_SHORTCUTS, "&Shortcuts\tCtrl-J");
+
+	wxMenuBar* menuBar = new wxMenuBar();
+	menuBar->Append(menuFile, "&File");
+	menuBar->Append(menuView, "&View");
+	menuBar->Append(menuHelp, "&Help");
+
+	SetMenuBar(menuBar);
+
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuExit, this, Ids::ID_EXIT);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuPerspectiveDefault, this, Ids::ID_VIEW_DEFAULT);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuPerspectiveInput, this, Ids::ID_VIEW_INPUT);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuPerspectiveGrid, this, Ids::ID_VIEW_GRID);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuPerspectiveAlgorithm, this, Ids::ID_VIEW_ALGORITHM);
 }
 
 void Main::SetShortcuts()
@@ -113,5 +165,33 @@ void Main::PrepareInput()
 	grid->SetToolCoords(toolCoords);
 
 	statusControls->SetGrid(grid);
+}
+
+void Main::MenuExit(wxCommandEvent& evt)
+{
+	Close();
+}
+
+void Main::MenuPerspectiveDefault(wxCommandEvent& evt)
+{
+	m_SplitterGridAlgorithm->SetSashPosition(GetClientSize().GetY() * 0.75);
+	m_SplitterInputGrid->SetSashPosition(GetClientSize().GetX() * 0.2);
+}
+
+void Main::MenuPerspectiveInput(wxCommandEvent& evt)
+{
+	m_SplitterInputGrid->SetSashPosition(9999);
+}
+
+void Main::MenuPerspectiveGrid(wxCommandEvent& evt)
+{
+	m_SplitterGridAlgorithm->SetSashPosition(9999);
+	m_SplitterInputGrid->SetSashPosition(-9999);
+}
+
+void Main::MenuPerspectiveAlgorithm(wxCommandEvent& evt)
+{
+	m_SplitterGridAlgorithm->SetSashPosition(-9999);
+	m_SplitterInputGrid->SetSashPosition(-9999);
 }
 
