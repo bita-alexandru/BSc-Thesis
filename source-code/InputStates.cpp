@@ -98,7 +98,7 @@ void InputStates::SetStates(std::vector<std::string> states)
             // old state deleted -> update on grid (if necessary)
             else if (m_States.find(itmState) == m_States.end())
             {
-                m_Grid->RemoveState(itmState, itmColor);
+                m_Grid->RemoveState(itmState);
             }
             else // this state still exists but the orders got changed
             {
@@ -117,7 +117,7 @@ void InputStates::SetStates(std::vector<std::string> states)
         if (alreadyUpdated.find(state) != alreadyUpdated.end()) continue;
 
         wxColour color = m_List->GetItemBackgroundColour(i);
-        m_Grid->RemoveState(state, color);
+        m_Grid->RemoveState(state);
     }
 
     m_List->RefreshAfterUpdate();

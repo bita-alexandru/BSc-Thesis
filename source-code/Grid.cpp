@@ -5,6 +5,7 @@ wxBEGIN_EVENT_TABLE(Grid, wxHVScrolledWindow)
 	EVT_MOUSE_EVENTS(Grid::OnMouse)
 	EVT_TIMER(Ids::ID_TIMER_SELECTION, Grid::OnTimerSelection)
 	EVT_KEY_DOWN(Grid::OnKeyDown)
+	EVT_ERASE_BACKGROUND(Grid::OnEraseBackground)
 wxEND_EVENT_TABLE()
 
 
@@ -60,13 +61,26 @@ void Grid::ScrollToCenter(int x, int y)
 
 void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> cells, std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> statePositions)
 {
+	for (auto it : m_PrevCells)
+	{
+		m_RedrawAll = false;
+		m_RedrawXYs.push_back({ it.first.first,it.first.second });
+		m_RedrawColors.push_back(wxColour("white"));
+	}
 
 	m_Cells = cells;
 	m_StatePositions = statePositions;
 	m_PrevCells = m_Cells;
 	m_PrevStatePositions = m_StatePositions;
 
+	for (auto it : m_Cells)
+	{
+		m_RedrawAll = false;
+		m_RedrawXYs.push_back({ it.first.first,it.first.second });
+		m_RedrawColors.push_back(it.second.second);
+	}
 	Refresh(false);
+	Update();
 }
 
 void Grid::SetToolZoom(ToolZoom* toolZoom)
@@ -104,18 +118,16 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color)
 		// position is occupied
 		else
 		{
-			std::string oldState = m_Cells[{x, y}].first;
-			m_StatePositions[oldState].erase({ x,y });
-			// there are no more cells of this state anymore -> remove it from our map
-			if (m_StatePositions[oldState].size() == 0)
-			{
-				m_StatePositions.erase(oldState);
-			}
+			EraseCell(x, y);
 
 			m_Cells[{x, y}] = { state, color };
 			m_StatePositions[state].insert({ x,y });
 
+			m_RedrawAll = false;
+			m_RedrawXY = { x,y };
+			m_RedrawColor = color;
 			Refresh(false);
+			Update();
 		}
 	}
 	// position is available
@@ -124,44 +136,42 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color)
 		m_Cells[{x, y}] = { state, color };
 		m_StatePositions[state].insert({ x,y });
 
+		m_RedrawAll = false;
+		m_RedrawXY = { x,y };
+		m_RedrawColor = color;
 		Refresh(false);
-		//wxClientDC dc(this);
-		//DrawCell(dc, x, y, color);
+		Update();
 	}
-	
 }
 
 void Grid::RemoveCell(int x, int y, std::string state, wxColour color)
 {
 	if (m_Cells.find({ x, y }) != m_Cells.end())
 	{
-		m_Cells.erase({ x,y });
-		m_StatePositions[state].erase({ x,y });
-
-		// there are no more cells of this state anymore -> remove it from our map
-		if (m_StatePositions[state].size() == 0)
-		{
-			m_StatePositions.erase(state);
-		}
-
+		EraseCell(x, y);
 		Refresh(false);
-		//wxClientDC dc(this);
-		//DrawCell(dc, x, y, wxColour("white"));
+		Update();
 	}
 }
 
-void Grid::RemoveState(std::string state, wxColour color)
+void Grid::RemoveState(std::string state)
 {
 	// cells of this state have been placed on the grid
 	if (m_StatePositions.find(state) != m_StatePositions.end())
 	{
+
 		// remove every cell of this state from our map
 		for (auto it : m_StatePositions[state])
 		{
 			// remove from m_Cells, one by one
 			m_Cells.erase(it);
+
+			m_RedrawAll = false;
+			m_RedrawXYs.push_back({ it.first,it.second });
+			m_RedrawColors.push_back(wxColour("white"));
 		}
 		Refresh(false);
+		Update();
 
 		// remove the corresponding map
 		m_StatePositions.erase(state);
@@ -181,24 +191,43 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 			for (auto it : m_StatePositions[oldState])
 			{
 				m_Cells[it].second = newColor;
+
+				m_RedrawAll = false;
+				m_RedrawXYs.push_back({ it.first,it.second });
+				m_RedrawColors.push_back(newColor);
 			}
 			Refresh(false);
+			Update();
 		}
-		//// just a regular update
-		//else
-		//{
-		//	// update both the name and the color + make a new map
-		//	for (auto it : m_StatePositions[oldState])
-		//	{
-		//		m_Cells[it] = { newState, newColor };
-		//		m_StatePositions[newState].insert(it);
-		//	}
-		//	Refresh(false);
-
-		//	// remove the old map
-		//	m_StatePositions.erase(oldState);
-		//}
 	}
+}
+
+void Grid::EraseCell(int x, int y, bool multiple)
+{
+	std::string state = m_Cells[{x, y}].first;
+
+	m_Cells.erase({ x,y });
+	m_StatePositions[state].erase({ x,y });
+
+	// there are no more cells of this state anymore -> remove it from our map
+	if (m_StatePositions[state].size() == 0)
+	{
+		m_StatePositions.erase(state);
+	}
+
+	m_RedrawAll = false;
+
+	if (multiple)
+	{
+		m_RedrawXYs.push_back({ x,y });
+		m_RedrawColors.push_back(wxColour("white"));
+	}
+	else
+	{
+		m_RedrawXY = { x,y };
+		m_RedrawColor = wxColour("white");
+	}
+	
 }
 
 wxCoord Grid::OnGetRowHeight(size_t row) const
@@ -245,7 +274,7 @@ std::pair<int, int> Grid::GetHoveredCell(int X, int Y)
 
 bool Grid::ControlSelectState(wxMouseEvent& evt)
 {
-	// shortcut for alternating between states: ALT + L/R Click
+	// shortcut for alternating between states: Shift + L/R Click
 	if ((evt.LeftIsDown() || evt.RightIsDown()) && wxGetKeyState(WXK_SHIFT))
 	{
 		if (!m_TimerSelection->IsRunning()) m_TimerSelection->Start(80);
@@ -318,13 +347,15 @@ bool Grid::ModeDraw(wxMouseEvent& evt, int x, int y, char mode)
 				if (wxGetKeyState(WXK_ALT))
 				{
 					DeleteStructure(x, y, std::unordered_set<std::pair<int, int>, Hashes::PairHash>(), "");
+					Refresh(false);
+					Update();
 				}
 				else
 				{
 					DeleteStructure(x, y, std::unordered_set<std::pair<int, int>, Hashes::PairHash>(), state.first);
+					Refresh(false);
+					Update();
 				}
-
-				Refresh(false);
 			}
 
 			RemoveCell(x, y, state.first, state.second);
@@ -420,61 +451,56 @@ bool Grid::ModeMove(wxMouseEvent& evt, int x, int y, char mode)
 	return false;
 }
 
-void Grid::DrawCell(wxDC& dc, int x, int y, wxColour color)
-{
-	wxBrush brush = dc.GetBrush();
-	wxPen pen = dc.GetPen();
-	if (m_Size == Sizes::CELL_SIZE_MIN) dc.SetPen(*wxTRANSPARENT_PEN);
-
-	brush.SetColour(color);
-
-	pen.SetStyle(wxPENSTYLE_SOLID);
-	pen.SetColour(wxColour(200, 200, 200));
-
-	dc.SetPen(pen);
-	dc.SetBrush(brush);
-
-	wxRect rect(x * m_Size, y * m_Size, m_Size, m_Size);
-	dc.DrawRectangle(rect);
-
-	//RefreshRect(rect, false);
-	//Update();
-}
-
 void Grid::OnDraw(wxDC& dc)
 {
-	dc.Clear();
-
 	wxBrush brush = dc.GetBrush();
 	wxPen pen = dc.GetPen();
 
 	pen.SetStyle(wxPENSTYLE_SOLID);
 	pen.SetColour(wxColour(200, 200, 200));
 
-	brush.SetColour(wxColour("white"));
-
 	dc.SetPen(pen);
 	if (m_Size == Sizes::CELL_SIZE_MIN) dc.SetPen(*wxTRANSPARENT_PEN);
+
+	if (m_JustScrolled) m_JustScrolled = false;
+	else if (!m_RedrawAll)
+	{
+		m_RedrawAll = true;
+
+		// more than 1 cell to be redrawn
+		if (m_RedrawXYs.size())
+		{
+			for (int i = 0; i < m_RedrawXYs.size(); i++)
+			{
+				brush.SetColour(m_RedrawColors[i]);
+				dc.SetBrush(brush);
+
+				int x = m_RedrawXYs[i].first;
+				int y = m_RedrawXYs[i].second;
+
+				dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
+			}
+
+			m_RedrawXYs.clear();
+			m_RedrawColors.clear();
+			return;
+		}
+
+		brush.SetColour(m_RedrawColor);
+		dc.SetBrush(brush);
+
+		int x = m_RedrawXY.first;
+		int y = m_RedrawXY.second;
+
+		dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
+		return;
+	}
+
+	brush.SetColour(wxColour("white"));
+	dc.SetBrush(brush);
 
 	wxPosition visibleBegin = GetVisibleBegin();
 	wxPosition visibleEnd = GetVisibleEnd();
-
-	//for (int y = visibleBegin.GetRow(); y < visibleEnd.GetRow(); y++)
-	//	for (int x = visibleBegin.GetCol(); x < visibleEnd.GetCol(); x++)
-	//		dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
-
-	//for (auto it : m_Cells)
-	//{
-	//	int x = it.first.first;
-	//	int y = it.first.second;
-
-	//	wxColour color = it.second.second;
-
-	//	brush.SetColour(color);
-	//	dc.SetBrush(brush);
-
-	//	dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
-	//}
 
 	for (int y = visibleBegin.GetRow(); y < visibleEnd.GetRow(); y++)
 	{
@@ -486,15 +512,12 @@ void Grid::OnDraw(wxDC& dc)
 				brush.SetColour(color);
 				dc.SetBrush(brush);
 
-				//DrawCell(dc, x, y, color);
-
 				dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
 
 				brush.SetColour(wxColour("white"));
 				dc.SetBrush(brush);
 				continue;
 			}
-			//DrawCell(dc, x, y, wxColour("white"));
 			dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
 		}
 	}
@@ -582,6 +605,7 @@ void Grid::OnKeyDown(wxKeyEvent& evt)
 		evt.Skip();
 		return;
 	}
+	m_JustScrolled = true;
 
 	if (m_ToolModes->GetMode() == 'D')
 	{
@@ -610,14 +634,16 @@ void Grid::OnKeyDown(wxKeyEvent& evt)
 	evt.Skip();
 }
 
+void Grid::OnEraseBackground(wxEraseEvent& evt)
+{
+}
+
 void Grid::DeleteStructure(int X, int Y, std::unordered_set<std::pair<int,int>, Hashes::PairHash> visited, std::string state)
 {
 	visited.insert({ X,Y });
 
 	int dx[8] = {0, 1, 1, 1, 0, -1, -1 ,-1};
 	int dy[8] = {-1, -1, 0, 1, 1, 1, 0, -1};
-
-	//wxLogDebug("%i,%i %s", X, Y, state);
 
 	// delete a whole structure no matter the states it is composed of
 	if (state.empty())
@@ -651,12 +677,5 @@ void Grid::DeleteStructure(int X, int Y, std::unordered_set<std::pair<int,int>, 
 	if (state.empty()) state = m_Cells[{X, Y}].first;
 	
 	// TO DO, add function EraseCell(x,y,state,color) for dealing with this
-	m_Cells.erase({ X,Y });
-	m_StatePositions[state].erase({ X,Y });
-
-	// there are no more cells of this state anymore -> remove it from our map
-	if (m_StatePositions[state].size() == 0)
-	{
-		m_StatePositions.erase(state);
-	}
+	EraseCell(X, Y, true);
 }

@@ -125,7 +125,7 @@ void ToolStates::BuildInterface()
 	next->SetToolTip("Next");
 
 	previous->Bind(wxEVT_BUTTON, &ToolStates::OnPrev, this);
-	next->Bind(wxEVT_BUTTON, &ToolStates::OnPrev, this);
+	next->Bind(wxEVT_BUTTON, &ToolStates::OnNext, this);
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 	sizer->Add(previous, 0, wxALIGN_CENTER_VERTICAL);

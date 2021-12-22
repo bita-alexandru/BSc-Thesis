@@ -42,8 +42,9 @@ public:
 
 	void InsertCell(int x, int y, std::string state, wxColour color);
 	void RemoveCell(int x, int y, std::string state, wxColour color);
-	void RemoveState(std::string state, wxColour color);
+	void RemoveState(std::string state);
 	void UpdateState(std::string oldState, wxColour oldColor, std::string newState, wxColour newColor);
+	void EraseCell(int x, int y, bool multiple = false);
 private:
 	int m_Size = Sizes::CELL_SIZE_DEFAULT;
 	const int m_Offset = Sizes::TOTAL_CELLS / 2;
@@ -54,7 +55,7 @@ private:
 	ToolModes* m_ToolModes = nullptr;
 	ToolStates* m_ToolStates = nullptr;
 	ToolCoords* m_ToolCoords = nullptr;
-	
+
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> m_Cells;
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> m_StatePositions;
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> m_PrevCells;
@@ -66,8 +67,14 @@ private:
 	bool m_PrevUpdated = false;
 
 	std::pair<int, int> m_MouseXY;
-
 	std::pair<int, int> m_PrevCell;
+
+	bool m_RedrawAll = true;
+	bool m_JustScrolled = false;
+	std::pair<int, int> m_RedrawXY;
+	std::vector<std::pair<int, int>> m_RedrawXYs;
+	wxColour m_RedrawColor;
+	std::vector<wxColour> m_RedrawColors;
 
 	virtual wxCoord OnGetRowHeight(size_t row) const;
 	virtual wxCoord OnGetColumnWidth(size_t row) const;
@@ -84,13 +91,12 @@ private:
 	bool ModePick(wxMouseEvent& evt, int x, int y, char mode, std::string state);
 	bool ModeMove(wxMouseEvent& evt, int x, int y, char mode);
 
-	void DrawCell(wxDC& dc, int x, int y, wxColour color);
-
 	wxDECLARE_EVENT_TABLE();
 	void OnDraw(wxDC& dc);
 	void OnMouse(wxMouseEvent& evt);
 	void OnTimerSelection(wxTimerEvent& evt);
 	void OnKeyDown(wxKeyEvent& evt);
+	void OnEraseBackground(wxEraseEvent& evt);
 
 	void DeleteStructure(int x, int y, std::unordered_set<std::pair<int, int>, Hashes::PairHash> visited, std::string state = "");
 };
