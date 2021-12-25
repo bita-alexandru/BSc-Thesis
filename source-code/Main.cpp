@@ -102,7 +102,7 @@ void Main::BuildMenubar()
 
 void Main::SetShortcuts()
 {
-	wxAcceleratorEntry entries[11];
+	wxAcceleratorEntry entries[13];
 	// ToolZoom
 	entries[0].Set(wxACCEL_CTRL, (int)'+', Ids::ID_ZOOM_IN);
 	entries[1].Set(wxACCEL_CTRL, (int)'-', Ids::ID_ZOOM_OUT);
@@ -117,10 +117,12 @@ void Main::SetShortcuts()
 	entries[7].Set(wxACCEL_CTRL, WXK_LEFT, Ids::ID_BUTTON_PREV);
 	entries[8].Set(wxACCEL_CTRL, WXK_RIGHT, Ids::ID_BUTTON_NEXT);
 	// Editors and their Searchbars
-	entries[9].Set(wxACCEL_CTRL, (int)'[', Ids::ID_EDIT_STATES);
-	entries[10].Set(wxACCEL_CTRL, (int)']', Ids::ID_EDIT_RULES);
+	entries[9].Set(wxACCEL_CTRL, (int)'1', Ids::ID_EDIT_STATES);
+	entries[10].Set(wxACCEL_CTRL, (int)'2', Ids::ID_EDIT_RULES);
+	entries[11].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'1', Ids::ID_SEARCH_STATES);
+	entries[12].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'2', Ids::ID_SEARCH_RULES);
 
-	wxAcceleratorTable accel(11, entries);
+	wxAcceleratorTable accel(13, entries);
 	this->SetAcceleratorTable(accel);
 }
 

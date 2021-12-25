@@ -119,8 +119,8 @@ void ToolStates::BuildInterface()
 	m_State->SetToolTip("FREE");
 	m_State->Refresh();
 
-	wxButton* previous = new wxButton(this, Ids::ID_BUTTON_PREV, "<", wxDefaultPosition, wxSize(32, 32));
-	wxButton* next = new wxButton(this, Ids::ID_BUTTON_NEXT, ">", wxDefaultPosition, wxSize(32, 32));
+	wxBitmapButton* previous = new wxBitmapButton(this, Ids::ID_BUTTON_PREV, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/previous.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
+	wxBitmapButton* next = new wxBitmapButton(this, Ids::ID_BUTTON_NEXT, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/next.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
 	previous->SetToolTip("Previous");
 	next->SetToolTip("Next");
 
@@ -143,6 +143,7 @@ void ToolStates::UpdateTextIndex()
 	m_TextIndex->SetLabel(label);
 	
 	//Layout();
+	//Update();
 }
 
 void ToolStates::UpdateState()

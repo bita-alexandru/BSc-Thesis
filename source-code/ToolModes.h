@@ -13,9 +13,9 @@ public:
 private:
 	char m_Mode = 'D';
 	
-	wxButton* m_Draw = nullptr;
-	wxButton* m_Pick = nullptr;
-	wxButton* m_Move = nullptr;
+	wxBitmapButton* m_Draw = nullptr;
+	wxBitmapButton* m_Pick = nullptr;
+	wxBitmapButton* m_Move = nullptr;
 	
 	wxStaticText* m_TextMode = nullptr;
 

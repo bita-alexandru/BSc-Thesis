@@ -47,9 +47,9 @@ void ToolModes::SetMode(char mode)
 
 void ToolModes::BuildInterface()
 {
-	m_Draw = new wxButton(this, Ids::ID_MODE_DRAW, "D", wxDefaultPosition, wxSize(32, 32));
-	m_Pick = new wxButton(this, Ids::ID_MODE_PICK, "P", wxDefaultPosition, wxSize(32, 32));
-	m_Move = new wxButton(this, Ids::ID_MODE_MOVE, "M", wxDefaultPosition, wxSize(32, 32));
+	m_Draw = new wxBitmapButton(this, Ids::ID_MODE_DRAW, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/draw.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
+	m_Pick = new wxBitmapButton(this, Ids::ID_MODE_PICK, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/pick.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
+	m_Move = new wxBitmapButton(this, Ids::ID_MODE_MOVE, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/move.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
 	m_Draw->Disable();
 	m_Draw->SetToolTip("Draw");
 	m_Pick->SetToolTip("Pick");

@@ -40,7 +40,7 @@ private:
 	
 	wxDECLARE_EVENT_TABLE();
 	void OnCloseEvent(wxCloseEvent& evt);
-	void OnShowEvent(wxShowEvent& evt);
+	void OnFocusEvent(wxFocusEvent& evt);
 
 	void OnClose(wxCommandEvent& evt);
 	void OnSave(wxCommandEvent& evt);

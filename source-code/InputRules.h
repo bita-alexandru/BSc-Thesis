@@ -28,6 +28,7 @@ private:
 	EditorRules* m_EditorRules = nullptr;
 
 	wxMenu* m_Menu = nullptr;
+	wxSearchCtrl* m_Search = nullptr;
 
 	std::unordered_map<std::string, std::unordered_map<std::string, std::any>> m_Rules;
 	std::unordered_map<std::string, std::string> m_States;
@@ -45,5 +46,6 @@ private:
 	void RuleDelete();
 
 	void OnEdit(wxCommandEvent& evt);
+	void FocusSearch(wxCommandEvent& evt);
 };
 

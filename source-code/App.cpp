@@ -14,6 +14,8 @@ App::~App()
 
 bool App::OnInit()
 {
+	wxImage::AddHandler(new wxPNGHandler);
+
 	m_Main = new Main();
 	m_Main->Show();
 

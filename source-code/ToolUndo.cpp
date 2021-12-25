@@ -129,8 +129,8 @@ void ToolUndo::Redo(wxCommandEvent& evt)
 
 void ToolUndo::BuildInterface()
 {
-	m_Undo = new wxButton(this, Ids::ID_BUTTON_UNDO, "U", wxDefaultPosition, wxSize(32, 32));
-	m_Redo = new wxButton(this, Ids::ID_BUTTON_REDO, "R", wxDefaultPosition, wxSize(32, 32));
+	m_Undo = new wxBitmapButton(this, Ids::ID_BUTTON_UNDO, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/undo.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
+	m_Redo = new wxBitmapButton(this, Ids::ID_BUTTON_REDO, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/redo.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
 
 	m_Undo->SetToolTip("Undo");
 	m_Undo->Disable();

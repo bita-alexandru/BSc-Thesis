@@ -22,8 +22,8 @@ void StatusSpeed::SetDelay(char mode)
 
 void StatusSpeed::BuildInterface()
 {
-    wxButton* slower = new wxButton(this, Ids::ID_BUTTON_SLOWER, "<<", wxDefaultPosition, wxSize(32, 32));
-    wxButton* faster = new wxButton(this, Ids::ID_BUTTON_FASTER, ">>", wxDefaultPosition, wxSize(32, 32));
+    wxBitmapButton* slower = new wxBitmapButton(this, Ids::ID_BUTTON_SLOWER, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/slower.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
+    wxBitmapButton* faster = new wxBitmapButton(this, Ids::ID_BUTTON_FASTER, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/faster.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
     slower->SetToolTip("Slower");
     faster->SetToolTip("Faster");
 

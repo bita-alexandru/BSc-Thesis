@@ -53,8 +53,8 @@ void ToolZoom::SetGrid(Grid* grid)
 
 void ToolZoom::BuildInterface()
 {
-	wxButton* zoomIn = new wxButton(this, Ids::ID_ZOOM_IN, "+", wxDefaultPosition, wxSize(32, 32));
-	wxButton* zoomOut = new wxButton(this, Ids::ID_ZOOM_OUT, "-", wxDefaultPosition, wxSize(32, 32));
+	wxBitmapButton* zoomIn = new wxBitmapButton(this, Ids::ID_ZOOM_IN, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/zoom-in.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
+	wxBitmapButton* zoomOut = new wxBitmapButton(this, Ids::ID_ZOOM_OUT, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/zoom-out.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
 
 	zoomIn->SetToolTip("Zoom in");
 	zoomOut->SetToolTip("Zoom out");

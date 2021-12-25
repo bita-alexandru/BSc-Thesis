@@ -44,11 +44,11 @@ void StatusControls::SetGrid(Grid* grid)
 
 void StatusControls::BuildInterface()
 {
-    wxButton* center = new wxButton(this, Ids::ID_BUTTON_CENTER, "GTC", wxDefaultPosition, wxSize(32, 32));
-    wxButton* start = new wxButton(this, Ids::ID_BUTTON_START, "S", wxDefaultPosition, wxSize(32, 32));
-    wxButton* reset = new wxButton(this, Ids::ID_BUTTON_RESET, "R", wxDefaultPosition, wxSize(32, 32));
-    wxButton* step = new wxButton(this, Ids::ID_BUTTON_STEP, "NS", wxDefaultPosition, wxSize(32, 32));
-    wxButton* generation = new wxButton(this, Ids::ID_BUTTON_GENERATION, "NG", wxDefaultPosition, wxSize(32, 32));
+    wxBitmapButton* start = new wxBitmapButton(this, Ids::ID_BUTTON_START, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/start.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
+    wxBitmapButton* reset = new wxBitmapButton(this, Ids::ID_BUTTON_RESET, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/reset.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
+    wxBitmapButton* center = new wxBitmapButton(this, Ids::ID_BUTTON_CENTER, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/center.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
+    wxBitmapButton* step = new wxBitmapButton(this, Ids::ID_BUTTON_STEP, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/step.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
+    wxBitmapButton* generation = new wxBitmapButton(this, Ids::ID_BUTTON_GENERATION, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/generation.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
 
     center->SetToolTip("Go To Center");
     center->Bind(wxEVT_BUTTON, &StatusControls::GoToCenter, this);
@@ -59,10 +59,10 @@ void StatusControls::BuildInterface()
     generation->SetToolTip("Next Generation");
 
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
-    sizer->Add(center, 0, wxALIGN_CENTER_VERTICAL);
-    sizer->Add(start, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 16);
+    sizer->Add(start, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(reset, 0, wxALIGN_CENTER_VERTICAL);
-    sizer->Add(step, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 16);
+    sizer->Add(center, 0, wxALIGN_CENTER_VERTICAL | wxLEFT | wxRIGHT, 24);
+    sizer->Add(step, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(generation, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 48);
 
     this->SetSizer(sizer);

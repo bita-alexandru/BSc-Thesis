@@ -125,16 +125,20 @@ void InputRules::BuildInterface()
 	wxButton* edit = new wxButton(this, Ids::ID_EDIT_RULES, wxString("Edit Rules"));
     edit->Bind(wxEVT_BUTTON, &InputRules::OnEdit, this);
 
-    wxSearchCtrl* search = new wxSearchCtrl(this, Ids::ID_SEARCH_RULES);
-    search->Bind(wxEVT_TEXT, &InputRules::Search, this);
-    search->Bind(wxEVT_SEARCHCTRL_SEARCH_BTN, &InputRules::SearchEnter, this);
+    m_Search = new wxSearchCtrl(this, wxID_ANY);
+    m_Search->Bind(wxEVT_TEXT, &InputRules::Search, this);
+    m_Search->Bind(wxEVT_SEARCHCTRL_SEARCH_BTN, &InputRules::SearchEnter, this);
 
 	m_List = new ListRules(this);
     m_List->Bind(wxEVT_CONTEXT_MENU, &InputRules::OnItemRightClick, this);
 
+    wxButton* focusSearch = new wxButton(this, Ids::ID_SEARCH_RULES);
+    focusSearch->Hide();
+    focusSearch->Bind(wxEVT_BUTTON, &InputRules::FocusSearch, this);
+
 	wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "Rules");
 	sizer->Add(edit, 0, wxEXPAND);
-    sizer->Add(search, 0, wxEXPAND);
+    sizer->Add(m_Search, 0, wxEXPAND);
 	sizer->Add(m_List, 1, wxEXPAND);
 
 	this->SetSizer(sizer);
@@ -318,4 +322,9 @@ void InputRules::OnEdit(wxCommandEvent& evt)
 {
     m_EditorRules->Show();
     m_EditorRules->SetFocus();
+}
+
+void InputRules::FocusSearch(wxCommandEvent& evt)
+{
+    m_Search->SetFocus();
 }

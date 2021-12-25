@@ -55,8 +55,8 @@ private:
 		>
 	>m_RedoStatePositions;
 
-	wxButton* m_Undo = nullptr;
-	wxButton* m_Redo = nullptr;
+	wxBitmapButton* m_Undo = nullptr;
+	wxBitmapButton* m_Redo = nullptr;
 
 	void Undo(wxCommandEvent& evt);
 	void Redo(wxCommandEvent& evt);

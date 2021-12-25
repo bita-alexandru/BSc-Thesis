@@ -36,6 +36,7 @@ private:
 	EditorStates* m_EditorStates = nullptr;
 
 	wxMenu* m_Menu = nullptr;
+	wxSearchCtrl* m_Search = nullptr;
 
 	std::deque<std::string> m_Colors = std::deque<std::string>();
 	std::unordered_map<std::string, std::string> m_States;
@@ -59,5 +60,6 @@ private:
 	void StateDelete();
 
 	void OnEdit(wxCommandEvent& evt);
+	void FocusSearch(wxCommandEvent& evt);
 };
 

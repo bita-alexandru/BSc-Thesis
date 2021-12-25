@@ -160,9 +160,13 @@ void InputStates::BuildInterface()
     wxButton* edit = new wxButton(this, Ids::ID_EDIT_STATES, wxString("Edit States"));
     edit->Bind(wxEVT_BUTTON, &InputStates::OnEdit, this);
     
-    wxSearchCtrl* search = new wxSearchCtrl(this, Ids::ID_SEARCH_STATES);
-    search->Bind(wxEVT_TEXT, &InputStates::Search, this);
-    search->Bind(wxEVT_SEARCHCTRL_SEARCH_BTN, &InputStates::SearchEnter, this);
+    m_Search = new wxSearchCtrl(this, wxID_ANY);
+    m_Search->Bind(wxEVT_TEXT, &InputStates::Search, this);
+    m_Search->Bind(wxEVT_SEARCHCTRL_SEARCH_BTN, &InputStates::SearchEnter, this);
+
+    wxButton* focusSearch = new wxButton(this, Ids::ID_SEARCH_STATES);
+    focusSearch->Hide();
+    focusSearch->Bind(wxEVT_BUTTON, &InputStates::FocusSearch, this);
 
     m_List = new ListStates(this);
     m_List->PushBack({ 0, "FREE" }, { wxColour("white"), wxColour("black") });
@@ -173,7 +177,7 @@ void InputStates::BuildInterface()
 
     wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "States");
     sizer->Add(edit, 0, wxEXPAND);
-    sizer->Add(search, 0, wxEXPAND);
+    sizer->Add(m_Search, 0, wxEXPAND);
     sizer->Add(m_List, 1, wxEXPAND);
 
     this->SetSizer(sizer);
@@ -466,4 +470,9 @@ void InputStates::OnEdit(wxCommandEvent& evt)
 {
     m_EditorStates->Show();
     m_EditorStates->SetFocus();
+}
+
+void InputStates::FocusSearch(wxCommandEvent& evt)
+{
+    m_Search->SetFocus();
 }

@@ -6,7 +6,7 @@
 
 wxBEGIN_EVENT_TABLE(EditorStates, wxFrame)
 	EVT_CLOSE(EditorStates::OnCloseEvent)
-	EVT_SHOW(EditorStates::OnShowEvent)
+	EVT_SET_FOCUS(EditorStates::OnFocusEvent)
 wxEND_EVENT_TABLE()
 
 EditorStates::EditorStates(wxFrame* parent) : wxFrame(parent, wxID_ANY, "CellyGen::States", wxDefaultPosition, wxSize(Sizes::EDITOR_WIDTH, Sizes::EDITOR_HEIGHT))
@@ -293,7 +293,7 @@ void EditorStates::OnCloseEvent(wxCloseEvent& evt)
 	else CloseEditor(false);
 }
 
-void EditorStates::OnShowEvent(wxShowEvent& evt)
+void EditorStates::OnFocusEvent(wxFocusEvent& evt)
 {
 	m_TextCtrl->SetFocus();
 }
