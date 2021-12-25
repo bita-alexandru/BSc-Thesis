@@ -40,11 +40,12 @@ public:
 	void SetToolStates(ToolStates* toolStates);
 	void SetToolCoords(ToolCoords* toolCoords);
 
-	void InsertCell(int x, int y, std::string state, wxColour color);
-	void RemoveCell(int x, int y, std::string state, wxColour color);
+	void InsertCell(int x, int y, std::string state, wxColour color, bool multiple = false);
+	void RemoveCell(int x, int y, std::string state, wxColour color, bool multiple = false);
 	void RemoveState(std::string state);
 	void UpdateState(std::string oldState, wxColour oldColor, std::string newState, wxColour newColor);
 	void EraseCell(int x, int y, bool multiple = false);
+	std::string GetState(int x, int y);
 private:
 	int m_Size = Sizes::CELL_SIZE_DEFAULT;
 	const int m_Offset = Sizes::TOTAL_CELLS / 2;
@@ -68,6 +69,7 @@ private:
 
 	std::pair<int, int> m_MouseXY;
 	std::pair<int, int> m_PrevCell;
+	std::pair<int, int> m_LastDrawn;
 
 	bool m_RedrawAll = true;
 	bool m_JustScrolled = false;
@@ -98,6 +100,8 @@ private:
 	void OnKeyDown(wxKeyEvent& evt);
 	void OnEraseBackground(wxEraseEvent& evt);
 
-	void DeleteStructure(int x, int y, std::unordered_set<std::pair<int, int>, Hashes::PairHash> visited, std::string state = "");
+	void DeleteStructure(int x, int y, std::string state = "");
+	void DrawLine(int x, int y, std::string state, wxColour color, bool remove = false);
+	bool InBounds(int x, int y);
 };
 

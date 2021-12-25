@@ -108,9 +108,9 @@ void Grid::SetToolCoords(ToolCoords* toolCoords)
 	m_ToolCoords = toolCoords;
 }
 
-void Grid::InsertCell(int x, int y, std::string state, wxColour color)
+void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool multiple)
 {
-	if (m_Cells.find({ x, y }) != m_Cells.end())
+	if (GetState(x, y) != "FREE")
 	{
 		// current cell is of state "FREE" but there's already a cell of another state
 		// on this exact position -> remove it
@@ -118,16 +118,28 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color)
 		// position is occupied
 		else
 		{
+			// same state -> don't do anything
+			if (m_Cells[{x, y}].first == state) return;
+
 			EraseCell(x, y);
 
 			m_Cells[{x, y}] = { state, color };
 			m_StatePositions[state].insert({ x,y });
 
-			m_RedrawAll = false;
-			m_RedrawXY = { x,y };
-			m_RedrawColor = color;
-			Refresh(false);
-			Update();
+			if (multiple)
+			{
+				m_RedrawAll = false;
+				m_RedrawXYs.push_back({ x,y });
+				m_RedrawColors.push_back(color);
+			}
+			else
+			{
+				m_RedrawAll = false;
+				m_RedrawXY = { x,y };
+				m_RedrawColor = color;
+				Refresh(false);
+				Update();
+			}
 		}
 	}
 	// position is available
@@ -136,21 +148,34 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color)
 		m_Cells[{x, y}] = { state, color };
 		m_StatePositions[state].insert({ x,y });
 
-		m_RedrawAll = false;
-		m_RedrawXY = { x,y };
-		m_RedrawColor = color;
-		Refresh(false);
-		Update();
+		if (multiple)
+		{
+			m_RedrawAll = false;
+			m_RedrawXYs.push_back({ x,y });
+			m_RedrawColors.push_back(color);
+		}
+		else
+		{
+			m_RedrawAll = false;
+			m_RedrawXY = { x,y };
+			m_RedrawColor = color;
+			Refresh(false);
+			Update();
+		}
 	}
 }
 
-void Grid::RemoveCell(int x, int y, std::string state, wxColour color)
+void Grid::RemoveCell(int x, int y, std::string state, wxColour color, bool multiple)
 {
-	if (m_Cells.find({ x, y }) != m_Cells.end())
+	if (GetState(x, y) != "FREE")
 	{
-		EraseCell(x, y);
-		Refresh(false);
-		Update();
+		EraseCell(x, y, multiple);
+		
+		if (!multiple)
+		{
+			Refresh(false);
+			Update();
+		}
 	}
 }
 
@@ -227,7 +252,13 @@ void Grid::EraseCell(int x, int y, bool multiple)
 		m_RedrawXY = { x,y };
 		m_RedrawColor = wxColour("white");
 	}
-	
+}
+
+std::string Grid::GetState(int x, int y)
+{
+	if (m_Cells.find({ x,y }) == m_Cells.end()) return "FREE";
+
+	return m_Cells[{x, y}].first;
 }
 
 wxCoord Grid::OnGetRowHeight(size_t row) const
@@ -333,32 +364,48 @@ bool Grid::ModeDraw(wxMouseEvent& evt, int x, int y, char mode)
 		if (evt.LeftIsDown())
 		{
 			std::pair<std::string, wxColour> state = m_ToolStates->GetState();
-			InsertCell(x, y, state.first, state.second);
+			
+			// just clicked
+			if (evt.LeftDown())
+			{
+				m_LastDrawn = { x,y };
+				InsertCell(x, y, state.first, state.second);
+			}
+			// holding click
+			else
+			{
+				// mouse was dragged so fast that it didn't register
+				// some of the cells meant to be drawn
+				DrawLine(x, y, state.first, state.second);
+			}
 		}
 		// right click -> remove a cell
 		else if (evt.RightIsDown())
 		{
-			if (m_Cells.find({ x,y }) == m_Cells.end()) return false;
+			// cell is already available -> nothing to remove
+			if (GetState(x, y) == "FREE") return false;
 
 			std::pair<std::string, wxColour> state = m_Cells[{x, y}];
 
 			if (wxGetKeyState(WXK_CONTROL))
 			{
-				if (wxGetKeyState(WXK_ALT))
-				{
-					DeleteStructure(x, y, std::unordered_set<std::pair<int, int>, Hashes::PairHash>(), "");
-					Refresh(false);
-					Update();
-				}
-				else
-				{
-					DeleteStructure(x, y, std::unordered_set<std::pair<int, int>, Hashes::PairHash>(), state.first);
-					Refresh(false);
-					Update();
-				}
+				if (wxGetKeyState(WXK_ALT)) DeleteStructure(x, y, "");
+				else DeleteStructure(x, y, state.first);
 			}
 
-			RemoveCell(x, y, state.first, state.second);
+			// just clicked
+			if (evt.RightDown())
+			{
+				m_LastDrawn = { x,y };
+				RemoveCell(x, y, state.first, state.second);
+			}
+			// holding click
+			else
+			{
+				// mouse was dragged so fast that it didn't register
+				// some of the cells meant to be drawn
+				DrawLine(x, y, "FREE", wxColour("white"), true);
+			}
 		}
 		else if (evt.LeftUp() || evt.RightUp())
 		{
@@ -638,44 +685,126 @@ void Grid::OnEraseBackground(wxEraseEvent& evt)
 {
 }
 
-void Grid::DeleteStructure(int X, int Y, std::unordered_set<std::pair<int,int>, Hashes::PairHash> visited, std::string state)
+void Grid::DeleteStructure(int X, int Y, std::string state)
 {
-	visited.insert({ X,Y });
-
 	int dx[8] = {0, 1, 1, 1, 0, -1, -1 ,-1};
 	int dy[8] = {-1, -1, 0, 1, 1, 1, 0, -1};
-
-	// delete a whole structure no matter the states it is composed of
-	if (state.empty())
-	{
-		for (int d = 0; d < 8; d++)
-		{
-			int x = X + dx[d];
-			int y = Y + dy[d];
-
-			if (m_Cells.find({ x,y }) != m_Cells.end() && visited.find({ x, y }) == visited.end())
-			{
-				DeleteStructure(x, y, visited, "");
-			}
-		}
-	}
-	// otherwise, make sure to respect the given input
-	else
-	{
-		for (int d = 0; d < 8; d++)
-		{
-			int x = X + dx[d];
-			int y = Y + dy[d];
-
-			if (m_StatePositions[state].find({ x,y }) != m_StatePositions[state].end() && visited.find({ x, y }) == visited.end())
-			{
-				DeleteStructure(x, y, visited, state);
-			}
-		}
-	}
-
-	if (state.empty()) state = m_Cells[{X, Y}].first;
 	
-	// TO DO, add function EraseCell(x,y,state,color) for dealing with this
-	EraseCell(X, Y, true);
+	std::unordered_set<std::pair<int, int>, Hashes::PairHash> visited;
+	std::stack<std::pair<int, int>> neighbors;
+	neighbors.push({ X,Y });
+
+	while (neighbors.size())
+	{
+		std::pair<int, int> neighbor = neighbors.top();
+		neighbors.pop();
+
+		visited.insert(neighbor);
+
+		std::string neighborState = GetState(neighbor.first, neighbor.second);
+
+		// doesn't matter if the structure is composed of cells of the same stats
+		if (state == "") EraseCell(neighbor.first, neighbor.second, true);
+		// otherwise erase only if they share the same state
+		else if (state == neighborState) EraseCell(neighbor.first, neighbor.second, true);
+		
+		for (int d = 0; d < 8; d++)
+		{
+			int x = neighbor.first + dx[d];
+			int y = neighbor.second + dy[d];
+
+			// valid neighbor -> push onto stack
+			if (GetState(x, y) != "FREE" && visited.find({ x, y }) == visited.end())
+			{
+				neighbors.push({ x,y });
+			}
+		}
+	}
+
+	Refresh(false);
+	Update();
+}
+
+void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove)
+{
+	if (m_LastDrawn != std::make_pair(x, y))
+	{
+		// apply the following algorithm to draw a line
+		// starting from the last drawn {x,y} to the current {x,y}
+		int changed = 0;
+		int d, ii, jj, di, ai, si, dj, aj, sj;
+		di = x - m_LastDrawn.first;
+		ai = abs(di) << 1;
+		si = (di < 0) ? -1 : 1;
+		dj = y - m_LastDrawn.second;
+		aj = abs(dj) << 1;
+		sj = (dj < 0) ? -1 : 1;
+
+		ii = m_LastDrawn.first;
+		jj = m_LastDrawn.second;
+
+		if (ai > aj)
+		{
+			d = aj - (ai >> 1);
+			while (ii != x)
+			{
+				std::string currState = GetState(ii, jj);
+				if (currState != state)
+				{
+					if (!remove) InsertCell(ii, jj, state, color, true);
+					else EraseCell(ii, jj, true);
+					changed++;
+				}
+				if (d >= 0)
+				{
+					jj += sj;
+					d -= ai;
+				}
+				ii += si;
+				d += aj;
+			}
+		}
+		else
+		{
+			d = ai - (aj >> 1);
+			while (jj != y) 
+			{
+				std::string currState = GetState(ii, jj);
+				if (currState != state) 
+				{
+					if (!remove) InsertCell(ii, jj, state, color, true);
+					else EraseCell(ii, jj, true);
+					changed++;
+				}
+				if (d >= 0) 
+				{
+					ii += si;
+					d -= aj;
+				}
+				jj += sj;
+				d += ai;
+			}
+		}
+
+		m_LastDrawn = { x,y };
+
+		std::string currState = GetState(x, y);
+		if (currState != state) 
+		{
+			if (!remove) InsertCell(ii, jj, state, color, true);
+			else EraseCell(ii, jj, true);
+			changed++;
+		}
+
+		if (changed > 0)
+		{
+			Refresh(false);
+			Update();
+		}
+	}
+}
+
+bool Grid::InBounds(int x, int y)
+{
+	return (x >= 0 && x < Sizes::TOTAL_CELLS && y >= 0 && y < Sizes::TOTAL_CELLS);
 }
