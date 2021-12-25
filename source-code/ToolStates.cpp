@@ -76,6 +76,11 @@ void ToolStates::SetState(std::string state)
 	}
 }
 
+void ToolStates::SetGrid(Grid* grid)
+{
+	m_Grid = grid;
+}
+
 void ToolStates::SelectPrevState()
 {
 	m_Index = std::max(0, m_Index - 1);
@@ -156,9 +161,11 @@ void ToolStates::UpdateState()
 void ToolStates::OnPrev(wxCommandEvent& evt)
 {
 	SelectPrevState();
+	m_Grid->SetFocus();
 }
 
 void ToolStates::OnNext(wxCommandEvent& evt)
 {
 	SelectNextState();
+	m_Grid->SetFocus();
 }

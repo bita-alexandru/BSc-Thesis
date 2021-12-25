@@ -9,7 +9,7 @@ wxBEGIN_EVENT_TABLE(Grid, wxHVScrolledWindow)
 wxEND_EVENT_TABLE()
 
 
-Grid::Grid(wxWindow* parent): wxHVScrolledWindow(parent)
+Grid::Grid(wxWindow* parent): wxHVScrolledWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS)
 {
 	BuildInterface();
 
@@ -30,6 +30,24 @@ void Grid::SetSize(int size)
 {
 	m_Size = size;
 
+	// still drawing
+	if (m_IsDrawing || m_IsErasing)
+	{
+		m_IsDrawing = false;
+		m_IsErasing = false;
+
+		if (m_Cells != m_PrevCells)
+		{
+			m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
+			m_PrevCells = m_Cells;
+			m_PrevStatePositions = m_StatePositions;
+		}
+	}
+
+	// to do, set a variable to mark that the grid has just been resized
+	// will assist in drawing optimization
+
+	// get (x,y) located at the center of the screen
 	wxPosition visibleBegin = GetVisibleBegin();
 	wxPosition visibleEnd = GetVisibleEnd();
 
@@ -44,6 +62,7 @@ void Grid::SetSize(int size)
 
 void Grid::ScrollToCenter(int x, int y)
 {
+	// make sure (x,y) will be located at the center of the screen after zooming
 	wxPosition visibleBegin = GetVisibleBegin();
 	wxPosition visibleEnd = GetVisibleEnd();
 
@@ -57,6 +76,10 @@ void Grid::ScrollToCenter(int x, int y)
 	column = std::max(0, column); column = std::min(Sizes::TOTAL_CELLS - 1, column);
 
 	ScrollToRowColumn(row, column);
+
+	m_RedrawAll = true;
+	Refresh(false);
+	Update();
 }
 
 void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> cells, std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> statePositions)
@@ -303,10 +326,11 @@ std::pair<int, int> Grid::GetHoveredCell(int X, int Y)
 	return { x, y };
 }
 
-bool Grid::ControlSelectState(wxMouseEvent& evt)
+bool Grid::ControlSelectState()
 {
+	wxMouseState mouse = wxGetMouseState();
 	// shortcut for alternating between states: Shift + L/R Click
-	if ((evt.LeftIsDown() || evt.RightIsDown()) && wxGetKeyState(WXK_SHIFT))
+	if ((mouse.LeftIsDown() || mouse.RightIsDown()) && wxGetKeyState(WXK_SHIFT))
 	{
 		if (!m_TimerSelection->IsRunning()) m_TimerSelection->Start(80);
 
@@ -316,23 +340,24 @@ bool Grid::ControlSelectState(wxMouseEvent& evt)
 	return false;
 }
 
-bool Grid::ControlZoom(wxMouseEvent& evt, int x, int y)
+bool Grid::ControlZoom(int x, int y, int rotation)
 {
 	// shortcut for zooming in/out with focus on hovered cell
-	int wheelRotation = evt.GetWheelRotation();
-
-	if (wheelRotation && wxGetKeyState(WXK_CONTROL))
+	if (rotation && wxGetKeyState(WXK_CONTROL))
 	{
-		if (wheelRotation > 0 && m_ToolZoom->GetSize() < Sizes::CELL_SIZE_MAX)
+		if (rotation > 0 && m_ToolZoom->GetSize() < Sizes::CELL_SIZE_MAX)
 		{
 			ScrollToCenter(x, y);
 			m_ToolZoom->ZoomIn();
 		}
-		if (wheelRotation < 0 && m_ToolZoom->GetSize() > Sizes::CELL_SIZE_MIN)
+		if (rotation < 0 && m_ToolZoom->GetSize() > Sizes::CELL_SIZE_MIN)
 		{
 			ScrollToCenter(x, y);
 			m_ToolZoom->ZoomOut();
 		}
+
+		wxPoint XY = ScreenToClient(wxGetMouseState().GetPosition());
+		ControlUpdateCoords(XY.x, XY.y);
 
 		return true;
 	}
@@ -342,33 +367,33 @@ bool Grid::ControlZoom(wxMouseEvent& evt, int x, int y)
 
 std::string Grid::ControlUpdateCoords(int x, int y)
 {
-	std::string name = "FREE";
-
 	// update coordinates displayed on screen
-	if (m_Cells.find({ x, y }) != m_Cells.end())
-	{
-		name = m_Cells[{x, y}].first;
-	}
+	std::string name = GetState(x, y);
 
 	m_ToolCoords->Set(x - m_Offset, y - m_Offset, name);
 
 	return name;
 }
 
-bool Grid::ModeDraw(wxMouseEvent& evt, int x, int y, char mode)
+bool Grid::ModeDraw(int x, int y, char mode)
 {
 	// "draw" mode
 	if (mode == 'D')
 	{
+		wxMouseState mouse = wxGetMouseState();
+
 		// left click -> place a cell
-		if (evt.LeftIsDown())
+		if (mouse.LeftIsDown())
 		{
 			std::pair<std::string, wxColour> state = m_ToolStates->GetState();
 			
 			// just clicked
-			if (evt.LeftDown())
+			if (!m_IsDrawing)
 			{
+				m_IsDrawing = true;
+				m_IsErasing = false;
 				m_LastDrawn = { x,y };
+				
 				InsertCell(x, y, state.first, state.second);
 			}
 			// holding click
@@ -380,10 +405,13 @@ bool Grid::ModeDraw(wxMouseEvent& evt, int x, int y, char mode)
 			}
 		}
 		// right click -> remove a cell
-		else if (evt.RightIsDown())
+		else if (mouse.RightIsDown())
 		{
-			// cell is already available -> nothing to remove
-			if (GetState(x, y) == "FREE") return false;
+			if (GetState(x, y) == "FREE")
+			{
+				m_LastDrawn = { x,y };
+				return true;
+			}
 
 			std::pair<std::string, wxColour> state = m_Cells[{x, y}];
 
@@ -394,9 +422,12 @@ bool Grid::ModeDraw(wxMouseEvent& evt, int x, int y, char mode)
 			}
 
 			// just clicked
-			if (evt.RightDown())
+			if (!m_IsErasing)
 			{
+				m_IsErasing = true;
+				m_IsDrawing = false;
 				m_LastDrawn = { x,y };
+
 				RemoveCell(x, y, state.first, state.second);
 			}
 			// holding click
@@ -407,8 +438,75 @@ bool Grid::ModeDraw(wxMouseEvent& evt, int x, int y, char mode)
 				DrawLine(x, y, "FREE", wxColour("white"), true);
 			}
 		}
-		else if (evt.LeftUp() || evt.RightUp())
+		else if (m_IsDrawing || m_IsErasing)
 		{
+			if (m_Cells != m_PrevCells)
+			{
+				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
+				m_PrevCells = m_Cells;
+				m_PrevStatePositions = m_StatePositions;
+			}
+
+			m_IsDrawing = false;
+			m_IsErasing = false;
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+bool Grid::ModePick(int x, int y, char mode, std::string state)
+{
+	// "pick" mode
+	if (mode == 'P')
+	{
+		// still drawing
+		if (m_IsDrawing || m_IsErasing)
+		{
+			m_IsDrawing = false;
+			m_IsErasing = false;
+
+			if (m_Cells != m_PrevCells)
+			{
+				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
+				m_PrevCells = m_Cells;
+				m_PrevStatePositions = m_StatePositions;
+			}
+		}
+		if (m_IsMoving) m_IsMoving = false;
+
+		wxMouseState mouse = wxGetMouseState();
+
+		if (mouse.LeftIsDown())
+		{
+			m_ToolStates->SetState(state);
+			m_ToolModes->SetMode('D');
+		}
+		else if (mouse.RightIsDown())
+		{
+			m_ToolModes->SetMode('D');
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+bool Grid::ModeMove(int x, int y, char mode)
+{
+	wxMouseState mouse = wxGetMouseState();
+
+	if ((mode == 'M' && mouse.LeftIsDown()) || mouse.MiddleIsDown())
+	{
+		// still drawing
+		if (m_IsDrawing || m_IsErasing)
+		{
+			m_IsDrawing = false;
+			m_IsErasing = false;
+
 			if (m_Cells != m_PrevCells)
 			{
 				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
@@ -417,83 +515,57 @@ bool Grid::ModeDraw(wxMouseEvent& evt, int x, int y, char mode)
 			}
 		}
 
-		return true;
-	}
-
-	return false;
-}
-
-bool Grid::ModePick(wxMouseEvent& evt, int x, int y, char mode, std::string state)
-{
-	// "pick" mode
-	if (mode == 'P')
-	{
-		if (evt.LeftDown())
+		if (!m_IsMoving)
 		{
-			m_ToolStates->SetState(state);
-			m_ToolModes->SetMode('D');
+			m_IsMoving = true;
+
+			SetFocus();
+			m_PrevCell = { x,y };
+
+			return true;
 		}
-		else if (evt.RightDown())
+		else
 		{
-			m_ToolModes->SetMode('D');
-		}
-
-		return true;
-	}
-
-	return false;
-}
-
-bool Grid::ModeMove(wxMouseEvent& evt, int x, int y, char mode)
-{
-	if ((mode == 'M' && evt.LeftDown()) || evt.MiddleDown())
-	{
-		SetFocus();
-
-		m_PrevCell = { x,y };
-
-		return true;
-	}
-
-	if ((mode == 'M' && evt.LeftIsDown()) || evt.MiddleIsDown())
-	{
-		if (m_PrevCell.first != x || m_PrevCell.second != y)
-		{
-			int deltaX = m_PrevCell.first - x;
-			int deltaY = m_PrevCell.second - y;
-
-			if (deltaX)
+			if (m_PrevCell.first != x || m_PrevCell.second != y)
 			{
-				m_PrevCell.first = x;
+				int deltaX = m_PrevCell.first - x;
+				int deltaY = m_PrevCell.second - y;
 
-				if (m_PrevScrolledCol) m_PrevScrolledCol = false;
-				else
+				if (deltaX)
 				{
-					ScrollColumns(deltaX);
-					m_PrevScrolledCol = true;
+					m_PrevCell.first = x;
+
+					if (m_PrevScrolledCol) m_PrevScrolledCol = false;
+					else
+					{
+						ScrollColumns(deltaX);
+						m_PrevScrolledCol = true;
+					}
+				}
+				if (deltaY)
+				{
+					m_PrevCell.second = y;
+
+					if (m_PrevScrolledRow) m_PrevScrolledRow = false;
+					else
+					{
+						ScrollRows(deltaY);
+						m_PrevScrolledRow = true;
+					}
 				}
 			}
-			if (deltaY)
-			{
-				m_PrevCell.second = y;
 
-				if (m_PrevScrolledRow) m_PrevScrolledRow = false;
-				else
-				{
-					ScrollRows(deltaY);
-					m_PrevScrolledRow = true;
-				}
-			}
+			return true;
 		}
-
-		return true;
 	}
-
-	if (mode == 'M' && evt.RightDown())
+	else if (mode == 'M' && mouse.RightIsDown())
 	{
+		m_IsMoving = false;
+
 		m_ToolModes->SetMode('D');
 		return true;
 	}
+	else m_IsMoving = false;
 
 	return false;
 }
@@ -509,6 +581,7 @@ void Grid::OnDraw(wxDC& dc)
 	dc.SetPen(pen);
 	if (m_Size == Sizes::CELL_SIZE_MIN) dc.SetPen(*wxTRANSPARENT_PEN);
 
+	// to do, optimize drawing furthermore, only redraw changes made after scrolling
 	if (m_JustScrolled) m_JustScrolled = false;
 	else if (!m_RedrawAll)
 	{
@@ -581,35 +654,49 @@ void Grid::OnMouse(wxMouseEvent& evt)
 	if (evt.Leaving())
 	{
 		m_ToolCoords->Reset();
+		
+		// still drawing
+		if (m_IsDrawing || m_IsErasing)
+		{
+			m_IsDrawing = false;
+			m_IsErasing = false;
+
+			if (m_Cells != m_PrevCells)
+			{
+				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
+				m_PrevCells = m_Cells;
+				m_PrevStatePositions = m_StatePositions;
+			}
+		}
 
 		return;
 	}
 
-	if (ControlSelectState(evt)) return;
-
-	m_MouseXY = { evt.GetX(), evt.GetY() };
+	if (ControlSelectState()) return;
 
 	std::pair<int, int> hoveredCell = GetHoveredCell(evt.GetX(), evt.GetY());
 	int x = hoveredCell.first;
 	int y = hoveredCell.second;
 
-	if (ControlZoom(evt, x, y)) return;
+	if (evt.Entering()) m_LastDrawn = { x,y };
+
+	if (ControlZoom(x, y, evt.GetWheelRotation())) return;
 
 	std::string state = ControlUpdateCoords(x, y);
 
 	char mode = m_ToolModes->GetMode();
-	
-	if (ModeMove(evt, x, y, mode))
+
+	if (ModeMove(x, y, mode))
 	{
 		evt.Skip();
 		return;
 	}
-	if (ModeDraw(evt, x, y, mode))
+	if (ModeDraw(x, y, mode))
 	{
 		evt.Skip();
 		return;
 	}
-	if (ModePick(evt, x, y, mode, state))
+	if (ModePick(x, y, mode, state))
 	{
 		evt.Skip();
 		return;
@@ -631,54 +718,44 @@ void Grid::OnTimerSelection(wxTimerEvent& evt)
 
 void Grid::OnKeyDown(wxKeyEvent& evt)
 {
-	if (evt.GetKeyCode() == (int)'W')
+	switch (evt.GetKeyCode())
 	{
+	case WXK_UP:
+	case 'W':
 		ScrollRows(-1);
-	}
-	else if (evt.GetKeyCode() == (int)'A')
-	{
-		ScrollColumns(-1);
-	}
-	else if (evt.GetKeyCode() == (int)'S')
-	{
+		break;
+	case WXK_DOWN:
+	case 'S':
 		ScrollRows(1);
-	}
-	else if (evt.GetKeyCode() == (int)'D')
-	{
+		break;
+	case WXK_LEFT:
+	case 'A':
+		ScrollColumns(-1);
+		break;
+	case WXK_RIGHT:
+	case 'D':
 		ScrollColumns(1);
-	}
-	else
-	{
-		evt.Skip();
+		break;
+	default:
 		return;
 	}
 	m_JustScrolled = true;
 
-	if (m_ToolModes->GetMode() == 'D')
-	{
-		wxMouseState mouseState = wxGetMouseState();
+	wxMouseState mouseState = wxGetMouseState();
+	wxPoint XY = mouseState.GetPosition();
 
-		std::pair<int, int> hoveredCell = GetHoveredCell(m_MouseXY.first, m_MouseXY.second);
-		int x = hoveredCell.first;
-		int y = hoveredCell.second;
+	int X = ScreenToClient(XY).x;
+	int Y = ScreenToClient(XY).y;
 
-		ControlUpdateCoords(x, y);
+	std::pair<int, int> hoveredCell = GetHoveredCell(X, Y);
+	int x = hoveredCell.first;
+	int y = hoveredCell.second;
 
-		if (mouseState.LeftIsDown())
-		{
-			std::pair<std::string, wxColour> state = m_ToolStates->GetState();
-			InsertCell(x, y, state.first, state.second);
-		}
-		else if (mouseState.RightIsDown())
-		{
-			if (m_Cells.find({ x,y }) == m_Cells.end()) return;
+	ControlUpdateCoords(x, y);
 
-			std::pair<std::string, wxColour> state = m_Cells[{x, y}];
-			RemoveCell(x, y, state.first, state.second);
-		}
-	}
+	ModeDraw(x, y, m_ToolModes->GetMode());
 
-	evt.Skip();
+	//evt.Skip();
 }
 
 void Grid::OnEraseBackground(wxEraseEvent& evt)

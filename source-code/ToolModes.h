@@ -1,6 +1,10 @@
 #pragma once
 #include "wx/wx.h"
 
+#include "Grid.h"
+
+class Grid;
+
 class ToolModes : public wxPanel
 {
 public:
@@ -10,8 +14,10 @@ public:
 	char GetMode();
 
 	void SetMode(char mode);
+	void SetGrid(Grid* grid);
 private:
 	char m_Mode = 'D';
+	Grid* m_Grid = nullptr;
 	
 	wxBitmapButton* m_Draw = nullptr;
 	wxBitmapButton* m_Pick = nullptr;

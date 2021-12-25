@@ -45,6 +45,11 @@ void ToolModes::SetMode(char mode)
 	UpdateTextMode();
 }
 
+void ToolModes::SetGrid(Grid* grid)
+{
+	m_Grid = grid;
+}
+
 void ToolModes::BuildInterface()
 {
 	m_Draw = new wxBitmapButton(this, Ids::ID_MODE_DRAW, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/draw.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
@@ -102,6 +107,7 @@ void ToolModes::UpdateTextMode()
 	m_TextMode->SetLabel(label);
 
 	//Layout();
+	//Update();
 }
 
 void ToolModes::OnMode(wxCommandEvent& evt)
@@ -109,4 +115,5 @@ void ToolModes::OnMode(wxCommandEvent& evt)
 	char mode = (evt.GetId() - Ids::ID_MODE_DRAW)["DPM"];
 
 	SetMode(mode);
+	m_Grid->SetFocus();
 }

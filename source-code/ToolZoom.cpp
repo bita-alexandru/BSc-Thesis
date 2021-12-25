@@ -77,15 +77,19 @@ void ToolZoom::UpdateTextScale()
 {
 	std::string label = "Scale=1:" + std::to_string(m_Size);
 	m_TextScale->SetLabel(label);
+
 	//Layout();
+	//Update();
 }
 
 void ToolZoom::OnZoomIn(wxCommandEvent& evt)
 {
 	ZoomIn();
+	m_Grid->SetFocus();
 }
 
 void ToolZoom::OnZoomOut(wxCommandEvent& evt)
 {
 	ZoomOut();
+	m_Grid->SetFocus();
 }

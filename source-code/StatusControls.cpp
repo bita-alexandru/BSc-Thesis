@@ -18,6 +18,7 @@ char StatusControls::GetStartState()
 
 void StatusControls::SetStartState(char state)
 {
+    // to do, change bitmaps, not labels
     switch (state)
     {
     case 'S':
@@ -71,4 +72,5 @@ void StatusControls::BuildInterface()
 void StatusControls::GoToCenter(wxCommandEvent& evt)
 {
     m_Grid->ScrollToCenter();
+    m_Grid->SetFocus();
 }

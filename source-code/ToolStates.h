@@ -3,6 +3,9 @@
 #include "wx/listctrl.h"
 
 #include "ListStates.h"
+#include "Grid.h"
+
+class Grid;
 
 class ToolStates : public wxPanel
 {
@@ -18,6 +21,7 @@ public:
 	void SetStateColor(int index, wxColour color);
 	void SetListStates(ListStates* list);
 	void SetState(std::string state);
+	void SetGrid(Grid* grid);
 
 	void SelectPrevState();
 	void SelectNextState();
@@ -25,6 +29,7 @@ private:
 	int m_Index = 0;
 	int m_MaximumIndex = 0;
 	ListStates* m_ListStates = nullptr;
+	Grid* m_Grid = nullptr;
 
 	std::vector<std::pair<std::string, wxColour>> m_States = std::vector<std::pair<std::string, wxColor>>({ {"FREE", wxColour("white")} });
 

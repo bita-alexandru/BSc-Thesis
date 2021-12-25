@@ -468,6 +468,8 @@ void InputStates::StateDelete()
 
 void InputStates::OnEdit(wxCommandEvent& evt)
 {
+    m_List->SetFocus();
+
     m_EditorStates->Show();
     m_EditorStates->SetFocus();
 }

@@ -320,6 +320,8 @@ void InputRules::RuleDelete()
 
 void InputRules::OnEdit(wxCommandEvent& evt)
 {
+    m_List->SetFocus();
+
     m_EditorRules->Show();
     m_EditorRules->SetFocus();
 }

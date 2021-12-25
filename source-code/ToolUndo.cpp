@@ -93,13 +93,10 @@ void ToolUndo::Undo(wxCommandEvent& evt)
 
 	m_Redo->Enable();
 
-	if (m_UndoCells.empty())
-	{
-		m_Undo->Disable();
-		m_Redo->SetFocus();
-	}
+	if (m_UndoCells.empty()) m_Undo->Disable();
 
 	m_Grid->SetCells(prevCells, prevStatePositions);
+	m_Grid->SetFocus();
 }
 
 void ToolUndo::Redo(wxCommandEvent& evt)
@@ -118,13 +115,10 @@ void ToolUndo::Redo(wxCommandEvent& evt)
 
 	m_Undo->Enable();
 
-	if (m_RedoCells.empty())
-	{
-		m_Redo->Disable();
-		m_Undo->SetFocus();
-	}
+	if (m_RedoCells.empty()) m_Redo->Disable();
 
 	m_Grid->SetCells(cells, statePositions);
+	m_Grid->SetFocus();
 }
 
 void ToolUndo::BuildInterface()

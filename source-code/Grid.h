@@ -18,6 +18,8 @@
 
 class ToolZoom;
 class ToolUndo;
+class ToolStates;
+class ToolModes;
 
 class Grid: public wxHVScrolledWindow
 {
@@ -66,8 +68,11 @@ private:
 	bool m_PrevScrolledCol = false;
 	bool m_PrevScrolledRow = false;
 	bool m_PrevUpdated = false;
+	bool m_AlreadyDrawn = false;
+	bool m_IsDrawing = false;
+	bool m_IsErasing = false;
+	bool m_IsMoving = false;
 
-	std::pair<int, int> m_MouseXY;
 	std::pair<int, int> m_PrevCell;
 	std::pair<int, int> m_LastDrawn;
 
@@ -86,12 +91,12 @@ private:
 	void InitializeTimers();
 
 	std::pair<int, int> GetHoveredCell(int X, int Y);
-	bool ControlSelectState(wxMouseEvent& evt);
-	bool ControlZoom(wxMouseEvent& evt, int x, int y);
+	bool ControlSelectState();
+	bool ControlZoom(int x, int y, int rotation);
 	std::string ControlUpdateCoords(int x, int y);
-	bool ModeDraw(wxMouseEvent& evt, int x, int y, char mode);
-	bool ModePick(wxMouseEvent& evt, int x, int y, char mode, std::string state);
-	bool ModeMove(wxMouseEvent& evt, int x, int y, char mode);
+	bool ModeDraw(int x, int y, char mode);
+	bool ModePick(int x, int y, char mode, std::string state);
+	bool ModeMove(int x, int y, char mode);
 
 	wxDECLARE_EVENT_TABLE();
 	void OnDraw(wxDC& dc);

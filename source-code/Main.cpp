@@ -146,6 +146,8 @@ void Main::PrepareInput()
 	StatusControls* statusControls = gridStatus->GetStatusControls();
 	StatusCells* statusCells = gridStatus->GetStatusCells();
 
+	grid->SetFocus();
+
 	m_EditorStates->SetInputStates(inputStates);
 	m_EditorRules->SetInputRules(inputRules);
 
@@ -159,6 +161,8 @@ void Main::PrepareInput()
 	toolZoom->SetGrid(grid);
 	toolUndo->SetGrid(grid);
 	toolStates->SetListStates(inputStates->GetList());
+	toolStates->SetGrid(grid);
+	toolModes->SetGrid(grid);
 
 	grid->SetToolZoom(toolZoom);
 	grid->SetToolUndo(toolUndo);

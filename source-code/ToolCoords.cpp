@@ -20,6 +20,7 @@ void ToolCoords::Set(int x, int y, std::string state)
 	m_State->SetLabel(name);
 	
 	//Layout();
+	//Update();
 }
 
 void ToolCoords::Reset()
@@ -28,6 +29,7 @@ void ToolCoords::Reset()
 	m_State->SetLabel("State=");
 
 	//Layout();
+	//Update();
 }
 
 void ToolCoords::BuildInterface()
