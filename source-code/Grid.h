@@ -48,6 +48,8 @@ public:
 	void UpdateState(std::string oldState, wxColour oldColor, std::string newState, wxColour newColor);
 	void EraseCell(int x, int y, bool multiple = false);
 	std::string GetState(int x, int y);
+
+	void Reset();
 private:
 	int m_Size = Sizes::CELL_SIZE_DEFAULT;
 	const int m_Offset = Sizes::TOTAL_CELLS / 2;
@@ -65,6 +67,7 @@ private:
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> m_PrevStatePositions;
 
 	wxTimer* m_TimerSelection = nullptr;
+
 	bool m_PrevScrolledCol = false;
 	bool m_PrevScrolledRow = false;
 	bool m_PrevUpdated = false;
@@ -75,13 +78,22 @@ private:
 
 	std::pair<int, int> m_PrevCell;
 	std::pair<int, int> m_LastDrawn;
+	std::pair<int, int> m_JustScrolled = { 0,0 };
+
+	std::vector<std::vector<std::pair<std::string, wxColour>>> m_Test = 
+		std::vector<std::vector<std::pair<std::string, wxColour>>>(401, std::vector<std::pair<std::string, wxColour>>(401, { "FREE", wxColour("white") }));
+
+	std::unordered_set<int> m_Keys;
 
 	bool m_RedrawAll = true;
-	bool m_JustScrolled = false;
+	bool m_JustResized = false;
+
+	int x1, x2;
+
 	std::pair<int, int> m_RedrawXY;
 	std::vector<std::pair<int, int>> m_RedrawXYs;
-	wxColour m_RedrawColor;
 	std::vector<wxColour> m_RedrawColors;
+	wxColour m_RedrawColor;
 
 	virtual wxCoord OnGetRowHeight(size_t row) const;
 	virtual wxCoord OnGetColumnWidth(size_t row) const;
@@ -97,13 +109,16 @@ private:
 	bool ModeDraw(int x, int y, char mode);
 	bool ModePick(int x, int y, char mode, std::string state);
 	bool ModeMove(int x, int y, char mode);
+	void ProcessKeys();
 
 	wxDECLARE_EVENT_TABLE();
 	void OnDraw(wxDC& dc);
 	void OnMouse(wxMouseEvent& evt);
 	void OnTimerSelection(wxTimerEvent& evt);
 	void OnKeyDown(wxKeyEvent& evt);
+	void OnKeyUp(wxKeyEvent& evt);
 	void OnEraseBackground(wxEraseEvent& evt);
+	void OnScroll(wxScrollWinEvent& evt);
 
 	void DeleteStructure(int x, int y, std::string state = "");
 	void DrawLine(int x, int y, std::string state, wxColour color, bool remove = false);

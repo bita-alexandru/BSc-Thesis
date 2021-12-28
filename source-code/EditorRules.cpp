@@ -39,6 +39,7 @@ std::vector<std::string> EditorRules::GetData()
 
 	// remove empty lines, white spaces and carriage symbols
 	text.erase(remove(text.begin(), text.end(), ' '), text.end());
+	text.erase(remove(text.begin(), text.end(), '\t'), text.end());
 	text.erase(remove(text.begin(), text.end(), '\r'), text.end());
 	text.erase(std::unique(text.begin(), text.end(), [](char a, char b) {return a == '\n' && b == '\n'; }), text.end());
 

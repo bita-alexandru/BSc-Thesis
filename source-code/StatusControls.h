@@ -23,5 +23,6 @@ private:
 	void BuildInterface();
 
 	void GoToCenter(wxCommandEvent& evt);
+	void Reset(wxCommandEvent& evt);
 };
 

@@ -55,7 +55,10 @@ void StatusControls::BuildInterface()
     center->Bind(wxEVT_BUTTON, &StatusControls::GoToCenter, this);
 
     start->SetToolTip("Start");
+
     reset->SetToolTip("Reset");
+    reset->Bind(wxEVT_BUTTON, &StatusControls::Reset, this);
+
     step->SetToolTip("Next Step");
     generation->SetToolTip("Next Generation");
 
@@ -72,5 +75,11 @@ void StatusControls::BuildInterface()
 void StatusControls::GoToCenter(wxCommandEvent& evt)
 {
     m_Grid->ScrollToCenter();
+    m_Grid->SetFocus();
+}
+
+void StatusControls::Reset(wxCommandEvent& evt)
+{
+    m_Grid->Reset();
     m_Grid->SetFocus();
 }
