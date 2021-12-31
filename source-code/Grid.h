@@ -119,6 +119,7 @@ private:
 	void OnKeyUp(wxKeyEvent& evt);
 	void OnEraseBackground(wxEraseEvent& evt);
 	void OnScroll(wxScrollWinEvent& evt);
+	void OnSize(wxSizeEvent& evt);
 
 	void DeleteStructure(int x, int y, std::string state = "");
 	void DrawLine(int x, int y, std::string state, wxColour color, bool remove = false);

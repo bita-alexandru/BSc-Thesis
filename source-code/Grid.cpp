@@ -8,6 +8,7 @@ wxBEGIN_EVENT_TABLE(Grid, wxHVScrolledWindow)
 	EVT_KEY_UP(Grid::OnKeyUp)
 	EVT_ERASE_BACKGROUND(Grid::OnEraseBackground)
 	EVT_SCROLLWIN(Grid::OnScroll)
+	EVT_SIZE(Grid::OnSize)
 wxEND_EVENT_TABLE()
 
 
@@ -423,13 +424,12 @@ bool Grid::ModeDraw(int x, int y, char mode)
 	// "draw" mode
 	if (mode == 'D')
 	{
-		SetFocus();
-
 		wxMouseState mouse = wxGetMouseState();
 
 		// left click -> place a cell
 		if (mouse.LeftIsDown())
 		{
+			SetFocus();
 			std::pair<std::string, wxColour> state = m_ToolStates->GetState();
 			
 			// just clicked
@@ -452,6 +452,7 @@ bool Grid::ModeDraw(int x, int y, char mode)
 		// right click -> remove a cell
 		else if (mouse.RightIsDown())
 		{
+			SetFocus();
 			if (GetState(x, y) == "FREE")
 			{
 				m_LastDrawn = { x,y };
@@ -580,53 +581,52 @@ bool Grid::ModeMove(int x, int y, char mode)
 				{
 					m_PrevCell.first = x;
 
-					if (m_PrevScrolledCol) m_PrevScrolledCol = false;
+					if (m_PrevScrolledCol)
+					{
+						m_PrevScrolledCol = false;
+						deltaX = 0;
+					}
 					else
 					{
 						m_PrevScrolledCol = true;
 
 						// don't scroll beyond the minimum limit
-						if (deltaX < 0)
-						{
-							deltaX = std::max(-GetScrollPos(wxHORIZONTAL), deltaX);
-							//wxLogDebug("POZ=%i SCROLL=%i", GetScrollPos(wxHORIZONTAL), m_JustScrolled.first);
-						}
+						if (deltaX < 0) deltaX = std::max(-GetScrollPos(wxHORIZONTAL), deltaX);
 						// don't scroll beyond the maximum limit
-						if (deltaX > 0)
-						{
-							deltaX = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxHORIZONTAL) - GetScrollThumb(wxHORIZONTAL), deltaX);
-							//wxLogDebug("POZ=%i SCROLL=%i", GetScrollPos(wxHORIZONTAL)-GetScrollThumb(wxHORIZONTAL), m_JustScrolled.first);
-						}
-
-						ScrollColumns(deltaX);
-						m_JustScrolled.first = deltaX;
+						if (deltaX > 0) deltaX = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxHORIZONTAL) - GetScrollThumb(wxHORIZONTAL), deltaX);
 					}
 				}
 				if (deltaY)
 				{
 					m_PrevCell.second = y;
 
-					if (m_PrevScrolledRow) m_PrevScrolledRow = false;
+					if (m_PrevScrolledRow)
+					{
+						m_PrevScrolledRow = false;
+						deltaY = 0;
+					}
 					else
 					{
 						m_PrevScrolledRow = true;
 						
 						// don't scroll beyond the minimum limit
-						if (deltaY < 0)
-						{
-							deltaY = std::max(-GetScrollPos(wxVERTICAL), deltaY);
-							//wxLogDebug("POZ=%i SCROLL=%i", GetScrollPos(wxVERTICAL), m_JustScrolled.second);
-						}
+						if (deltaY < 0) deltaY = std::max(-GetScrollPos(wxVERTICAL), deltaY);
 						// don't scroll beyond the maximum limit
-						if (deltaY > 0)
-						{
-							deltaY = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxVERTICAL) - GetScrollThumb(wxVERTICAL), deltaY);
-							//wxLogDebug("POZ=%i SCROLL=%i", Sizes::TOTAL_CELLS - GetScrollPos(wxVERTICAL) - GetScrollThumb(wxVERTICAL), m_JustScrolled.second);
-						}
-
-						ScrollRows(deltaY);
-						m_JustScrolled.second = deltaY;
+						if (deltaY > 0) deltaY = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxVERTICAL) - GetScrollThumb(wxVERTICAL), deltaY);
 					}
+				}
+
+				if (deltaX || deltaY)
+				{
+					//m_JustScrolled = { deltaX, deltaY };
+					m_JustScrolled.first += deltaX;
+					m_JustScrolled.second += deltaY;
+
+					ScrollColumns(deltaX);
+					ScrollRows(deltaY);
+
+					//Refresh(false);
+					//Update();
 				}
 			}
 
@@ -663,11 +663,20 @@ void Grid::OnDraw(wxDC& dc)
 	if (m_JustResized)
 	{
 		m_JustResized = false;
-		m_JustScrolled = { 0,0 };
-		m_RedrawAll = true;
+		//m_JustScrolled = { 0,0 };
+		//m_RedrawAll = true;
 	}
 	else if (m_JustScrolled != std::make_pair(0, 0))
 	{
+		//// don't scroll beyond the minimum limit
+		//if (m_JustScrolled.second < 0) m_JustScrolled.second = std::max(-GetScrollPos(wxVERTICAL), m_JustScrolled.second);
+		//if (m_JustScrolled.first < 0) m_JustScrolled.first = std::max(-GetScrollPos(wxHORIZONTAL), m_JustScrolled.first);
+		//// don't scroll beyond the maximum limit
+		//if (m_JustScrolled.first > 0) m_JustScrolled.first = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxHORIZONTAL) - GetScrollThumb(wxHORIZONTAL), m_JustScrolled.first);
+		//if (m_JustScrolled.second > 0) m_JustScrolled.second = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxVERTICAL) - GetScrollThumb(wxVERTICAL), m_JustScrolled.second);
+
+		//if (m_JustScrolled == std::make_pair(0, 0)) return;
+
 		std::unordered_set<std::pair<int, int>, Hashes::PairHash> alreadyDrawn;
 		std::vector<std::pair<int, int>> beforeScrolling;
 		
@@ -722,86 +731,94 @@ void Grid::OnDraw(wxDC& dc)
 
 		// redraw borders
 
-		//// scrolled right -> redraw right border
-		//if (m_JustScrolled.first > 0)
-		//{
-		//	for (int i = visibleEnd.GetCol(); i >= visibleEnd.GetCol() - m_JustScrolled.first; i--)
-		//	{
-		//		//int i = visibleEnd.GetCol();
-		//		//wxLogDebug("i=%i", i-m_Offset);
-		//		for (int j = visibleBegin.GetRow(); j <= visibleEnd.GetRow(); j++)
-		//		{
-		//			//wxLogDebug("j=%i", j- m_Offset);
-		//			if (alreadyDrawn.find({ i,j }) == alreadyDrawn.end())
-		//			{
-		//				dc.DrawRectangle(i * m_Size, j * m_Size, m_Size, m_Size);
-		//				//wxLogDebug("prev=(%i,%i) %s", i - m_Offset, j - m_Offset, brush.GetColour().GetAsString());
-		//			}
-		//		}
-		//	}
-		//}
-		//// scrolled left -> redraw left border
-		//if (m_JustScrolled.first < 0)
-		//{
-		//	for (int i = visibleBegin.GetCol(); i <= visibleBegin.GetCol() + m_JustScrolled.first; i++)
-		//	{
-		//		//int i = visibleBegin.GetCol();
-		//		for (int j = visibleBegin.GetRow(); j <= visibleEnd.GetRow(); j++)
-		//		{
-		//			if (alreadyDrawn.find({ i,j }) == alreadyDrawn.end())
-		//			{
-		//				dc.DrawRectangle(i * m_Size, j * m_Size, m_Size, m_Size);
-		//				//wxLogDebug("prev=(%i,%i) %s", i - m_Offset, j - m_Offset, brush.GetColour().GetAsString());
-		//			}
-		//		}
-		//	}
-		//}
-		//// scrolled down -> redraw bottom border
-		//if (m_JustScrolled.second > 0)
-		//{
-		//	for (int i = visibleEnd.GetRow(); i >= visibleEnd.GetRow() - m_JustScrolled.second; i--)
-		//	{
-		//		//int i = visibleEnd.GetRow();
-		//		for (int j = visibleBegin.GetCol(); j <= visibleEnd.GetCol(); j++)
-		//		{
-		//			if (alreadyDrawn.find({ j,i }) == alreadyDrawn.end())
-		//			{
-		//				dc.DrawRectangle(j * m_Size, i * m_Size, m_Size, m_Size);
-		//				//wxLogDebug("prev=(%i,%i) %s", i - m_Offset, j - m_Offset, brush.GetColour().GetAsString());
-		//			}
-		//		}
-		//	}
-		//}
-		//// scrolled up -> redraw upper border
-		//if (m_JustScrolled.second < 0)
-		//{
-		//	for (int i = visibleBegin.GetRow(); i <= visibleBegin.GetRow() + m_JustScrolled.second; i++)
-		//	{
-		//		//int i = visibleBegin.GetRow();
-		//		for (int j = visibleBegin.GetCol(); j <= visibleEnd.GetCol(); j++)
-		//		{
-		//			if (alreadyDrawn.find({ j,i }) == alreadyDrawn.end())
-		//			{
-		//				dc.DrawRectangle(j * m_Size, i * m_Size, m_Size, m_Size);
-		//				//wxLogDebug("prev=(%i,%i) %s", i - m_Offset, j - m_Offset, brush.GetColour().GetAsString());
-		//			}
-		//		}
-		//	}
-		//}
+		// scrolled right -> redraw right border
+		if (m_JustScrolled.first > 0)
+		{
+			//wxLogDebug("DREAPTA=%i,%i", visibleEnd.GetCol() - m_Offset, m_JustScrolled.first);
+			for (int i = visibleEnd.GetCol() - 1; i > visibleEnd.GetCol() - 1 - m_JustScrolled.first; i--)
+			{
+				//int i = visibleEnd.GetCol();
+				//wxLogDebug("col=%i", i - m_Offset);
+				for (int j = visibleBegin.GetRow(); j <= visibleEnd.GetRow(); j++)
+				{
+					//wxLogDebug("j=%i", j- m_Offset);
+					if (alreadyDrawn.find({ i,j }) == alreadyDrawn.end())
+					{
+						dc.DrawRectangle(i * m_Size, j * m_Size, m_Size, m_Size);
+						//wxLogDebug("prev=(%i,%i) %s", i - m_Offset, j - m_Offset, brush.GetColour().GetAsString());
+					}
+				}
+			}
+		}
+		// scrolled left -> redraw left border
+		if (m_JustScrolled.first < 0)
+		{
+			//wxLogDebug("STANGA=%i,%i", visibleBegin.GetCol() - m_Offset, m_JustScrolled.first);
+			for (int i = visibleBegin.GetCol(); i < visibleBegin.GetCol() - m_JustScrolled.first; i++)
+			{
+				//wxLogDebug("col=%i", i - m_Offset);
+				//int i = visibleBegin.GetCol();
+				for (int j = visibleBegin.GetRow(); j <= visibleEnd.GetRow(); j++)
+				{
+					if (alreadyDrawn.find({ i,j }) == alreadyDrawn.end())
+					{
+						dc.DrawRectangle(i * m_Size, j * m_Size, m_Size, m_Size);
+						//wxLogDebug("prev=(%i,%i) %s", i - m_Offset, j - m_Offset, brush.GetColour().GetAsString());
+					}
+				}
+			}
+		}
+		// scrolled down -> redraw bottom border
+		if (m_JustScrolled.second > 0)
+		{
+			//wxLogDebug("SCROLLAT JOS = %i", m_JustScrolled.second);
+			//wxLogDebug("JOS=%i,%i", visibleEnd.GetRow() - m_Offset,m_JustScrolled.second);
+			for (int i = visibleEnd.GetRow() - 1; i > visibleEnd.GetRow() - 1 - m_JustScrolled.second; i--)
+			{
+				//wxLogDebug("row=%i", i - m_Offset);
+				//int i = visibleEnd.GetRow();
+				for (int j = visibleBegin.GetCol(); j <= visibleEnd.GetCol(); j++)
+				{
+					if (alreadyDrawn.find({ j,i }) == alreadyDrawn.end())
+					{
+						dc.DrawRectangle(j * m_Size, i * m_Size, m_Size, m_Size);
+						//wxLogDebug("prev=(%i,%i) %s", i - m_Offset, j - m_Offset, brush.GetColour().GetAsString());
+					}
+				}
+			}
+		}
+		// scrolled up -> redraw upper border
+		if (m_JustScrolled.second < 0)
+		{
+			//wxLogDebug("SUS=%i,%i", visibleBegin.GetRow() - m_Offset, m_JustScrolled.second);
+			for (int i = visibleBegin.GetRow(); i < visibleBegin.GetRow() - m_JustScrolled.second; i++)
+			{
+				//wxLogDebug("row=%i", i - m_Offset);
+				//int i = visibleBegin.GetRow();
+				for (int j = visibleBegin.GetCol(); j <= visibleEnd.GetCol(); j++)
+				{
+					if (alreadyDrawn.find({ j,i }) == alreadyDrawn.end())
+					{
+						dc.DrawRectangle(j * m_Size, i * m_Size, m_Size, m_Size);
+						//wxLogDebug("prev=(%i,%i) %s", i - m_Offset, j - m_Offset, brush.GetColour().GetAsString());
+					}
+				}
+			}
+		}
 
 		//Update();
 
 		m_JustScrolled = { 0,0 };
-		m_JustResized = false;
-		m_RedrawAll = true;
+		//m_JustResized = false;
+		//m_RedrawAll = true;
 
-		return;
+		if (m_RedrawAll) return;
 	}
 	if (!m_RedrawAll)
 	{
 		m_RedrawAll = true;
-		m_JustScrolled = { 0,0 };
-		m_JustResized = false;
+		//m_JustScrolled = { 0,0 };
+		//m_JustResized = false;
 
 		// more than 1 cell to be redrawn
 		if (m_RedrawXYs.size())
@@ -890,6 +907,7 @@ void Grid::OnMouse(wxMouseEvent& evt)
 				m_PrevStatePositions = m_StatePositions;
 			}
 		}
+		//m_JustScrolled = { 0,0 };
 
 		return;
 	}
@@ -1020,10 +1038,18 @@ void Grid::ProcessKeys()
 	if (deltaX > 0) deltaX = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxHORIZONTAL) - GetScrollThumb(wxHORIZONTAL), deltaX);
 	if (deltaY > 0) deltaY = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxVERTICAL) - GetScrollThumb(wxVERTICAL), deltaY);
 
-	m_JustScrolled = { deltaX,deltaY };
+	if (deltaX || deltaY)
+	{
+		//m_JustScrolled = { deltaX,deltaY };
+		m_JustScrolled.first += deltaX;
+		m_JustScrolled.second += deltaY;
 
-	if (deltaX) ScrollColumns(deltaX);
-	if (deltaY) ScrollRows(deltaY);
+		ScrollColumns(deltaX);
+		ScrollRows(deltaY);
+
+		//Refresh(false);
+		//Update();
+	}
 
 	wxMouseState mouseState = wxGetMouseState();
 	wxPoint XY = mouseState.GetPosition();
@@ -1185,7 +1211,32 @@ void Grid::OnScroll(wxScrollWinEvent& evt)
 		deltaY = newPosition - GetScrollPos(wxVERTICAL);
 	}
 
-	m_JustScrolled = { deltaX, deltaY };
+	//// don't scroll beyond the minimum limit
+	//if (deltaY < 0) deltaY = std::max(-GetScrollPos(wxVERTICAL), deltaY);
+	//if (deltaX < 0) deltaX = std::max(-GetScrollPos(wxHORIZONTAL), deltaX);
+	//// don't scroll beyond the maximum limit
+	//if (deltaX > 0) deltaX = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxHORIZONTAL) - GetScrollThumb(wxHORIZONTAL), deltaX);
+	//if (deltaY > 0) deltaY = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxVERTICAL) - GetScrollThumb(wxVERTICAL), deltaY);
 
+	if (deltaX || deltaY)
+	{
+		//m_JustScrolled = { deltaX, deltaY };
+		m_JustScrolled.first += deltaX;
+		m_JustScrolled.second += deltaY;
+
+		ScrollColumns(deltaX);
+		ScrollRows(deltaY);
+
+		//Refresh(false);
+		//Update();
+	}
+	//m_JustScrolled = { 0, 0 };
+
+	//evt.Skip();
+}
+
+void Grid::OnSize(wxSizeEvent& evt)
+{
+	m_JustResized = true;
 	evt.Skip();
 }
