@@ -17,6 +17,8 @@ Grid::Grid(wxWindow* parent): wxHVScrolledWindow(parent, wxID_ANY, wxDefaultPosi
 	BuildInterface();
 
 	InitializeTimers();
+
+	PrepareData();
 }
 
 Grid::~Grid()
@@ -339,6 +341,11 @@ void Grid::BuildInterface()
 void Grid::InitializeTimers()
 {
 	m_TimerSelection = new wxTimer(this, Ids::ID_TIMER_SELECTION);
+}
+
+void Grid::PrepareData()
+{
+	m_Cells = std::vector<std::vector<std::pair<std::string, wxColour>>>(401, std::vector<std::pair<std::string, wxColour>>(401, { "FREE", wxColour("white") }));
 }
 
 std::pair<int, int> Grid::GetHoveredCell(int X, int Y)

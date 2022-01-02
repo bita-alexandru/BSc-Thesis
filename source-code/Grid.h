@@ -32,8 +32,8 @@ public:
 	void ScrollToCenter(int x = Sizes::TOTAL_CELLS / 2, int y = Sizes::TOTAL_CELLS / 2);
 
 	void SetCells(
-		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> cells,
-		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> statePositions
+		std::vector<std::vector<std::pair<std::string, wxColour>>> cells,
+		std::vector<std::vector<std::pair<std::string, wxColour>>> statePositions
 	);
 
 	void SetToolZoom(ToolZoom* toolZoom);
@@ -61,10 +61,14 @@ private:
 	ToolStates* m_ToolStates = nullptr;
 	ToolCoords* m_ToolCoords = nullptr;
 
-	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> m_Cells;
-	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> m_StatePositions;
-	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> m_PrevCells;
-	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> m_PrevStatePositions;
+	//std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> m_Cells;
+	//std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> m_StatePositions;
+	//std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> m_PrevCells;
+	//std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> m_PrevStatePositions;
+	std::vector<std::vector<std::pair<std::string, wxColour>>> m_Cells;
+	std::vector<std::vector<std::pair<std::string, wxColour>>> m_PrevCells;
+	std::unordered_map<std::string, std::vector<std::pair<int, int>>> m_StatePositions;
+	std::unordered_map<std::string, std::vector<std::pair<int, int>>> m_PrevStatePositions;
 
 	wxTimer* m_TimerSelection = nullptr;
 
@@ -80,15 +84,10 @@ private:
 	std::pair<int, int> m_LastDrawn;
 	std::pair<int, int> m_JustScrolled = { 0,0 };
 
-	std::vector<std::vector<std::pair<std::string, wxColour>>> m_Test = 
-		std::vector<std::vector<std::pair<std::string, wxColour>>>(401, std::vector<std::pair<std::string, wxColour>>(401, { "FREE", wxColour("white") }));
-
 	std::unordered_set<int> m_Keys;
 
 	bool m_RedrawAll = true;
 	bool m_JustResized = false;
-
-	int x1, x2;
 
 	std::pair<int, int> m_RedrawXY;
 	std::vector<std::pair<int, int>> m_RedrawXYs;
@@ -101,6 +100,7 @@ private:
 
 	void BuildInterface();
 	void InitializeTimers();
+	void PrepareData();
 
 	std::pair<int, int> GetHoveredCell(int X, int Y);
 	bool ControlSelectState();
