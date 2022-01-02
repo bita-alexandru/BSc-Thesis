@@ -21,7 +21,7 @@ class ToolUndo;
 class ToolStates;
 class ToolModes;
 
-class Grid: public wxHVScrolledWindow
+class Grid : public wxHVScrolledWindow
 {
 public:
 	Grid(wxWindow* parent);
@@ -32,8 +32,8 @@ public:
 	void ScrollToCenter(int x = Sizes::TOTAL_CELLS / 2, int y = Sizes::TOTAL_CELLS / 2);
 
 	void SetCells(
-		std::vector<std::vector<std::pair<std::string, wxColour>>> cells,
-		std::vector<std::vector<std::pair<std::string, wxColour>>> statePositions
+		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> cells,
+		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> statePositions
 	);
 
 	void SetToolZoom(ToolZoom* toolZoom);
@@ -50,6 +50,9 @@ public:
 	std::string GetState(int x, int y);
 
 	void Reset();
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> GetCells();
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> GetStatePositions();
+	std::unordered_map<std::string, wxColour>& GetColors();
 private:
 	int m_Size = Sizes::CELL_SIZE_DEFAULT;
 	const int m_Offset = Sizes::TOTAL_CELLS / 2;
@@ -61,14 +64,10 @@ private:
 	ToolStates* m_ToolStates = nullptr;
 	ToolCoords* m_ToolCoords = nullptr;
 
-	//std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> m_Cells;
-	//std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> m_StatePositions;
-	//std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> m_PrevCells;
-	//std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> m_PrevStatePositions;
-	std::vector<std::vector<std::pair<std::string, wxColour>>> m_Cells;
-	std::vector<std::vector<std::pair<std::string, wxColour>>> m_PrevCells;
-	std::unordered_map<std::string, std::vector<std::pair<int, int>>> m_StatePositions;
-	std::unordered_map<std::string, std::vector<std::pair<int, int>>> m_PrevStatePositions;
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> m_Cells;
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> m_StatePositions;
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> m_PrevCells;
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> m_PrevStatePositions;
 
 	wxTimer* m_TimerSelection = nullptr;
 
@@ -100,7 +99,6 @@ private:
 
 	void BuildInterface();
 	void InitializeTimers();
-	void PrepareData();
 
 	std::pair<int, int> GetHoveredCell(int X, int Y);
 	bool ControlSelectState();
@@ -125,4 +123,3 @@ private:
 	void DrawLine(int x, int y, std::string state, wxColour color, bool remove = false);
 	bool InBounds(int x, int y);
 };
-

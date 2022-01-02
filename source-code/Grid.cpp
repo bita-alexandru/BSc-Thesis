@@ -1,24 +1,22 @@
 #include "Grid.h"
 
 wxBEGIN_EVENT_TABLE(Grid, wxHVScrolledWindow)
-	EVT_PAINT(Grid::OnPaint)
-	EVT_MOUSE_EVENTS(Grid::OnMouse)
-	EVT_TIMER(Ids::ID_TIMER_SELECTION, Grid::OnTimerSelection)
-	EVT_KEY_DOWN(Grid::OnKeyDown)
-	EVT_KEY_UP(Grid::OnKeyUp)
-	EVT_ERASE_BACKGROUND(Grid::OnEraseBackground)
-	EVT_SCROLLWIN(Grid::OnScroll)
-	EVT_SIZE(Grid::OnSize)
+EVT_PAINT(Grid::OnPaint)
+EVT_MOUSE_EVENTS(Grid::OnMouse)
+EVT_TIMER(Ids::ID_TIMER_SELECTION, Grid::OnTimerSelection)
+EVT_KEY_DOWN(Grid::OnKeyDown)
+EVT_KEY_UP(Grid::OnKeyUp)
+EVT_ERASE_BACKGROUND(Grid::OnEraseBackground)
+EVT_SCROLLWIN(Grid::OnScroll)
+EVT_SIZE(Grid::OnSize)
 wxEND_EVENT_TABLE()
 
 
-Grid::Grid(wxWindow* parent): wxHVScrolledWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS)
+Grid::Grid(wxWindow* parent) : wxHVScrolledWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS)
 {
 	BuildInterface();
 
 	InitializeTimers();
-
-	PrepareData();
 }
 
 Grid::~Grid()
@@ -63,7 +61,7 @@ void Grid::SetSize(int size)
 	wxVarHScrollHelper::RefreshAll();
 	wxVarVScrollHelper::RefreshAll();
 
-	ScrollToCenter(x , y);
+	ScrollToCenter(x, y);
 }
 
 void Grid::ScrollToCenter(int x, int y)
@@ -199,7 +197,7 @@ void Grid::RemoveCell(int x, int y, std::string state, wxColour color, bool mult
 	if (GetState(x, y) != "FREE")
 	{
 		EraseCell(x, y, multiple);
-		
+
 		if (!multiple)
 		{
 			Refresh(false);
@@ -312,6 +310,21 @@ void Grid::Reset()
 	Update();
 }
 
+std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> Grid::GetCells()
+{
+	return m_Cells;
+}
+
+std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> Grid::GetStatePositions()
+{
+	return m_StatePositions;
+}
+
+std::unordered_map<std::string, wxColour>& Grid::GetColors()
+{
+	return m_ToolStates->GetColors();
+}
+
 wxCoord Grid::OnGetRowHeight(size_t row) const
 {
 	return wxCoord(m_Size);
@@ -343,16 +356,11 @@ void Grid::InitializeTimers()
 	m_TimerSelection = new wxTimer(this, Ids::ID_TIMER_SELECTION);
 }
 
-void Grid::PrepareData()
-{
-	m_Cells = std::vector<std::vector<std::pair<std::string, wxColour>>>(401, std::vector<std::pair<std::string, wxColour>>(401, { "FREE", wxColour("white") }));
-}
-
 std::pair<int, int> Grid::GetHoveredCell(int X, int Y)
 {
 	// get hovered cell information 
 	wxPosition visible = GetVisibleBegin();
-	
+
 	int x = X / m_Size + visible.GetCol();
 	int y = Y / m_Size + visible.GetRow();
 
@@ -403,7 +411,7 @@ bool Grid::ControlZoom(int x, int y, int rotation)
 
 		return true;
 	}
-	
+
 	if (rotation)
 	{
 		int sign = (rotation > 0) ? 1 : -1;
@@ -438,14 +446,14 @@ bool Grid::ModeDraw(int x, int y, char mode)
 		{
 			SetFocus();
 			std::pair<std::string, wxColour> state = m_ToolStates->GetState();
-			
+
 			// just clicked
 			if (!m_IsDrawing)
 			{
 				m_IsDrawing = true;
 				m_IsErasing = false;
 				m_LastDrawn = { x,y };
-				
+
 				InsertCell(x, y, state.first, state.second);
 			}
 			// holding click
@@ -480,7 +488,7 @@ bool Grid::ModeDraw(int x, int y, char mode)
 				m_IsErasing = true;
 				m_IsDrawing = false;
 				m_LastDrawn = { x,y };
-				
+
 				RemoveCell(x, y, state.first, state.second);
 			}
 			// holding click
@@ -615,7 +623,7 @@ bool Grid::ModeMove(int x, int y, char mode)
 					else
 					{
 						m_PrevScrolledRow = true;
-						
+
 						// don't scroll beyond the minimum limit
 						if (deltaY < 0) deltaY = std::max(-GetScrollPos(wxVERTICAL), deltaY);
 						// don't scroll beyond the maximum limit
@@ -686,7 +694,7 @@ void Grid::OnDraw(wxDC& dc)
 
 		std::unordered_set<std::pair<int, int>, Hashes::PairHash> alreadyDrawn;
 		std::vector<std::pair<int, int>> beforeScrolling;
-		
+
 		for (auto sp : m_StatePositions)
 		{
 			brush.SetColour(m_Cells[{sp.second.begin()->first, sp.second.begin()->second}].second);
@@ -742,7 +750,7 @@ void Grid::OnDraw(wxDC& dc)
 		if (m_JustScrolled.first > 0)
 		{
 			//wxLogDebug("DREAPTA=%i,%i", visibleEnd.GetCol() - m_Offset, m_JustScrolled.first);
-			for (int i = visibleEnd.GetCol() - 1; i > visibleEnd.GetCol() - 1 - m_JustScrolled.first; i--)
+			for (int i = visibleEnd.GetCol(); i > visibleEnd.GetCol() - 1 - m_JustScrolled.first; i--)
 			{
 				//int i = visibleEnd.GetCol();
 				//wxLogDebug("col=%i", i - m_Offset);
@@ -761,7 +769,7 @@ void Grid::OnDraw(wxDC& dc)
 		if (m_JustScrolled.first < 0)
 		{
 			//wxLogDebug("STANGA=%i,%i", visibleBegin.GetCol() - m_Offset, m_JustScrolled.first);
-			for (int i = visibleBegin.GetCol(); i < visibleBegin.GetCol() - m_JustScrolled.first; i++)
+			for (int i = visibleBegin.GetCol(); i <= visibleBegin.GetCol() - m_JustScrolled.first; i++)
 			{
 				//wxLogDebug("col=%i", i - m_Offset);
 				//int i = visibleBegin.GetCol();
@@ -780,7 +788,7 @@ void Grid::OnDraw(wxDC& dc)
 		{
 			//wxLogDebug("SCROLLAT JOS = %i", m_JustScrolled.second);
 			//wxLogDebug("JOS=%i,%i", visibleEnd.GetRow() - m_Offset,m_JustScrolled.second);
-			for (int i = visibleEnd.GetRow() - 1; i > visibleEnd.GetRow() - 1 - m_JustScrolled.second; i--)
+			for (int i = visibleEnd.GetRow(); i > visibleEnd.GetRow() - 1 - m_JustScrolled.second; i--)
 			{
 				//wxLogDebug("row=%i", i - m_Offset);
 				//int i = visibleEnd.GetRow();
@@ -798,7 +806,7 @@ void Grid::OnDraw(wxDC& dc)
 		if (m_JustScrolled.second < 0)
 		{
 			//wxLogDebug("SUS=%i,%i", visibleBegin.GetRow() - m_Offset, m_JustScrolled.second);
-			for (int i = visibleBegin.GetRow(); i < visibleBegin.GetRow() - m_JustScrolled.second; i++)
+			for (int i = visibleBegin.GetRow(); i <= visibleBegin.GetRow() - m_JustScrolled.second; i++)
 			{
 				//wxLogDebug("row=%i", i - m_Offset);
 				//int i = visibleBegin.GetRow();
@@ -862,7 +870,7 @@ void Grid::OnDraw(wxDC& dc)
 		dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
 		return;
 	}
-	
+
 	dc.Clear();
 
 	brush.SetColour(wxColour("white"));
@@ -900,7 +908,7 @@ void Grid::OnMouse(wxMouseEvent& evt)
 	if (evt.Leaving())
 	{
 		m_ToolCoords->Reset();
-		
+
 		// still drawing
 		if (m_IsDrawing || m_IsErasing)
 		{
@@ -972,7 +980,7 @@ void Grid::OnTimerSelection(wxTimerEvent& evt)
 void Grid::OnKeyDown(wxKeyEvent& evt)
 {
 	int key = evt.GetKeyCode();
-	
+
 	switch (key)
 	{
 	case WXK_UP:
@@ -1079,9 +1087,9 @@ void Grid::OnEraseBackground(wxEraseEvent& evt)
 
 void Grid::DeleteStructure(int X, int Y, std::string state)
 {
-	int dx[8] = {0, 1, 1, 1, 0, -1, -1 ,-1};
-	int dy[8] = {-1, -1, 0, 1, 1, 1, 0, -1};
-	
+	int dx[8] = { 0, 1, 1, 1, 0, -1, -1 ,-1 };
+	int dy[8] = { -1, -1, 0, 1, 1, 1, 0, -1 };
+
 	std::unordered_set<std::pair<int, int>, Hashes::PairHash> visited;
 	std::stack<std::pair<int, int>> neighbors;
 	neighbors.push({ X,Y });
@@ -1099,7 +1107,7 @@ void Grid::DeleteStructure(int X, int Y, std::string state)
 		if (state == "") EraseCell(neighbor.first, neighbor.second, true);
 		// otherwise erase only if they share the same state
 		else if (state == neighborState) EraseCell(neighbor.first, neighbor.second, true);
-		
+
 		for (int d = 0; d < 8; d++)
 		{
 			int x = neighbor.first + dx[d];
@@ -1159,16 +1167,16 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 		else
 		{
 			d = ai - (aj >> 1);
-			while (jj != y) 
+			while (jj != y)
 			{
 				std::string currState = GetState(ii, jj);
-				if (currState != state) 
+				if (currState != state)
 				{
 					if (!remove) InsertCell(ii, jj, state, color, true);
 					else EraseCell(ii, jj, true);
 					changed++;
 				}
-				if (d >= 0) 
+				if (d >= 0)
 				{
 					ii += si;
 					d -= aj;
@@ -1181,7 +1189,7 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 		m_LastDrawn = { x,y };
 
 		std::string currState = GetState(x, y);
-		if (currState != state) 
+		if (currState != state)
 		{
 			if (!remove) InsertCell(ii, jj, state, color, true);
 			else EraseCell(ii, jj, true);
@@ -1198,7 +1206,7 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 
 bool Grid::InBounds(int x, int y)
 {
-	return (x >= 0 && x < Sizes::TOTAL_CELLS && y >= 0 && y < Sizes::TOTAL_CELLS);
+	return (x >= 0 && x < Sizes::TOTAL_CELLS&& y >= 0 && y < Sizes::TOTAL_CELLS);
 }
 
 void Grid::OnScroll(wxScrollWinEvent& evt)
@@ -1218,13 +1226,6 @@ void Grid::OnScroll(wxScrollWinEvent& evt)
 		deltaY = newPosition - GetScrollPos(wxVERTICAL);
 	}
 
-	//// don't scroll beyond the minimum limit
-	//if (deltaY < 0) deltaY = std::max(-GetScrollPos(wxVERTICAL), deltaY);
-	//if (deltaX < 0) deltaX = std::max(-GetScrollPos(wxHORIZONTAL), deltaX);
-	//// don't scroll beyond the maximum limit
-	//if (deltaX > 0) deltaX = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxHORIZONTAL) - GetScrollThumb(wxHORIZONTAL), deltaX);
-	//if (deltaY > 0) deltaY = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxVERTICAL) - GetScrollThumb(wxVERTICAL), deltaY);
-
 	if (deltaX || deltaY)
 	{
 		//m_JustScrolled = { deltaX, deltaY };
@@ -1237,9 +1238,6 @@ void Grid::OnScroll(wxScrollWinEvent& evt)
 		//Refresh(false);
 		//Update();
 	}
-	//m_JustScrolled = { 0, 0 };
-
-	//evt.Skip();
 }
 
 void Grid::OnSize(wxSizeEvent& evt)

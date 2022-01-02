@@ -15,6 +15,7 @@ public:
 
 	int GetIndex();
 	std::pair<std::string, wxColour> GetState();
+	std::unordered_map<std::string, wxColour>& GetColors();
 
 	void SetIndex(int index);
 	void SetStates(std::vector<std::pair<std::string, wxColour>> states);
@@ -32,6 +33,7 @@ private:
 	Grid* m_Grid = nullptr;
 
 	std::vector<std::pair<std::string, wxColour>> m_States = std::vector<std::pair<std::string, wxColor>>({ {"FREE", wxColour("white")} });
+	std::unordered_map<std::string, wxColour> m_Colors = std::unordered_map<std::string, wxColour>({ {"FREE", wxColour("white")} });
 
 	wxStaticText* m_TextIndex = nullptr;
 	wxPanel* m_State = nullptr;

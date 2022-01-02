@@ -20,40 +20,20 @@ public:
 	void SetGrid(Grid* grid);
 
 	void PushBack(
-		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> cells,
-		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> statePositions,
-		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> prevCells,
-		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> prevStatePositions
+		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> &cells,
+		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> &statePositions,
+		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> &prevCells,
+		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> &prevStatePositions
 	);
 
 	void Reset();
 private:
 	Grid* m_Grid = nullptr;
 
-	std::stack<
-		std::pair<
-			std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash>,
-			std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash>
-		>
-	>m_UndoCells;
-	std::stack<
-		std::pair<
-		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash>,
-		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash>
-		>
-	>m_RedoCells;
-	std::stack<
-		std::pair<
-			std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>>,
-			std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>>
-		>
-	> m_UndoStatePositions;
-	std::stack <
-		std::pair<
-		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>>,
-		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>>
-		>
-	>m_RedoStatePositions;
+	std::stack<std::vector<std::pair<std::pair<int, int>, std::pair<std::string, wxColour>>>> m_UndoCells;
+	std::stack<std::vector<std::pair<std::pair<int, int>, std::pair<std::string, wxColour>>>> m_RedoCells;
+	std::stack<std::vector<std::pair<std::string, std::pair<int, int>>>> m_UndoStatePositions;
+	std::stack<std::vector<std::pair<std::string, std::pair<int, int>>>> m_RedoStatePositions;
 
 	wxBitmapButton* m_Undo = nullptr;
 	wxBitmapButton* m_Redo = nullptr;

@@ -22,6 +22,11 @@ std::pair<std::string, wxColour> ToolStates::GetState()
     return m_States[m_Index];
 }
 
+std::unordered_map<std::string, wxColour>& ToolStates::GetColors()
+{
+	return m_Colors;
+}
+
 void ToolStates::SetIndex(int index)
 {
 	if (index >= 0 && index <= m_MaximumIndex)
@@ -35,6 +40,8 @@ void ToolStates::SetIndex(int index)
 void ToolStates::SetStates(std::vector<std::pair<std::string, wxColour>> states)
 {
 	m_States = states;
+	m_Colors.clear();
+	for (auto it : states) m_Colors[it.first] = it.second;
 
 	int size = states.size() - 1;
 	if (m_Index > size)
@@ -50,6 +57,7 @@ void ToolStates::SetStates(std::vector<std::pair<std::string, wxColour>> states)
 void ToolStates::SetStateColor(int index, wxColour color)
 {
 	m_States[index].second = color;
+	m_Colors[m_States[index].first] = color;
 
 	if (index == m_Index) UpdateState();
 }
