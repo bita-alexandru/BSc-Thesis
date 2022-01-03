@@ -32,39 +32,44 @@ void ToolUndo::PushBack(
 	for (auto i : cells)
 	{
 		// new cell
-		if (prevCells.find(i.first) == prevCells.end())
-		{
-			//wxLogDebug("1");
-			cellChanges.push_back({ i.first,i.second });
-		}
+		if (prevCells.find(i.first) == prevCells.end()) cellChanges.push_back({ i.first,i.second });
 		// new state/color
-		else if (prevCells[i.first] != cells[i.first])
-		{
-			//wxLogDebug("2");
-			cellChanges.push_back({ i.first,i.second });
-		}
+		else if (prevCells[i.first] != cells[i.first]) cellChanges.push_back({ i.first,i.second });
 	}
 	for (auto i : statePositions)
 	{
 		// new state
 		if (prevStatePositions.find(i.first) == prevStatePositions.end())
-		{
-			for (auto j : statePositions[i.first])
-			{
-				statePositionsChanges.push_back({ i.first,j });
-			}
-		}
+			for (auto j : statePositions[i.first]) statePositionsChanges.push_back({ i.first,j });
 		// check the positions
 		else
 		{
 			for (auto j : statePositions[i.first])
-			{
 				// new position
-				if (prevStatePositions[i.first].find(j) == prevStatePositions[i.first].end())
-				{
+				if (prevStatePositions[i.first].find(j) == prevStatePositions[i.first].end()) 
 					statePositionsChanges.push_back({ i.first,j });
-				}
-			}
+		}
+	}
+
+	for (auto i : prevCells)
+	{
+		// new cell
+		if (cells.find(i.first) == cells.end()) cellChanges.push_back({ i.first,i.second });
+		// new state/color
+		else if (cells[i.first] != prevCells[i.first]) cellChanges.push_back({ i.first,i.second });
+	}
+	for (auto i : prevStatePositions)
+	{
+		// new state
+		if (statePositions.find(i.first) == statePositions.end())
+			for (auto j : statePositions[i.first]) statePositionsChanges.push_back({ i.first,j });
+		// check the positions
+		else
+		{
+			for (auto j : prevStatePositions[i.first])
+				// new position
+				if (statePositions[i.first].find(j) == statePositions[i.first].end())
+					statePositionsChanges.push_back({ i.first,j });
 		}
 	}
 
@@ -102,7 +107,6 @@ void ToolUndo::Undo(wxCommandEvent& evt)
 	// iterate through the most recent changes
 	for (auto it : m_UndoCells.top())
 	{
-		//wxLogDebug("%i,%i = %s,%s", it.first.first-200, it.first.second-200, it.second.first, it.second.second.GetAsString());
 		// if i find a change in the current configuration -> delete it
 		if (cells.find(it.first) != cells.end()) cells.erase(it.first);
 		// otherwise -> add it
@@ -110,7 +114,6 @@ void ToolUndo::Undo(wxCommandEvent& evt)
 	}
 	for (auto it : m_UndoStatePositions.top())
 	{
-		//wxLogDebug("%s = %i,%i", it.first, it.second.first-200, it.second.second-200);
 		// if i find a change in the current configuration -> update/insert it
 		if (statePositions.find(it.first) != statePositions.end())
 		{
@@ -195,8 +198,8 @@ void ToolUndo::Redo(wxCommandEvent& evt)
 
 void ToolUndo::BuildInterface()
 {
-	m_Undo = new wxBitmapButton(this, Ids::ID_BUTTON_UNDO, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/undo.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
-	m_Redo = new wxBitmapButton(this, Ids::ID_BUTTON_REDO, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/redo.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
+	m_Undo = new wxBitmapButton(this, Ids::ID_BUTTON_UNDO, wxBitmap("BTN_UNDO", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
+	m_Redo = new wxBitmapButton(this, Ids::ID_BUTTON_REDO, wxBitmap("BTN_REDO", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
 
 	m_Undo->SetToolTip("Undo");
 	m_Undo->Disable();

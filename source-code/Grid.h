@@ -28,7 +28,7 @@ public:
 	~Grid();
 
 	int GetSize();
-	void SetSize(int size);
+	void SetSize(int size, bool center = true);
 	void ScrollToCenter(int x = Sizes::TOTAL_CELLS / 2, int y = Sizes::TOTAL_CELLS / 2);
 
 	void SetCells(

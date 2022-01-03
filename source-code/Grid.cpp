@@ -29,7 +29,7 @@ int Grid::GetSize()
 	return m_Size;
 }
 
-void Grid::SetSize(int size)
+void Grid::SetSize(int size, bool center)
 {
 	m_Size = size;
 
@@ -47,16 +47,21 @@ void Grid::SetSize(int size)
 		}
 	}
 
-	// to do, set a variable to mark that the grid has just been resized
-	// will assist in drawing optimization
 	m_JustResized = true;
+
+	if (!center)
+	{
+		wxVarHScrollHelper::RefreshAll();
+		wxVarVScrollHelper::RefreshAll();
+		return;
+	}
 
 	// get (x,y) located at the center of the screen
 	wxPosition visibleBegin = GetVisibleBegin();
 	wxPosition visibleEnd = GetVisibleEnd();
 
-	int x = visibleEnd.GetCol() - (visibleEnd.GetCol() - visibleBegin.GetCol() - 1) / 2;
-	int y = visibleEnd.GetRow() - (visibleEnd.GetRow() - visibleBegin.GetRow() + 1) / 2;
+	int x = visibleEnd.GetCol() - (visibleEnd.GetCol() - visibleBegin.GetCol()) / 2;
+	int y = visibleEnd.GetRow() - (visibleEnd.GetRow() - visibleBegin.GetRow()) / 2;
 
 	wxVarHScrollHelper::RefreshAll();
 	wxVarVScrollHelper::RefreshAll();
@@ -82,6 +87,7 @@ void Grid::ScrollToCenter(int x, int y)
 	ScrollToRowColumn(row, column);
 
 	m_RedrawAll = true;
+
 	Refresh(false);
 	Update();
 }
@@ -337,7 +343,7 @@ wxCoord Grid::OnGetColumnWidth(size_t row) const
 
 void Grid::OnPaint(wxPaintEvent& evt)
 {
-	wxBufferedPaintDC dc(this);
+	wxAutoBufferedPaintDC dc(this);
 	PrepareDC(dc);
 	OnDraw(dc);
 }
@@ -388,13 +394,13 @@ bool Grid::ControlZoom(int x, int y, int rotation)
 	{
 		if (rotation > 0 && m_ToolZoom->GetSize() < Sizes::CELL_SIZE_MAX)
 		{
+			m_ToolZoom->ZoomIn(false);
 			ScrollToCenter(x, y);
-			m_ToolZoom->ZoomIn();
 		}
 		if (rotation < 0 && m_ToolZoom->GetSize() > Sizes::CELL_SIZE_MIN)
 		{
+			m_ToolZoom->ZoomOut(false);
 			ScrollToCenter(x, y);
-			m_ToolZoom->ZoomOut();
 		}
 
 		wxPoint XY = ScreenToClient(wxGetMouseState().GetPosition());
@@ -674,36 +680,24 @@ void Grid::OnDraw(wxDC& dc)
 	wxPosition visibleBegin = GetVisibleBegin();
 	wxPosition visibleEnd = GetVisibleEnd();
 
-	// to do, optimize drawing furthermore, only redraw changes made after scrolling
 	if (m_JustResized)
 	{
 		m_JustResized = false;
-		//m_JustScrolled = { 0,0 };
-		//m_RedrawAll = true;
 	}
 	else if (m_JustScrolled != std::make_pair(0, 0))
 	{
-		//// don't scroll beyond the minimum limit
-		//if (m_JustScrolled.second < 0) m_JustScrolled.second = std::max(-GetScrollPos(wxVERTICAL), m_JustScrolled.second);
-		//if (m_JustScrolled.first < 0) m_JustScrolled.first = std::max(-GetScrollPos(wxHORIZONTAL), m_JustScrolled.first);
-		//// don't scroll beyond the maximum limit
-		//if (m_JustScrolled.first > 0) m_JustScrolled.first = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxHORIZONTAL) - GetScrollThumb(wxHORIZONTAL), m_JustScrolled.first);
-		//if (m_JustScrolled.second > 0) m_JustScrolled.second = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxVERTICAL) - GetScrollThumb(wxVERTICAL), m_JustScrolled.second);
-
-		//if (m_JustScrolled == std::make_pair(0, 0)) return;
-
 		std::unordered_set<std::pair<int, int>, Hashes::PairHash> alreadyDrawn;
 		std::vector<std::pair<int, int>> beforeScrolling;
 
+		// iterate through the cells in order of their states
 		for (auto sp : m_StatePositions)
 		{
 			brush.SetColour(m_Cells[{sp.second.begin()->first, sp.second.begin()->second}].second);
 			dc.SetBrush(brush);
 
+			// redraw only the cells affected by the scroll
 			for (auto it : sp.second)
 			{
-				//wxLogDebug("IT=%i", x1++);
-
 				// the cell state before scrolling
 				int x = it.first;
 				int y = it.second;
@@ -714,7 +708,6 @@ void Grid::OnDraw(wxDC& dc)
 					alreadyDrawn.insert({ x,y });
 
 					dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
-					//wxLogDebug("curr=(%i,%i) %s", x - m_Offset, y - m_Offset, brush.GetColour().GetAsString());
 				}
 
 				x += m_JustScrolled.first;
@@ -724,12 +717,9 @@ void Grid::OnDraw(wxDC& dc)
 				if ((x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow()))
 				{
 					beforeScrolling.push_back({ x,y });
-					//wxLogDebug("prev=(%i,%i) %s", x - m_Offset, y - m_Offset, brush.GetColour().GetAsString());
 				}
 			}
 		}
-		//wxLogDebug("RESIZE=%i,%i", m_JustScrolled.first, m_JustScrolled.second);
-		//wxLogDebug("------------");
 
 		brush.SetColour(wxColour("white"));
 		dc.SetBrush(brush);
@@ -749,18 +739,13 @@ void Grid::OnDraw(wxDC& dc)
 		// scrolled right -> redraw right border
 		if (m_JustScrolled.first > 0)
 		{
-			//wxLogDebug("DREAPTA=%i,%i", visibleEnd.GetCol() - m_Offset, m_JustScrolled.first);
 			for (int i = visibleEnd.GetCol(); i > visibleEnd.GetCol() - 1 - m_JustScrolled.first; i--)
 			{
-				//int i = visibleEnd.GetCol();
-				//wxLogDebug("col=%i", i - m_Offset);
 				for (int j = visibleBegin.GetRow(); j <= visibleEnd.GetRow(); j++)
 				{
-					//wxLogDebug("j=%i", j- m_Offset);
 					if (alreadyDrawn.find({ i,j }) == alreadyDrawn.end())
 					{
 						dc.DrawRectangle(i * m_Size, j * m_Size, m_Size, m_Size);
-						//wxLogDebug("prev=(%i,%i) %s", i - m_Offset, j - m_Offset, brush.GetColour().GetAsString());
 					}
 				}
 			}
@@ -768,17 +753,13 @@ void Grid::OnDraw(wxDC& dc)
 		// scrolled left -> redraw left border
 		if (m_JustScrolled.first < 0)
 		{
-			//wxLogDebug("STANGA=%i,%i", visibleBegin.GetCol() - m_Offset, m_JustScrolled.first);
 			for (int i = visibleBegin.GetCol(); i <= visibleBegin.GetCol() - m_JustScrolled.first; i++)
 			{
-				//wxLogDebug("col=%i", i - m_Offset);
-				//int i = visibleBegin.GetCol();
 				for (int j = visibleBegin.GetRow(); j <= visibleEnd.GetRow(); j++)
 				{
 					if (alreadyDrawn.find({ i,j }) == alreadyDrawn.end())
 					{
 						dc.DrawRectangle(i * m_Size, j * m_Size, m_Size, m_Size);
-						//wxLogDebug("prev=(%i,%i) %s", i - m_Offset, j - m_Offset, brush.GetColour().GetAsString());
 					}
 				}
 			}
@@ -786,18 +767,13 @@ void Grid::OnDraw(wxDC& dc)
 		// scrolled down -> redraw bottom border
 		if (m_JustScrolled.second > 0)
 		{
-			//wxLogDebug("SCROLLAT JOS = %i", m_JustScrolled.second);
-			//wxLogDebug("JOS=%i,%i", visibleEnd.GetRow() - m_Offset,m_JustScrolled.second);
 			for (int i = visibleEnd.GetRow(); i > visibleEnd.GetRow() - 1 - m_JustScrolled.second; i--)
 			{
-				//wxLogDebug("row=%i", i - m_Offset);
-				//int i = visibleEnd.GetRow();
 				for (int j = visibleBegin.GetCol(); j <= visibleEnd.GetCol(); j++)
 				{
 					if (alreadyDrawn.find({ j,i }) == alreadyDrawn.end())
 					{
 						dc.DrawRectangle(j * m_Size, i * m_Size, m_Size, m_Size);
-						//wxLogDebug("prev=(%i,%i) %s", i - m_Offset, j - m_Offset, brush.GetColour().GetAsString());
 					}
 				}
 			}
@@ -805,40 +781,29 @@ void Grid::OnDraw(wxDC& dc)
 		// scrolled up -> redraw upper border
 		if (m_JustScrolled.second < 0)
 		{
-			//wxLogDebug("SUS=%i,%i", visibleBegin.GetRow() - m_Offset, m_JustScrolled.second);
 			for (int i = visibleBegin.GetRow(); i <= visibleBegin.GetRow() - m_JustScrolled.second; i++)
 			{
-				//wxLogDebug("row=%i", i - m_Offset);
-				//int i = visibleBegin.GetRow();
 				for (int j = visibleBegin.GetCol(); j <= visibleEnd.GetCol(); j++)
 				{
 					if (alreadyDrawn.find({ j,i }) == alreadyDrawn.end())
 					{
 						dc.DrawRectangle(j * m_Size, i * m_Size, m_Size, m_Size);
-						//wxLogDebug("prev=(%i,%i) %s", i - m_Offset, j - m_Offset, brush.GetColour().GetAsString());
 					}
 				}
 			}
 		}
 
-		//Update();
-
 		m_JustScrolled = { 0,0 };
-		//m_JustResized = false;
-		//m_RedrawAll = true;
 
 		if (m_RedrawAll) return;
 	}
 	if (!m_RedrawAll)
 	{
 		m_RedrawAll = true;
-		//m_JustScrolled = { 0,0 };
-		//m_JustResized = false;
 
 		// more than 1 cell to be redrawn
 		if (m_RedrawXYs.size())
 		{
-			// to do, don't draw if (x,y) not in visible bounds
 			for (int i = 0; i < m_RedrawXYs.size(); i++)
 			{
 				int x = m_RedrawXYs[i].first;
@@ -880,10 +845,9 @@ void Grid::OnDraw(wxDC& dc)
 	{
 		for (int x = visibleBegin.GetCol(); x < visibleEnd.GetCol(); x++)
 		{
-			if (m_Cells.find({ x, y }) != m_Cells.end())
+			if (GetState(x, y) != "FREE")
 			{
-				wxColour color = m_Cells[{x, y}].second;
-				brush.SetColour(color);
+				brush.SetColour(m_Cells[{x, y}].second);
 				dc.SetBrush(brush);
 
 				dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
@@ -892,6 +856,7 @@ void Grid::OnDraw(wxDC& dc)
 				dc.SetBrush(brush);
 				continue;
 			}
+
 			dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
 		}
 	}

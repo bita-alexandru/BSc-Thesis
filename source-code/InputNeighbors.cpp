@@ -23,9 +23,9 @@ void InputNeighbors::BuildInterface()
 	wxPanel* row1 = new wxPanel(this);
 	wxBoxSizer* sizer1 = new wxBoxSizer(wxHORIZONTAL);
 	
-	wxBitmapToggleButton* m_NW = new wxBitmapToggleButton(row1, Ids::ID_NEIGHBOR_NW, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/nw.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(48, 48));
-	wxBitmapToggleButton* m_N = new wxBitmapToggleButton(row1, Ids::ID_NEIGHBOR_N, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/n.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(48, 48));
-	wxBitmapToggleButton* m_NE = new wxBitmapToggleButton(row1, Ids::ID_NEIGHBOR_NE, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/ne.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(48, 48));
+	wxBitmapToggleButton* m_NW = new wxBitmapToggleButton(row1, Ids::ID_NEIGHBOR_NW, wxBitmap("BTN_NW", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(48, 48));
+	wxBitmapToggleButton* m_N = new wxBitmapToggleButton(row1, Ids::ID_NEIGHBOR_N, wxBitmap("BTN_N", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(48, 48));
+	wxBitmapToggleButton* m_NE = new wxBitmapToggleButton(row1, Ids::ID_NEIGHBOR_NE, wxBitmap("BTN_NE", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(48, 48));
 	sizer1->Add(m_NW, 1, wxEXPAND);
 	sizer1->Add(m_N, 1, wxEXPAND);
 	sizer1->Add(m_NE, 1, wxEXPAND);
@@ -33,9 +33,9 @@ void InputNeighbors::BuildInterface()
 
 	wxPanel* row2 = new wxPanel(this);
 	wxBoxSizer* sizer2 = new wxBoxSizer(wxHORIZONTAL);
-	wxBitmapToggleButton* m_W = new wxBitmapToggleButton(row2, Ids::ID_NEIGHBOR_W, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/w.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(48, 48));
-	wxBitmapToggleButton* m_C = new wxBitmapToggleButton(row2, Ids::ID_NEIGHBOR_C, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/c.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(48, 48));
-	wxBitmapToggleButton* m_E = new wxBitmapToggleButton(row2, Ids::ID_NEIGHBOR_E, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/e.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(48, 48));
+	wxBitmapToggleButton* m_W = new wxBitmapToggleButton(row2, Ids::ID_NEIGHBOR_W, wxBitmap("BTN_W", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(48, 48));
+	wxBitmapToggleButton* m_C = new wxBitmapToggleButton(row2, Ids::ID_NEIGHBOR_C, wxBitmap("BTN_C", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(48, 48));
+	wxBitmapToggleButton* m_E = new wxBitmapToggleButton(row2, Ids::ID_NEIGHBOR_E, wxBitmap("BTN_E", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(48, 48));
 	sizer2->Add(m_W, 1, wxEXPAND);
 	sizer2->Add(m_C, 1, wxEXPAND);
 	sizer2->Add(m_E, 1, wxEXPAND);
@@ -43,13 +43,17 @@ void InputNeighbors::BuildInterface()
 
 	wxPanel* row3 = new wxPanel(this);
 	wxBoxSizer* sizer3 = new wxBoxSizer(wxHORIZONTAL);
-	wxBitmapToggleButton* m_SW = new wxBitmapToggleButton(row3, Ids::ID_NEIGHBOR_SW, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/sw.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(48, 48));
-	wxBitmapToggleButton* m_S = new wxBitmapToggleButton(row3, Ids::ID_NEIGHBOR_S, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/s.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(48, 48));
-	wxBitmapToggleButton* m_SE = new wxBitmapToggleButton(row3, Ids::ID_NEIGHBOR_SE, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/se.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(48, 48));
+	wxBitmapToggleButton* m_SW = new wxBitmapToggleButton(row3, Ids::ID_NEIGHBOR_SW, wxBitmap("BTN_SW", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(48, 48));
+	wxBitmapToggleButton* m_S = new wxBitmapToggleButton(row3, Ids::ID_NEIGHBOR_S, wxBitmap("BTN_S", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(48, 48));
+	wxBitmapToggleButton* m_SE = new wxBitmapToggleButton(row3, Ids::ID_NEIGHBOR_SE, wxBitmap("BTN_SE", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(48, 48));
 	sizer3->Add(m_SW, 1, wxEXPAND);
 	sizer3->Add(m_S, 1, wxEXPAND);
 	sizer3->Add(m_SE, 1, wxEXPAND);
 	row3->SetSizer(sizer3);
+
+	m_NW->SetToolTip("North-West"); m_N->SetToolTip("North"); m_NE->SetToolTip("North-East");
+	m_W->SetToolTip("West"); m_C->SetToolTip("Center (The Cell Itself)"); m_E->SetToolTip("East");
+	m_SW->SetToolTip("South-West"); m_S->SetToolTip("South"); m_SE->SetToolTip("South-East");
 
 	wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "Neighbors");
 	sizer->Add(row1, 1, wxEXPAND);

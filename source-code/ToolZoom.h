@@ -14,8 +14,8 @@ public:
 	~ToolZoom();
 
 	int GetSize();
-	void ZoomIn();
-	void ZoomOut();
+	void ZoomIn(bool center = true);
+	void ZoomOut(bool center = true);
 
 	void SetGrid(Grid* grid);
 private:

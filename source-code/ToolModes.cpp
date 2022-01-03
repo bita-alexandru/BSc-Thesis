@@ -52,9 +52,9 @@ void ToolModes::SetGrid(Grid* grid)
 
 void ToolModes::BuildInterface()
 {
-	m_Draw = new wxBitmapButton(this, Ids::ID_MODE_DRAW, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/draw.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
-	m_Pick = new wxBitmapButton(this, Ids::ID_MODE_PICK, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/pick.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
-	m_Move = new wxBitmapButton(this, Ids::ID_MODE_MOVE, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/move.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
+	m_Draw = new wxBitmapButton(this, Ids::ID_MODE_DRAW, wxBitmap("BTN_DRAW", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
+	m_Pick = new wxBitmapButton(this, Ids::ID_MODE_PICK, wxBitmap("BTN_PICK", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
+	m_Move = new wxBitmapButton(this, Ids::ID_MODE_MOVE, wxBitmap("BTN_MOVE", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
 	m_Draw->Disable();
 	m_Draw->SetToolTip("Draw");
 	m_Pick->SetToolTip("Pick");

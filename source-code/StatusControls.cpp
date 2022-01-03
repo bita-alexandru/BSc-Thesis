@@ -45,11 +45,11 @@ void StatusControls::SetGrid(Grid* grid)
 
 void StatusControls::BuildInterface()
 {
-    wxBitmapButton* start = new wxBitmapButton(this, Ids::ID_BUTTON_START, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/start.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
-    wxBitmapButton* reset = new wxBitmapButton(this, Ids::ID_BUTTON_RESET, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/reset.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
-    wxBitmapButton* center = new wxBitmapButton(this, Ids::ID_BUTTON_CENTER, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/center.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
-    wxBitmapButton* step = new wxBitmapButton(this, Ids::ID_BUTTON_STEP, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/step.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
-    wxBitmapButton* generation = new wxBitmapButton(this, Ids::ID_BUTTON_GENERATION, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/generation.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
+    wxBitmapButton* start = new wxBitmapButton(this, Ids::ID_BUTTON_START, wxBitmap("BTN_START", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
+    wxBitmapButton* reset = new wxBitmapButton(this, Ids::ID_BUTTON_RESET, wxBitmap("BTN_RESET", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
+    wxBitmapButton* center = new wxBitmapButton(this, Ids::ID_BUTTON_CENTER, wxBitmap("BTN_CENTER", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
+    wxBitmapButton* step = new wxBitmapButton(this, Ids::ID_BUTTON_STEP, wxBitmap("BTN_STEP", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
+    wxBitmapButton* generation = new wxBitmapButton(this, Ids::ID_BUTTON_GENERATION, wxBitmap("BTN_GENERATION", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
 
     center->SetToolTip("Go To Center");
     center->Bind(wxEVT_BUTTON, &StatusControls::GoToCenter, this);

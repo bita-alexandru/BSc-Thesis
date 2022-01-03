@@ -16,7 +16,7 @@ int ToolZoom::GetSize()
 	return m_Size;
 }
 
-void ToolZoom::ZoomIn()
+void ToolZoom::ZoomIn(bool center)
 {
 	if (m_Size == m_MaximumSize)
 	{
@@ -26,12 +26,12 @@ void ToolZoom::ZoomIn()
 	}
 
 	m_Size *= 2;
-	m_Grid->SetSize(m_Size);
+	m_Grid->SetSize(m_Size, center);
 
 	UpdateTextScale();
 }
 
-void ToolZoom::ZoomOut()
+void ToolZoom::ZoomOut(bool center)
 {
 	if (m_Size == m_MinimumSize)
 	{
@@ -41,7 +41,7 @@ void ToolZoom::ZoomOut()
 	}
 
 	m_Size /= 2;
-	m_Grid->SetSize(m_Size);
+	m_Grid->SetSize(m_Size, center);
 
 	UpdateTextScale();
 }
@@ -53,8 +53,8 @@ void ToolZoom::SetGrid(Grid* grid)
 
 void ToolZoom::BuildInterface()
 {
-	wxBitmapButton* zoomIn = new wxBitmapButton(this, Ids::ID_ZOOM_IN, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/zoom-in.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
-	wxBitmapButton* zoomOut = new wxBitmapButton(this, Ids::ID_ZOOM_OUT, wxBitmap("D:/Diverse/BSc-Thesis/assets/buttons/zoom-out.png", wxBITMAP_TYPE_PNG), wxDefaultPosition, wxSize(32, 32));
+	wxBitmapButton* zoomIn = new wxBitmapButton(this, Ids::ID_ZOOM_IN, wxBitmap("BTN_ZOOM-IN", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
+	wxBitmapButton* zoomOut = new wxBitmapButton(this, Ids::ID_ZOOM_OUT, wxBitmap("BTN_ZOOM-OUT", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
 
 	zoomIn->SetToolTip("Zoom in");
 	zoomOut->SetToolTip("Zoom out");

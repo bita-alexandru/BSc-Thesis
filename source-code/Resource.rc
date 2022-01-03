@@ -2,7 +2,34 @@
 // first icon in the executable and the icons are sorted both by their order
 // and alphabetically (!), so put this icon first and give it a name
 // starting with "a"
-aaaIcon ICON "icon.ico"
+aaaIcon ICON "../assets/logo/icon.ico"
+BTN_C RCDATA "../assets/buttons/c.png"
+BTN_CENTER RCDATA "../assets/buttons/center.png"
+BTN_DRAW RCDATA "../assets/buttons/draw.png"
+BTN_E RCDATA "../assets/buttons/e.png"
+BTN_FASTER RCDATA "../assets/buttons/faster.png"
+BTN_GENERATION RCDATA "../assets/buttons/generation.png"
+BTN_MOVE RCDATA "../assets/buttons/move.png"
+BTN_N RCDATA "../assets/buttons/n.png"
+BTN_NE RCDATA "../assets/buttons/ne.png"
+BTN_NEXT RCDATA "../assets/buttons/next.png"
+BTN_NW RCDATA "../assets/buttons/nw.png"
+BTN_PAUSE RCDATA "../assets/buttons/pause.png"
+BTN_PICK RCDATA "../assets/buttons/pick.png"
+BTN_PREVIOUS RCDATA "../assets/buttons/previous.png"
+BTN_REDO RCDATA "../assets/buttons/redo.png"
+BTN_RESET RCDATA "../assets/buttons/reset.png"
+BTN_S RCDATA "../assets/buttons/s.png"
+BTN_SE RCDATA "../assets/buttons/se.png"
+BTN_SLOWER RCDATA "../assets/buttons/slower.png"
+BTN_START RCDATA "../assets/buttons/start.png"
+BTN_STEP RCDATA "../assets/buttons/step.png"
+BTN_SW RCDATA "../assets/buttons/sw.png"
+BTN_UNDO RCDATA "../assets/buttons/undo.png"
+BTN_W RCDATA "../assets/buttons/w.png"
+BTN_ZOOM-IN RCDATA "../assets/buttons/zoom-in.png"
+BTN_ZOOM-OUT RCDATA "../assets/buttons/zoom-out.png"
+
 
 // set this to 1 if you don't want to use manifest resource (manifest resource
 // is needed to enable visual styles on Windows XP - see docs/msw/winxp.txt
