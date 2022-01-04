@@ -112,6 +112,9 @@ void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::strin
 		m_RedrawXYs.push_back({ it.first.first,it.first.second });
 		m_RedrawColors.push_back(it.second.second);
 	}
+
+	m_StatusCells->SetCountPopulation(m_Cells.size());
+
 	Refresh(false);
 	Update();
 }
@@ -139,6 +142,11 @@ void Grid::SetToolStates(ToolStates* toolStates)
 void Grid::SetToolCoords(ToolCoords* toolCoords)
 {
 	m_ToolCoords = toolCoords;
+}
+
+void Grid::SetStatusCells(StatusCells* statusCells)
+{
+	m_StatusCells = statusCells;
 }
 
 void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool multiple)
@@ -181,6 +189,8 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 		m_Cells[{x, y}] = { state, color };
 		m_StatePositions[state].insert({ x,y });
 
+		m_StatusCells->UpdateCountPopulation(1);
+
 		if (multiple)
 		{
 			m_RedrawAll = false;
@@ -192,6 +202,7 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 			m_RedrawAll = false;
 			m_RedrawXY = { x,y };
 			m_RedrawColor = color;
+
 			Refresh(false);
 			Update();
 		}
@@ -203,6 +214,8 @@ void Grid::RemoveCell(int x, int y, std::string state, wxColour color, bool mult
 	if (GetState(x, y) != "FREE")
 	{
 		EraseCell(x, y, multiple);
+
+		m_StatusCells->UpdateCountPopulation(-1);
 
 		if (!multiple)
 		{
@@ -311,6 +324,8 @@ void Grid::Reset()
 	m_IsMoving = false;
 
 	m_ToolUndo->Reset();
+	m_StatusCells->SetCountGeneration(0);
+	m_StatusCells->SetCountPopulation(0);
 
 	Refresh(false);
 	Update();
@@ -639,15 +654,11 @@ bool Grid::ModeMove(int x, int y, char mode)
 
 				if (deltaX || deltaY)
 				{
-					//m_JustScrolled = { deltaX, deltaY };
 					m_JustScrolled.first += deltaX;
 					m_JustScrolled.second += deltaY;
 
 					ScrollColumns(deltaX);
 					ScrollRows(deltaY);
-
-					//Refresh(false);
-					//Update();
 				}
 			}
 
@@ -1020,15 +1031,11 @@ void Grid::ProcessKeys()
 
 	if (deltaX || deltaY)
 	{
-		//m_JustScrolled = { deltaX,deltaY };
 		m_JustScrolled.first += deltaX;
 		m_JustScrolled.second += deltaY;
 
 		ScrollColumns(deltaX);
 		ScrollRows(deltaY);
-
-		//Refresh(false);
-		//Update();
 	}
 
 	wxMouseState mouseState = wxGetMouseState();
@@ -1086,6 +1093,8 @@ void Grid::DeleteStructure(int X, int Y, std::string state)
 		}
 	}
 
+	m_StatusCells->SetCountPopulation(m_Cells.size());
+
 	Refresh(false);
 	Update();
 }
@@ -1117,7 +1126,11 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 				if (currState != state)
 				{
 					if (!remove) InsertCell(ii, jj, state, color, true);
-					else EraseCell(ii, jj, true);
+					else
+					{
+						EraseCell(ii, jj, true);
+						m_StatusCells->UpdateCountPopulation(-1);
+					}
 					changed++;
 				}
 				if (d >= 0)
@@ -1138,7 +1151,11 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 				if (currState != state)
 				{
 					if (!remove) InsertCell(ii, jj, state, color, true);
-					else EraseCell(ii, jj, true);
+					else
+					{
+						EraseCell(ii, jj, true);
+						m_StatusCells->UpdateCountPopulation(-1);
+					}
 					changed++;
 				}
 				if (d >= 0)
@@ -1157,7 +1174,11 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 		if (currState != state)
 		{
 			if (!remove) InsertCell(ii, jj, state, color, true);
-			else EraseCell(ii, jj, true);
+			else
+			{
+				EraseCell(ii, jj, true);
+				m_StatusCells->UpdateCountPopulation(-1);
+			}
 			changed++;
 		}
 
@@ -1193,15 +1214,11 @@ void Grid::OnScroll(wxScrollWinEvent& evt)
 
 	if (deltaX || deltaY)
 	{
-		//m_JustScrolled = { deltaX, deltaY };
 		m_JustScrolled.first += deltaX;
 		m_JustScrolled.second += deltaY;
 
 		ScrollColumns(deltaX);
 		ScrollRows(deltaY);
-
-		//Refresh(false);
-		//Update();
 	}
 }
 

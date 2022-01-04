@@ -24,13 +24,49 @@ int StatusCells::GetCountPopulation()
 void StatusCells::SetCountGeneration(int n)
 {
 	m_CountGeneration = n;
+
 	UpdateTextCountGeneration();
 }
 
 void StatusCells::SetCountPopulation(int n)
 {
 	m_CountPopulation = n;
+
 	UpdateTextCountPopulation();
+}
+
+void StatusCells::UpdateCountGeneration(int n)
+{
+	m_CountGeneration += n;
+
+	UpdateTextCountGeneration();
+}
+
+void StatusCells::UpdateCountPopulation(int n)
+{
+	m_CountPopulation += n;
+
+	UpdateTextCountPopulation();
+}
+
+void StatusCells::SetTextCountGeneration(std::string message)
+{
+	std::string label = "Generation=" + message;
+
+	m_TextCountGeneration->SetLabel(label);
+
+	//Layout();
+	//Update();
+}
+
+void StatusCells::SetTextCountPopulation(std::string message)
+{
+	std::string label = "Population=" + message;
+
+	m_TextCountPopulation->SetLabel(label);
+
+	//Layout();
+	//Update();
 }
 
 void StatusCells::BuildInterface()
@@ -49,11 +85,19 @@ void StatusCells::BuildInterface()
 void StatusCells::UpdateTextCountGeneration()
 {
 	std::string label = "Generation=" + std::to_string(m_CountGeneration);
+
 	m_TextCountGeneration->SetLabel(label);
+
+	//Layout();
+	//Update();
 }
 
 void StatusCells::UpdateTextCountPopulation()
 {
 	std::string label = "Population=" + std::to_string(m_CountPopulation);
+
 	m_TextCountPopulation->SetLabel(label);
+
+	//Layout();
+	//Update();
 }

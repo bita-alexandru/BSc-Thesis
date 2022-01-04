@@ -15,6 +15,7 @@
 #include "ToolModes.h"
 #include "ToolStates.h"
 #include "ToolCoords.h"
+#include "StatusCells.h"
 
 class ToolZoom;
 class ToolUndo;
@@ -41,6 +42,7 @@ public:
 	void SetToolModes(ToolModes* toolModes);
 	void SetToolStates(ToolStates* toolStates);
 	void SetToolCoords(ToolCoords* toolCoords);
+	void SetStatusCells(StatusCells* statusCells);
 
 	void InsertCell(int x, int y, std::string state, wxColour color, bool multiple = false);
 	void RemoveCell(int x, int y, std::string state, wxColour color, bool multiple = false);
@@ -63,6 +65,8 @@ private:
 	ToolModes* m_ToolModes = nullptr;
 	ToolStates* m_ToolStates = nullptr;
 	ToolCoords* m_ToolCoords = nullptr;
+
+	StatusCells* m_StatusCells = nullptr;
 
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> m_Cells;
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> m_StatePositions;
