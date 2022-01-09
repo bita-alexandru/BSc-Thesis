@@ -92,7 +92,7 @@ void Grid::ScrollToCenter(int x, int y)
 	Update();
 }
 
-void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> cells, std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> statePositions)
+void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells, std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions)
 {
 	for (auto it : m_PrevCells)
 	{
@@ -311,8 +311,8 @@ std::string Grid::GetState(int x, int y)
 
 void Grid::Reset()
 {
-	m_Cells = std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash>();
-	m_StatePositions = std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>>();
+	m_Cells = std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt>();
+	m_StatePositions = std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>>();
 	m_PrevCells = m_Cells;
 	m_PrevStatePositions = m_StatePositions;
 
@@ -331,12 +331,12 @@ void Grid::Reset()
 	Update();
 }
 
-std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> Grid::GetCells()
+std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> Grid::GetCells()
 {
 	return m_Cells;
 }
 
-std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> Grid::GetStatePositions()
+std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> Grid::GetStatePositions()
 {
 	return m_StatePositions;
 }
@@ -697,7 +697,7 @@ void Grid::OnDraw(wxDC& dc)
 	}
 	else if (m_JustScrolled != std::make_pair(0, 0))
 	{
-		std::unordered_set<std::pair<int, int>, Hashes::PairHash> alreadyDrawn;
+		std::unordered_set<std::pair<int, int>, Hashes::PairInt> alreadyDrawn;
 		std::vector<std::pair<int, int>> beforeScrolling;
 
 		// iterate through the cells in order of their states
@@ -1062,7 +1062,7 @@ void Grid::DeleteStructure(int X, int Y, std::string state)
 	int dx[8] = { 0, 1, 1, 1, 0, -1, -1 ,-1 };
 	int dy[8] = { -1, -1, 0, 1, 1, 1, 0, -1 };
 
-	std::unordered_set<std::pair<int, int>, Hashes::PairHash> visited;
+	std::unordered_set<std::pair<int, int>, Hashes::PairInt> visited;
 	std::stack<std::pair<int, int>> neighbors;
 	neighbors.push({ X,Y });
 

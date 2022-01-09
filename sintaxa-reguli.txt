@@ -1,0 +1,74 @@
+-----------------------
+SINTAXA
+-----------------------
+START -> TRANSITION
+TRANSITION -> NO_RULES | YES_RULES
+
+NO_RULES -> STATE "->" STATE
+YES_RULES -> STATE "->" STATE ":" RULES
+
+RULES -> RULE | RULES AND RULE | RULES OR RULE
+RULE -> "(" "@" DIRECTION "=" SINGLE_CONDITION ")" |
+		"(" "@" "[" DIRECTIONS "]" "=" MULTI_CONDITION ")"
+
+DIRECTION -> "NW"|"N"|"NE"|"SW"|"S"|"SE"|"W"|"C"|"E"
+DIRECTIONS -> DIRECTIONS "," DIRECTION | DIRECTION "," DIRECTION
+
+SINGLE_STATE -> "1" "#" STATE | "#" STATE
+MULTI_STATE -> COUNT "#" STATE | "#" STATE
+
+SINGLE_CONDITION -> ONE_STATE | SINGLE_CONDITION AND ONE_STATE | SINGLE_CONDITION OR ONE_STATE
+MULTI_CONDITION -> MULTI_STATE |MULTI_CONDITION AND MULTI_STATE | MULTI_CONDITION OR MULTI_STATE
+
+AND -> "AND" | "&" | ","
+OR -> "OR" | "|"
+COUNT -> "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"
+STATE -> ([a-zA-Z]|[0-9]|[_])* | std::string
+-----------------------
+STRUCTURI DE DATE
+-----------------------
+unordered_map<state, rules[conditions]>
+
+state = string
+
+rules = [or][(direction, [or][and])]
+vector<vector<pair<string, vector<vector<pair<int, string>>>>>>
+-----------------------
+EXEMPLE SI SEMNIFICATII
+-----------------------
+A -> B : // starea A trece in starea B daca se indeplinesc urmatoarele reguli marcate dupa simbolul ":" (optional; poate fi omis daca nu sunt necesare reguli)
+
+Regulile sunt de forma "@D = <expresie>", unde D reprezinta simbolul unei directii.
+
+Directiile valide sunt {NW, N, NE, SW, S, SE, C} unde C=intreaga vecinatate.
+
+Validitatea unei directii depinde, de asemenea, si de marcajul ei pe "tabelul de vecinatate" prezent in fereastra principala.
+
+
+Presupunand vecinatatea Moore (toate cele 8 directii) si multimea de stari {s0, s1, s2, s3}, urmatoarele exemple de reguli sunt valide:
+
+// printre vecini se numara exact o singura celula "s0"
+@c = #s0 (SAU) @c = 1#s0
+// printre vecini se numara exact 2 celule "s0"
+@c = 2#s0
+// printre vecini se numara exact o singura celula "s0" si exact 3 celule "s1"
+@c = #s0, 3#s1
+// printre vecini se numara cel putin 2 celule "s0"
+@c = +2#s0
+// printre vecini se numara cel putin 2 celule "s0" si cel putin 2 celule "s1"
+@c = +2#s0, +2#s1
+// printre vecini se numara cel mult 2 celule "s0"
+@c = -2#s0
+// printre vecini se numara cel putin 2 celule "s0", cel mult 2 celule "s1" si exact 2 celule "s2"
+@c = +2#s0 | -2#s1 | 2#s2
+// printre vecini se numara fie cel putin 2 celule "s0" si 3 celule "s1", fie 4 celule "s2"
+@c = +2#s0, 3#s1 | 4#s2
+// aceeasi sintaxa se poate aplica si pe grupari de cel putin 2 directii
+@[nw,n,ne,sw,s,se]
+// pentru directii specifice sintaxa nu permite compararea cu mai mult sau mai putin de exact o singura celula
+@nw, @n, @ne, @w, @e, @sw, @s, @se
+
+In aceeasi maniera, regulile pot fi inlantuite prin "," pentru a marca valoarea booleana "AND" si cu "|" pentru a marca booleana "OR".
+
+// fie la nord celula este "s0" si la sud celula este "s1", fie la est celula este "s2" si la vest celula este "s3"
+(@n = #s0), (@s = #s1) | (@e = #s2),  (@w = #s3)

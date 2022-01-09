@@ -20,10 +20,10 @@ public:
 	void SetGrid(Grid* grid);
 
 	void PushBack(
-		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> &cells,
-		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> &statePositions,
-		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> &prevCells,
-		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> &prevStatePositions
+		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> &cells,
+		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> &statePositions,
+		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> &prevCells,
+		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> &prevStatePositions
 	);
 
 	void Reset();

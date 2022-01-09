@@ -7,6 +7,7 @@
 #include "Ids.h"
 #include "Sizes.h"
 #include "InputRules.h"
+#include "Interpreter.h"
 
 class InputRules;
 
@@ -16,6 +17,7 @@ public:
 	EditorRules(wxFrame* parent);
 	~EditorRules();
 
+	void SetStates(std::unordered_map<std::string, std::pair<std::string, wxColour>>& states);
 	void SetInputRules(InputRules* inputRules);
 	std::vector<std::string> GetData();
 
@@ -23,6 +25,7 @@ public:
 	void DeleteRule(std::string rule);
 private:
 	InputRules* m_InputRules = nullptr;
+	Interpreter m_Interpreter;
 
 	wxMenuBar* m_MenuBar = nullptr;
 	wxFindReplaceData* m_FindData = nullptr;

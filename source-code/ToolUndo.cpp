@@ -19,10 +19,10 @@ void ToolUndo::SetGrid(Grid* grid)
 }
 
 void ToolUndo::PushBack(
-	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> &cells,
-	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> &statePositions,
-	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> &prevCells,
-	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> &prevStatePositions
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> &cells,
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> &statePositions,
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> &prevCells,
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> &prevStatePositions
 )
 {
 	// store the actual changes
@@ -101,8 +101,8 @@ void ToolUndo::Undo(wxCommandEvent& evt)
 {
 	if (m_UndoCells.empty()) return;
 
-	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> cells = m_Grid->GetCells();
-	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> statePositions = m_Grid->GetStatePositions();
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells = m_Grid->GetCells();
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions = m_Grid->GetStatePositions();
 
 	// iterate through the most recent changes
 	for (auto it : m_UndoCells.top())
@@ -125,7 +125,7 @@ void ToolUndo::Undo(wxCommandEvent& evt)
 		// otherwise -> add it
 		else
 		{
-			statePositions.insert({ it.first, std::unordered_set<std::pair<int,int>,Hashes::PairHash>()});
+			statePositions.insert({ it.first, std::unordered_set<std::pair<int,int>,Hashes::PairInt>()});
 			statePositions[it.first].insert(it.second);
 		}
 	}
@@ -148,8 +148,8 @@ void ToolUndo::Redo(wxCommandEvent& evt)
 {
 	if (m_RedoCells.empty()) return;
 
-	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> cells = m_Grid->GetCells();
-	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> statePositions = m_Grid->GetStatePositions();
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells = m_Grid->GetCells();
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions = m_Grid->GetStatePositions();
 
 	// iterate through the most recent changes
 	for (auto it : m_RedoCells.top())
@@ -176,7 +176,7 @@ void ToolUndo::Redo(wxCommandEvent& evt)
 		// otherwise -> add it
 		else
 		{
-			statePositions.insert({ it.first, std::unordered_set<std::pair<int,int>,Hashes::PairHash>() });
+			statePositions.insert({ it.first, std::unordered_set<std::pair<int,int>,Hashes::PairInt>() });
 			statePositions[it.first].insert(it.second);
 		}
 	}

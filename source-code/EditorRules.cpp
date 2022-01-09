@@ -28,6 +28,11 @@ EditorRules::~EditorRules()
 	wxDELETE(m_FindDialog);
 }
 
+void EditorRules::SetStates(std::unordered_map<std::string, std::pair<std::string, wxColour>>& states)
+{
+	m_Interpreter.SetStates(states);
+}
+
 void EditorRules::SetInputRules(InputRules* inputRules)
 {
 	m_InputRules = inputRules;
@@ -36,6 +41,11 @@ void EditorRules::SetInputRules(InputRules* inputRules)
 std::vector<std::string> EditorRules::GetData()
 {
 	std::string text = (std::string)m_TextCtrl->GetText().Upper();
+
+	wxLogDebug("[START]");
+	Interpreter interpreter;
+	interpreter.Process(text);
+	wxLogDebug("[END]");
 
 	// remove empty lines, white spaces and carriage symbols
 	text.erase(remove(text.begin(), text.end(), ' '), text.end());
@@ -451,7 +461,7 @@ void EditorRules::OnFormat(wxCommandEvent& evt)
 	std::string text = (std::string)m_TextCtrl->GetText().Upper();
 
 	// remove empty lines, white spaces and carriage symbols
-	text.erase(remove(text.begin(), text.end(), ' '), text.end());
+	text.erase(std::unique(text.begin(), text.end(), [](char a, char b) {return a == ' ' && b == ' '; }), text.end());
 	text.erase(remove(text.begin(), text.end(), '\r'), text.end());
 	text.erase(std::unique(text.begin(), text.end(), [](char a, char b) {return a == '\n' && b == '\n'; }), text.end());
 

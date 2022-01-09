@@ -33,8 +33,8 @@ public:
 	void ScrollToCenter(int x = Sizes::TOTAL_CELLS / 2, int y = Sizes::TOTAL_CELLS / 2);
 
 	void SetCells(
-		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> cells,
-		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> statePositions
+		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells,
+		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions
 	);
 
 	void SetToolZoom(ToolZoom* toolZoom);
@@ -52,8 +52,8 @@ public:
 	std::string GetState(int x, int y);
 
 	void Reset();
-	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> GetCells();
-	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> GetStatePositions();
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> GetCells();
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> GetStatePositions();
 	std::unordered_map<std::string, wxColour>& GetColors();
 private:
 	int m_Size = Sizes::CELL_SIZE_DEFAULT;
@@ -68,10 +68,10 @@ private:
 
 	StatusCells* m_StatusCells = nullptr;
 
-	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> m_Cells;
-	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> m_StatePositions;
-	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairHash> m_PrevCells;
-	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairHash>> m_PrevStatePositions;
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> m_Cells;
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> m_StatePositions;
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> m_PrevCells;
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> m_PrevStatePositions;
 
 	wxTimer* m_TimerSelection = nullptr;
 

@@ -41,7 +41,6 @@ std::vector<std::string> EditorStates::GetData()
 	text.erase(remove(text.begin(), text.end(), ' '), text.end());
 	text.erase(remove(text.begin(), text.end(), '\r'), text.end());
 	text.erase(remove(text.begin(), text.end(), '\t'), text.end());
-	text.erase(std::unique(text.begin(), text.end(), [](char a, char b) {return a == '\n' && b == '\n'; }), text.end());
 
 	// count lines (states) and mark duplicates/invalid states
 	std::unordered_set<std::string> setStates;
@@ -57,6 +56,12 @@ std::vector<std::string> EditorStates::GetData()
 		cntLine++;
 
 		if (state.size() < 1) continue;
+
+		// separate line comment
+		if (state.size() > 1 && state.substr(0, 2) == "//") continue;
+
+		// inline comment, ignore it but continue with the state before it
+		if (state.find("//") != state.npos) state = state.substr(0, state.find("//"));
 
 		// state's name does not respect the character limits
 		if (state.size() < Sizes::CHARS_STATE_MIN || state.size() > Sizes::CHARS_STATE_MAX)
