@@ -8,7 +8,7 @@ ListStates::ListStates(wxWindow* parent) : wxListCtrl(parent, wxID_ANY, wxDefaul
 
 ListStates::~ListStates()
 {
-	for (int i = 0; i < attrs.size(); i++) delete attrs[i];
+	for (int i = 0; i < attrs.size(); i++) wxDELETE(attrs[i]);
 }
 
 wxString ListStates::OnGetItemText(long index, long column) const
@@ -64,7 +64,7 @@ void ListStates::PushBack(std::pair<int, std::string> item, std::pair<wxColour, 
 		new wxListItemAttr(color.second, color.first, font)
 	);
 
-	//SetItemCount(items.size());
+	SetItemCount(items.size());
 }
 
 void ListStates::ChangeItemId(int index, int id)
@@ -91,6 +91,8 @@ void ListStates::Erase(int index)
 	if (index < items.size())
 	{
 		items.erase(items.begin() + index);
+		
+		wxDELETE(attrs[index]);
 		attrs.erase(attrs.begin() + index);
 	}
 }
@@ -111,4 +113,11 @@ void ListStates::SetItemColor(int index, wxColour color)
 		wxColour blackwhite = (color.Red() * 0.299 + color.Green() * 0.587 + color.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
 		attrs[index]->SetTextColour(blackwhite);
 	}
+}
+
+wxColour ListStates::GetItemColor(int index)
+{
+	if (index >= 0 && index < attrs.size()) return attrs[index]->GetBackgroundColour();
+
+	return wxColour("white");
 }

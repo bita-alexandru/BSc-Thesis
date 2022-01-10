@@ -26,6 +26,8 @@ private:
 	bool CheckState(string& state);
 	bool UpdateChars(int& chars, string& s);
 	bool UpdateSize(int& size);
-	void MarkInvalid(bool& valid, vector<int>& invalid, int& cursor, string& rules, stringstream& ss);
+	void MarkInvalid(bool& valid, vector<int>& invalid, int& cursor);
+	bool CheckDirection(string& direction);
+	int CheckNumber(string& number, Transition& transition, int& count);
 };
 

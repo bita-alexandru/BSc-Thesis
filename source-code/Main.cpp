@@ -29,10 +29,10 @@ Main::~Main()
 
 void Main::BuildInterface()
 {
-	m_SplitterInputGrid = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_BORDER | wxSP_LIVE_UPDATE);
+	m_SplitterInputGrid = new wxSplitterWindow(this, wxID_ANY);
 	m_PanelInput = new PanelInput(m_SplitterInputGrid);
 
-	m_SplitterGridAlgorithm = new wxSplitterWindow(m_SplitterInputGrid, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_BORDER | wxSP_LIVE_UPDATE);
+	m_SplitterGridAlgorithm = new wxSplitterWindow(m_SplitterInputGrid, wxID_ANY);
 	m_PanelGrid = new PanelGrid(m_SplitterGridAlgorithm);
 	m_PanelAlgorithm = new PanelAlgorithm(m_SplitterGridAlgorithm);
 

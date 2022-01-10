@@ -78,8 +78,8 @@ void InputStates::SetStates(std::vector<std::string> states)
         }
 
         int itmId = m_List->Get(i).first;
-        std::string itmState = m_List->Get(i).second;
-        wxColour itmColor = m_List->GetItemBackgroundColour(i);
+        std::string itmState = m_List->Get(itmId).second;
+        wxColour itmColor = m_List->GetItemColor(itmId);
 
         if (itmId != id)
         {
@@ -98,7 +98,8 @@ void InputStates::SetStates(std::vector<std::string> states)
             // old state deleted -> update on grid (if necessary)
             else if (m_States.find(itmState) == m_States.end())
             {
-                m_Grid->RemoveState(itmState);
+                //m_Grid->RemoveState(itmState);
+                m_Grid->UpdateState(itmState, itmColor, state, color);
             }
             else // this state still exists but the orders got changed
             {

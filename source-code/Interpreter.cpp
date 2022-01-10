@@ -22,8 +22,7 @@ vector<int> Interpreter::Process(string& rules)
 
 	string LEFT_SPACED = "-";
 	string RIGHT_SPACED = ">";
-	string BOTH_SPACED = "|&,@();";
-	string NOT_SPACED = "[]+";
+	string BOTH_SPACED = "|&,@();[]";
 
 	// add spaces around specific symbols and convert characters to uppercase
 	for (int i = 0; i < rules.size(); i++)
@@ -53,10 +52,6 @@ vector<int> Interpreter::Process(string& rules)
 			rules.insert(i + 1, " ");
 
 			i += 2;
-			continue;
-		}
-		if (NOT_SPACED.find(c) != NOT_SPACED.npos)
-		{
 			continue;
 		}
 
@@ -93,13 +88,10 @@ vector<int> Interpreter::Process(string& rules)
 		if (!FindWord(cursor, rules, state1)) break;
 		//wxLogDebug("state1=%s", state1);
 		// check if state is invalid
-		if (!CheckState(state1)) MarkInvalid(valid, invalid, cursor, rules, ss);
+		if (!CheckState(state1)) MarkInvalid(valid, invalid, cursor);
 
-		if (valid)
-		{
-			// check if rule is within the size limits
-			if (!UpdateChars(chars, state1)) MarkInvalid(valid, invalid, cursor, rules, ss);
-		}
+		// check if rule is within the size limits
+		if (valid && !UpdateChars(chars, state1)) MarkInvalid(valid, invalid, cursor);
 
 		// read symbol "->"
 		if (valid)
@@ -108,13 +100,10 @@ vector<int> Interpreter::Process(string& rules)
 
 			//wxLogDebug("symbol=%s", symbol);
 			// check if it's the right symbol
-			if (symbol != "->") MarkInvalid(valid, invalid, cursor, rules, ss);
+			if (symbol != "->") MarkInvalid(valid, invalid, cursor);
 
-			if (valid)
-			{
-				// check if rule is within the size limits
-				if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, cursor, rules, ss);
-			}
+			// check if rule is within the size limits
+			if (valid && !UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, cursor);
 		}
 
 		// read transition state
@@ -123,30 +112,27 @@ vector<int> Interpreter::Process(string& rules)
 			ss >> state2; FindWord(cursor, rules, state2);
 
 			// check if state is invalid
-			if (!CheckState(state2)) MarkInvalid(valid, invalid, cursor, rules, ss);
+			if (!CheckState(state2)) MarkInvalid(valid, invalid, cursor);
+
+			// check if rule is within the size limits
+			if (valid && !UpdateChars(chars, state2)) MarkInvalid(valid, invalid, cursor);
 
 			if (valid)
 			{
-				// check if rule is within the size limits
-				if (!UpdateChars(chars, state2)) MarkInvalid(valid, invalid, cursor, rules, ss);
-
-				if (valid)
+				// check if transition is a duplicate
+				auto er = m_Transitions.equal_range(state1);
+				for (auto it = er.first; it != er.second; it++)
 				{
-					// check if transition is a duplicate
-					auto er = m_Transitions.equal_range(state1);
-					for (auto it = er.first; it != er.second; it++)
+					// it's a duplicate
+					if (it->second.state == state2)
 					{
-						// it's a duplicate
-						if (it->second.state == state2)
-						{
-							MarkInvalid(valid, invalid, cursor, rules, ss);
-							break;
-						}
+						MarkInvalid(valid, invalid, cursor);
+						break;
 					}
-
-					// assign to transition
-					if (valid) transition.state = state2;
 				}
+
+				// assign to transition
+				if (valid) transition.state = state2;
 			}
 		}
 
@@ -156,7 +142,7 @@ vector<int> Interpreter::Process(string& rules)
 			ss >> symbol; FindWord(cursor, rules, symbol);
 
 			// check if rule is within the size limits
-			if (!UpdateChars(chars, state2)) MarkInvalid(valid, invalid, cursor, rules, ss);
+			if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, cursor);
 
 			if (valid)
 			{
@@ -164,7 +150,7 @@ vector<int> Interpreter::Process(string& rules)
 				if (symbol == ";")
 				{
 					// check if rule is within the size limits
-					if (!UpdateChars(chars, state2)) MarkInvalid(valid, invalid, cursor, rules, ss);
+					if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, cursor);
 
 					// add to transition table
 					if (valid) m_Transitions.insert({ state1,transition });
@@ -173,35 +159,159 @@ vector<int> Interpreter::Process(string& rules)
 				else if (symbol == ":")
 				{
 					transition.orRules.clear();
-					transition.andRules.clear();
-
-					ss >> symbol; FindWord(cursor, rules, symbol);
-
-					// check if symbol is "("
-					if (symbol != "(") MarkInvalid(valid, invalid, cursor, rules, ss);
-
-					if (valid)
+					
+					// read every rule until ";" is detected
+					while (valid)
 					{
+						transition.andRules.clear();
+
 						ss >> symbol; FindWord(cursor, rules, symbol);
 
-						// check if symbol is "@"
-						if (symbol != "@") MarkInvalid(valid, invalid, cursor, rules, ss);
+						// check if rule is marked accordingly with a "("
+						if (symbol != "(") MarkInvalid(valid, invalid, cursor);
 
+						// check if rule is within the size limits
+						if (valid && !UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, cursor);
+
+						// read neighborhood and conditions
 						if (valid)
 						{
+							ss >> symbol; FindWord(cursor, rules, symbol);
+
+							// check if symbol is "@"
+							if (symbol != "@") MarkInvalid(valid, invalid, cursor);
+
 							// check if rule is within the size limits
-							if (!UpdateChars(chars, state2)) MarkInvalid(valid, invalid, cursor, rules, ss);
+							if (valid && !UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, cursor);
 
 							if (valid)
 							{
-								string neighbors;
-								ss >> neighbors;
+								transition.andRules.push_back({});
 
-								// it's a group of directions, eg. "[n,e,s,w]"
-								if (neighbors[0] == '[' && neighbors[neighbors.size() - 1] == ']')
+								// could indicate either a group of directions or a specific one
+								string neighborhood;
+								ss >> neighborhood; FindWord(cursor, rules, neighborhood);
+
+								if (valid && !UpdateChars(chars, neighborhood)) MarkInvalid(valid, invalid, cursor);
+
+								// a group of directions, eg. "[n,s,w,e]"
+								if (valid && neighborhood == "[")
 								{
-									// check every direction
-									// to do
+									NEIGHBORS neighbors;
+
+									// read every direction until "]" is detected
+									while (valid)
+									{
+										string direction;
+										ss >> direction; FindWord(cursor, rules, direction);
+
+										// check if rule is within the size limits
+										if (valid && !UpdateChars(chars, direction)) MarkInvalid(valid, invalid, cursor);
+
+										// check if direction is valid according to the current neighborhood
+										if (valid && !CheckDirection(direction)) MarkInvalid(valid, invalid, cursor);
+
+										if (valid) neighbors.push_back(direction);
+
+										if (!valid) break;
+
+										// expect to read either "," or "]"
+										ss >> symbol; FindWord(cursor, rules, direction);
+
+										// more directions to follow
+										if (symbol == ",")
+										{
+											if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, cursor);
+											continue;
+										}
+										// neighborhood completed
+										else if (symbol == "]")
+										{
+											if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, cursor);
+											// check if neighborhood is within the size limit
+											if (valid && neighbors.size() > m_Neighbors.size()) MarkInvalid(valid, invalid, cursor);
+
+											// assign to transition
+											if (valid) transition.andRules.back().first = neighbors;
+										}
+										// invalid symbol
+										else
+										{
+											MarkInvalid(valid, invalid, cursor);
+											break;
+										}
+									}
+								}
+								// a specific direction or "ALL" meaning every possible valid direction
+								else if (valid && (neighborhood == "ALL" || CheckDirection(neighborhood)))
+								{
+									// assign to transition
+									transition.andRules.back().first = { neighborhood };
+								}
+								// invalid token
+								else if (valid) MarkInvalid(valid, invalid, cursor);
+
+								if (!valid) break;
+
+								int count = 0;
+
+								// read conditions until ")" is detected
+								while (valid)
+								{
+									// condition could be of different forms
+									// eg. "<number>#<state>" / "<sign><number>#<state>"
+									// or  "#<state>" / "<sign>#<state>"
+									string condition;
+									ss >> condition;
+
+									if (!UpdateChars(chars, condition)) MarkInvalid(valid, invalid, cursor);
+
+									if (!valid) break;
+
+									// split by "#"
+									stringstream tokenizer(condition);
+									vector<string> tokens;
+									string token;
+
+									while (getline(tokenizer, token, '#')) tokens.push_back(token);
+
+									// "#<state>"
+									if (tokens.size() == 2)
+									{
+										string state = tokens.back();
+									}
+									// "<number>#<state>" or "<sign><number>#<state>" or "<sign>#<state>"
+									else if (tokens.size() == 3)
+									{
+										string sign = "";
+										string number = tokens.front();
+										string state = tokens.back();
+
+										// <sign> is present
+										if (number.size() && (number[0] == '+' || number[0] == '-'))
+										{
+											sign.push_back(number[0]);
+											number.erase(number.begin());
+
+											// no number specified
+											if (number.empty()) number.push_back('1');
+										}
+
+										// check if number is valid
+										int n = CheckNumber(number, transition, count);
+										if (n == -1) MarkInvalid(valid, invalid, cursor);
+
+										// check if state is valid
+										if (valid && !CheckState(state)) MarkInvalid(valid, invalid, cursor);
+
+										// assign to transition
+										if (valid)
+										{
+											count += n;
+										}
+									}
+									// invalid tokens
+									else MarkInvalid(valid, invalid, cursor);
 								}
 							}
 						}
@@ -211,6 +321,9 @@ vector<int> Interpreter::Process(string& rules)
 		}
 		
 		//wxLogDebug("state1=<%s> symbol=<%s> state2=<%s> cursor=<%i>", state1, symbol, state2, cursor);
+
+		// go to the next transition if there's any left
+		if (!valid) NextTransition(cursor, rules, ss);
 	}
 
 	return invalid;
@@ -290,12 +403,30 @@ bool Interpreter::UpdateSize(int& size)
 	return size <= Sizes::RULES_MAX;
 }
 
-void Interpreter::MarkInvalid(bool& valid,vector<int>& invalid, int& cursor, string& rules, stringstream& ss)
+void Interpreter::MarkInvalid(bool& valid,vector<int>& invalid, int& cursor)
 {
 	// mark it in our list
 	invalid.push_back(cursor);
-	// go to the next transition if there's any left
-	NextTransition(cursor, rules, ss);
 
 	valid = false;
+}
+
+bool Interpreter::CheckDirection(string& direction)
+{
+	return m_Neighbors.find(direction) != m_Neighbors.end();
+}
+
+int Interpreter::CheckNumber(string& number, Transition& transition, int& count)
+{
+	int n = -1;
+
+	// convert to number if valid
+	if (number.size() && number.find_first_not_of("0123456789") == string::npos) n = stoi(number);
+
+	// check that it does not surpass the neighborhood size limit
+	// also keep count of the total number tracked by the previous "AND" condition
+	if (transition.andRules.back().first[0] == "C" && n + count > m_Neighbors.size()) n = -1;
+	else if (transition.andRules.back().first[0] != "C" && n + count > transition.andRules.back().first.size()) n = -1;
+
+	return n;
 }

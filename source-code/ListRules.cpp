@@ -17,9 +17,9 @@ ListRules::~ListRules()
 {
 	for (int i = 0; i < items.size(); i++)
 	{
-		delete itmAttrs[i];
-		delete aColAttrs[i];
-		delete bColAttrs[i];
+		wxDELETE(itmAttrs[i]);
+		wxDELETE(aColAttrs[i]);
+		wxDELETE(bColAttrs[i]);
 	}
 }
 
@@ -135,7 +135,12 @@ void ListRules::Erase(int index)
 {
 	if (index < items.size())
 	{
+		wxDELETE(itmAttrs[index]);
+		wxDELETE(aColAttrs[index]);
+		wxDELETE(bColAttrs[index]);
+
 		items.erase(items.begin() + index);
+		itmAttrs.erase(itmAttrs.begin() + index);
 		aColAttrs.erase(aColAttrs.begin() + index);
 		bColAttrs.erase(bColAttrs.begin() + index);
 	}
@@ -173,12 +178,12 @@ wxColour ListRules::GetColorA(int index)
 {
 	if (index < items.size()) return aColAttrs[index]->GetBackgroundColour();
 
-	return "";
+	return wxColour("white");
 }
 
 wxColour ListRules::GetColorB(int index)
 {
 	if (index < items.size()) return bColAttrs[index]->GetBackgroundColour();
 
-	return "";
+	return wxColour("white");
 }

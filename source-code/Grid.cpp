@@ -230,7 +230,6 @@ void Grid::RemoveState(std::string state)
 	// cells of this state have been placed on the grid
 	if (m_StatePositions.find(state) != m_StatePositions.end())
 	{
-
 		// remove every cell of this state from our map
 		for (auto it : m_StatePositions[state])
 		{
@@ -241,13 +240,16 @@ void Grid::RemoveState(std::string state)
 			m_RedrawXYs.push_back({ it.first,it.second });
 			m_RedrawColors.push_back(wxColour("white"));
 		}
+
 		Refresh(false);
 		Update();
 
 		// remove the corresponding map
+		m_StatePositions[state].clear();
 		m_StatePositions.erase(state);
 
 		m_ToolUndo->Reset();
+
 		m_PrevCells = m_Cells;
 		m_PrevStatePositions = m_StatePositions;
 	}
@@ -269,8 +271,30 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 				m_RedrawXYs.push_back({ it.first,it.second });
 				m_RedrawColors.push_back(newColor);
 			}
+
 			Refresh(false);
 			Update();
+		}
+		// same color but a new state
+		else if (oldColor == newColor)
+		{
+			for (auto it : m_StatePositions[oldState])
+			{
+				m_Cells[it].first = newState;
+				m_StatePositions[newState].insert(it);
+			}
+
+			m_StatePositions.erase(oldState);
+
+			m_ToolUndo->Reset();
+
+			m_PrevCells = m_Cells;
+			m_PrevStatePositions = m_StatePositions;
+		}
+		else
+		{
+			wxLogDebug("SERVUS");
+			RemoveState(oldState);
 		}
 	}
 }

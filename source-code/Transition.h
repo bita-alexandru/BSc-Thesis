@@ -3,9 +3,14 @@
 #include <vector>
 #include <string>
 
-#define CONDITIONS_AND vector<pair<int, string>> // pair = (<number of cells>, <state name>)
+#define TYPE_EQUAL 0
+#define TYPE_LESS -1
+#define TYPE_MORE 1
+
+#define CONDITIONS_AND vector<pair<pair<int, int>, string>> // pair = ((<number of cells>, <comparison-type>), <state name>)
 #define CONDITIONS_OR vector<CONDITIONS_AND>
-#define RULES_AND vector<pair<string, CONDITIONS_OR>> // pair = (<neighborhood>, ...)
+#define NEIGHBORS vector<string>
+#define RULES_AND vector<pair<NEIGHBORS, CONDITIONS_OR>> // pair = (<neighborhood>, ...)
 #define RULES_OR vector<RULES_AND>
 
 using namespace std;

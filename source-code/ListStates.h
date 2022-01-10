@@ -25,6 +25,7 @@ public:
 	std::pair<int, std::string> Get(int index);
 
 	void SetItemColor(int index, wxColour color);
+	wxColour GetItemColor(int index);
 private:
 	std::vector<std::pair<int, std::string>> items;
 	std::vector<wxListItemAttr*> attrs;
