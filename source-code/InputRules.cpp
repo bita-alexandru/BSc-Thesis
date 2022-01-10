@@ -118,6 +118,7 @@ void InputRules::SetRules(std::vector<std::string> rules)
 void InputRules::SetStates(std::unordered_map<std::string, std::string>& states)
 {
     m_States = states;
+    m_EditorRules->SetStates(states);
 }
 
 void InputRules::BuildInterface()

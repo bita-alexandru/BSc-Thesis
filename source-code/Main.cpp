@@ -1,5 +1,9 @@
 #include "Main.h"
 
+wxBEGIN_EVENT_TABLE(Main, wxFrame)
+	EVT_CLOSE(Main::OnClose)
+wxEND_EVENT_TABLE()
+
 Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(Sizes::MAIN_WIDTH, Sizes::MAIN_HEIGHT))
 {
 	SetIcon(wxICON(aaaIcon));
@@ -161,6 +165,8 @@ void Main::PrepareInput()
 
 	inputRules->SetEditorRules(m_EditorRules);
 
+	inputNeighbors->SetEditorRules(m_EditorRules);
+
 	toolZoom->SetGrid(grid);
 	toolUndo->SetGrid(grid);
 	toolStates->SetListStates(inputStates->GetList());
@@ -206,3 +212,10 @@ void Main::MenuPerspectiveAlgorithm(wxCommandEvent& evt)
 	m_SplitterInputGrid->SetSashPosition(-9999);
 }
 
+void Main::OnClose(wxCloseEvent& evt)
+{
+	wxDELETE(m_EditorStates);
+	wxDELETE(m_EditorRules);
+
+	evt.Skip();
+}

@@ -41,4 +41,8 @@ private:
 	void MenuPerspectiveInput(wxCommandEvent& evt);
 	void MenuPerspectiveGrid(wxCommandEvent& evt);
 	void MenuPerspectiveAlgorithm(wxCommandEvent& evt);
+
+	void OnClose(wxCloseEvent& evt);
+
+	wxDECLARE_EVENT_TABLE();
 };

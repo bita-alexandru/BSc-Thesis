@@ -28,9 +28,14 @@ EditorRules::~EditorRules()
 	wxDELETE(m_FindDialog);
 }
 
-void EditorRules::SetStates(std::unordered_map<std::string, std::pair<std::string, wxColour>>& states)
+void EditorRules::SetStates(std::unordered_map<std::string, std::string>& states)
 {
 	m_Interpreter.SetStates(states);
+}
+
+void EditorRules::SetNeighbors(std::unordered_set<std::string>& neighbors)
+{
+	m_Interpreter.SetNeighbors(neighbors);
 }
 
 void EditorRules::SetInputRules(InputRules* inputRules)
@@ -43,8 +48,7 @@ std::vector<std::string> EditorRules::GetData()
 	std::string text = (std::string)m_TextCtrl->GetText().Upper();
 
 	wxLogDebug("[START]");
-	Interpreter interpreter;
-	interpreter.Process(text);
+	m_Interpreter.Process(text);
 	wxLogDebug("[END]");
 
 	// remove empty lines, white spaces and carriage symbols

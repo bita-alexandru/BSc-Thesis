@@ -17,7 +17,8 @@ public:
 	EditorRules(wxFrame* parent);
 	~EditorRules();
 
-	void SetStates(std::unordered_map<std::string, std::pair<std::string, wxColour>>& states);
+	void SetStates(std::unordered_map<std::string, std::string>& states);
+	void SetNeighbors(std::unordered_set<std::string>& neighbors);
 	void SetInputRules(InputRules* inputRules);
 	std::vector<std::string> GetData();
 

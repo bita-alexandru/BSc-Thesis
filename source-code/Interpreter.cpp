@@ -23,7 +23,7 @@ vector<int> Interpreter::Process(string& rules)
 	string LEFT_SPACED = "-";
 	string RIGHT_SPACED = ">";
 	string BOTH_SPACED = "|&,@();";
-	string NOT_SPACED = "[]";
+	string NOT_SPACED = "[]+";
 
 	// add spaces around specific symbols and convert characters to uppercase
 	for (int i = 0; i < rules.size(); i++)
@@ -75,59 +75,78 @@ vector<int> Interpreter::Process(string& rules)
 	stringstream ss(rules);
 	int cursor = 0;
 	int size = 0;
-	int chars = 0;
 
 	while (true)
 	{
+		int chars = 0;
+		Transition transition = {};
+
 		string state1;
 		string symbol;
 		string state2;
 		bool valid = true;
 
-		// read state1
+		// read transitory state
 		ss >> state1;
-		// check if end of file
-		if (ss.tellp() == -1)
-		// check if state is invalid
-		if (!CheckState(state1))
-		{
-			// mark it in our list
-			invalid.push_back(ss.tellg());
-			// go to the next transition or break the loop if there are no more
-			if (!NextTransition(cursor, rules, ss)) break;
 
-			valid = false;
+		// check if end of file
+		if (!FindWord(cursor, rules, state1)) break;
+		//wxLogDebug("state1=%s", state1);
+		// check if state is invalid
+		if (!CheckState(state1)) MarkInvalid(valid, invalid, cursor, rules, ss);
+
+		if (valid)
+		{
+			// check if rule is within the size limits
+			if (!UpdateChars(chars, state1)) MarkInvalid(valid, invalid, cursor, rules, ss);
 		}
 
 		// read symbol "->"
 		if (valid)
 		{
-			ss >> symbol;
-			// check if it's the right symbol
-			if (symbol.compare("->"))
-			{
-				// mark it in our list
-				invalid.push_back(cursor);
-				// go to the next transition or break the loop if there are no more
-				if (!NextTransition(cursor, rules, ss)) break;
+			ss >> symbol; FindWord(cursor, rules, symbol);
 
-				valid = false;
+			//wxLogDebug("symbol=%s", symbol);
+			// check if it's the right symbol
+			if (symbol != "->") MarkInvalid(valid, invalid, cursor, rules, ss);
+
+			if (valid)
+			{
+				// check if rule is within the size limits
+				if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, cursor, rules, ss);
 			}
 		}
 
-		// read state2
+		// read transition state
 		if (valid)
 		{
-			ss >> state2;
-			// check if state is invalid
-			if (!CheckState(state1))
-			{
-				// mark it in our list
-				invalid.push_back(cursor);
-				// go to the next transition or break the loop if there are no more
-				if (!NextTransition(cursor, rules, ss)) break;
+			ss >> state2; FindWord(cursor, rules, state2);
 
-				valid = false;
+			// check if state is invalid
+			if (!CheckState(state2)) MarkInvalid(valid, invalid, cursor, rules, ss);
+
+			if (valid)
+			{
+				// check if rule is within the size limits
+				if (!UpdateChars(chars, state2)) MarkInvalid(valid, invalid, cursor, rules, ss);
+
+				if (valid)
+				{
+					// check if transition is a duplicate
+					auto er = m_Transitions.equal_range(state1);
+					for (auto it = er.first; it != er.second; it++)
+					{
+						// it's a duplicate
+						if (it->second.state == state2)
+						{
+							MarkInvalid(valid, invalid, cursor, rules, ss);
+							break;
+						}
+					}
+
+					// assign to transition
+					if (valid) transition.state = state2;
+				}
 			}
 		}
 
@@ -136,20 +155,73 @@ vector<int> Interpreter::Process(string& rules)
 		{
 			ss >> symbol; FindWord(cursor, rules, symbol);
 
-			if (symbol.compare(";")) continue;
+			// check if rule is within the size limits
+			if (!UpdateChars(chars, state2)) MarkInvalid(valid, invalid, cursor, rules, ss);
+
+			if (valid)
+			{
+				// end of transition rules
+				if (symbol == ";")
+				{
+					// check if rule is within the size limits
+					if (!UpdateChars(chars, state2)) MarkInvalid(valid, invalid, cursor, rules, ss);
+
+					// add to transition table
+					if (valid) m_Transitions.insert({ state1,transition });
+				}
+				// indicates that a list of rules will follow
+				else if (symbol == ":")
+				{
+					transition.orRules.clear();
+					transition.andRules.clear();
+
+					ss >> symbol; FindWord(cursor, rules, symbol);
+
+					// check if symbol is "("
+					if (symbol != "(") MarkInvalid(valid, invalid, cursor, rules, ss);
+
+					if (valid)
+					{
+						ss >> symbol; FindWord(cursor, rules, symbol);
+
+						// check if symbol is "@"
+						if (symbol != "@") MarkInvalid(valid, invalid, cursor, rules, ss);
+
+						if (valid)
+						{
+							// check if rule is within the size limits
+							if (!UpdateChars(chars, state2)) MarkInvalid(valid, invalid, cursor, rules, ss);
+
+							if (valid)
+							{
+								string neighbors;
+								ss >> neighbors;
+
+								// it's a group of directions, eg. "[n,e,s,w]"
+								if (neighbors[0] == '[' && neighbors[neighbors.size() - 1] == ']')
+								{
+									// check every direction
+									// to do
+								}
+							}
+						}
+					}
+				}
+			}
 		}
+		
+		//wxLogDebug("state1=<%s> symbol=<%s> state2=<%s> cursor=<%i>", state1, symbol, state2, cursor);
 	}
-	//wxLogDebug("state1=<%s> symbol=<%s> state2=<%s> cursor=<%i>", state1, symbol, state2, cursor);
 
 	return invalid;
 }
 
-unordered_multimap<string, Transition> Interpreter::GetTransitionTable()
+unordered_multimap<string, Transition> Interpreter::GetTransitions()
 {
-	return m_TransitionTable;
+	return m_Transitions;
 }
 
-void Interpreter::SetStates(unordered_map<string, pair<string, wxColour>>& states)
+void Interpreter::SetStates(unordered_map<string, string>& states)
 {
 	m_States = states;
 }
@@ -183,7 +255,7 @@ bool Interpreter::FindWord(int& cursor, string &rules, string& s)
 	return true;
 }
 
-bool Interpreter::NextTransition(stringstream& ss)
+bool Interpreter::NextTransition(int& cursor, string& rules, stringstream& ss)
 {
 	string semicolon = ";";
 
@@ -208,7 +280,7 @@ bool Interpreter::UpdateChars(int& chars, string& s)
 {
 	chars += s.size();
 
-	return chars >= Sizes::CHARS_RULE_MIN && chars <= Sizes::CHARS_RULE_MAX;
+	return chars <= Sizes::CHARS_RULE_MAX;
 }
 
 bool Interpreter::UpdateSize(int& size)
@@ -216,4 +288,14 @@ bool Interpreter::UpdateSize(int& size)
 	size++;
 
 	return size <= Sizes::RULES_MAX;
+}
+
+void Interpreter::MarkInvalid(bool& valid,vector<int>& invalid, int& cursor, string& rules, stringstream& ss)
+{
+	// mark it in our list
+	invalid.push_back(cursor);
+	// go to the next transition if there's any left
+	NextTransition(cursor, rules, ss);
+
+	valid = false;
 }

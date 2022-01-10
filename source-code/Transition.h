@@ -14,9 +14,9 @@ struct Transition
 {
 	string state;
 	
-	CONDITIONS_AND vca;
-	CONDITIONS_OR vco;
+	CONDITIONS_AND andConditions;
+	CONDITIONS_OR orConditions;
 
-	RULES_AND vra;
-	RULES_OR vro;
+	RULES_AND andRules;
+	RULES_OR orRules;
 };

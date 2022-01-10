@@ -9,6 +9,11 @@ InputNeighbors::~InputNeighbors()
 {
 }
 
+void InputNeighbors::SetEditorRules(EditorRules* editorRules)
+{
+	m_EditorRules = editorRules;
+}
+
 std::unordered_set<std::string>& InputNeighbors::GetNeighbors()
 {
 	return m_Neighbors;
@@ -94,4 +99,7 @@ void InputNeighbors::OnToggleButton(wxCommandEvent& evt)
 		// neighbor not in list -> add it
 		m_Neighbors.insert(neighbor);
 	}
+
+	// notify EditorRules about the changes
+	m_EditorRules->SetNeighbors(m_Neighbors);
 }
