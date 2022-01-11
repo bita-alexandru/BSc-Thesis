@@ -102,29 +102,31 @@ std::vector<std::string> EditorRules::GetData()
 
 	if (rules.size() > Sizes::RULES_MAX)
 	{
-		wxMessageDialog* dialog = new wxMessageDialog(
+		wxMessageDialog dialog(
 			this, "The maximum allowed number of rules has been surpassed.\nMake sure you're within the given limit before saving.", "Error",
 			wxOK | wxICON_ERROR
 		);
-		dialog->SetExtendedMessage(
+		dialog.SetExtendedMessage(
 			"Limit: " + std::to_string(Sizes::RULES_MAX) + "\nCurrent number: " + std::to_string(rules.size())
 		);
-		int answer = dialog->ShowModal();
+		
+		int answer = dialog.ShowModal();
 
 		m_InvalidInput = true;
 		return {};
 	}
 	else if (indexInvalid.size())
 	{
-		wxMessageDialog* dialog = new wxMessageDialog(
+		wxMessageDialog dialog(
 			this, "Some of the rules appear to be invalid.", "Warning",
 			wxYES_NO | wxCANCEL | wxICON_EXCLAMATION
 		);
-		dialog->SetYesNoLabels("Mark && Resolve", "Ignore");
-		dialog->SetExtendedMessage(
+		dialog.SetYesNoLabels("Mark && Resolve", "Ignore");
+		dialog.SetExtendedMessage(
 			"Make sure you don't have any duplicates and that you're respecting the naming conventions."
 		);
-		int answer = dialog->ShowModal();
+
+		int answer = dialog.ShowModal();
 
 		if (answer == wxID_YES)
 		{
@@ -163,11 +165,16 @@ void EditorRules::GoTo(std::string rule)
 	// not found
 	if (result == -1)
 	{
+		if (m_DialogShown) return;
 		wxMessageDialog* dialog = new wxMessageDialog(
 			this, "No occurence found.", "Go To",
 			wxOK | wxICON_INFORMATION
 		);
+
+		m_DialogShown = true;
 		int answer = dialog->ShowModal();
+		m_DialogShown = false;
+
 		return;
 	}
 
@@ -197,6 +204,13 @@ void EditorRules::DeleteRule(std::string rule)
 		m_TextCtrl->LineDelete();
 		m_PrevText = m_TextCtrl->GetText();
 	}
+}
+
+void EditorRules::ForceClose()
+{
+	m_ForceClose = true;
+
+	//Close();
 }
 
 void EditorRules::BuildMenuBar()
@@ -292,6 +306,12 @@ void EditorRules::BuildDialogFind(std::string title, long style)
 
 void EditorRules::OnCloseEvent(wxCloseEvent& evt)
 {
+	if (m_ForceClose)
+	{
+		evt.Skip();
+		return;
+	}
+
 	// changes unsaved -> show dialog
 	if (m_PrevText != m_TextCtrl->GetText())
 	{
@@ -330,6 +350,7 @@ void EditorRules::OnClose(wxCommandEvent& evt)
 			this, "Do you want to save the changes?", "Save",
 			wxYES_NO | wxCANCEL | wxICON_INFORMATION
 		);
+
 		int answer = dialog->ShowModal();
 
 		if (answer == wxID_YES)
@@ -388,11 +409,16 @@ void EditorRules::OnFind(wxFindDialogEvent& evt)
 
 	if (result == -1)
 	{
+		if (m_DialogShown) return;
 		wxMessageDialog* dialog = new wxMessageDialog(
 			this, "No occurences found.", "Find",
 			wxOK | wxICON_INFORMATION
 		);
+
+		m_DialogShown = true;
 		int answer = dialog->ShowModal();
+		m_DialogShown = false;
+
 		return;
 	}
 
@@ -407,16 +433,21 @@ void EditorRules::OnFindNext(wxFindDialogEvent& evt)
 	int flags = m_FindData->GetFlags();
 	int result;
 
-	if (flags & wxFR_DOWN) result = m_TextCtrl->FindText(m_TextCtrl->GetAnchor(), m_TextCtrl->GetLastPosition(), find, flags);
+	if (flags & wxFR_DOWN) result = m_TextCtrl->FindText(m_TextCtrl->GetAnchor() + 1, m_TextCtrl->GetLastPosition(), find, flags);
 	else result = m_TextCtrl->FindText(m_TextCtrl->GetAnchor(), 0, find, flags);
 
 	if (result == -1)
 	{
+		if (m_DialogShown) return;
 		wxMessageDialog* dialog = new wxMessageDialog(
 			this, "No more occurences found.", "Find",
 			wxOK | wxICON_INFORMATION
 		);
+
+		m_DialogShown = true;
 		int answer = dialog->ShowModal();
+		m_DialogShown = false;
+
 		return;
 	}
 
@@ -453,11 +484,16 @@ void EditorRules::OnReplaceAll(wxFindDialogEvent& evt)
 
 	std::string message = std::to_string(occurences);
 	message += (occurences == 1) ? " occurence has been replaced." : " occurences have been replaced.";
+
+	if (m_DialogShown) return;
 	wxMessageDialog* dialog = new wxMessageDialog(
 		this, message, "Replace All",
 		wxOK | wxICON_INFORMATION
 	);
+
+	m_DialogShown = true;
 	int answer = dialog->ShowModal();
+	m_DialogShown = false;
 }
 
 void EditorRules::OnFormat(wxCommandEvent& evt)
@@ -513,6 +549,12 @@ void EditorRules::OnExport(wxCommandEvent& evt)
 void EditorRules::CloseEditor(bool save)
 {
 	wxDELETE(m_FindData); wxDELETE(m_FindDialog);
+
+	if (m_ForceClose)
+	{
+		Close();
+		return;
+	}
 	
 	if (save)
 	{

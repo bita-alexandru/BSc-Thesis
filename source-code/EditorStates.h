@@ -22,6 +22,7 @@ public:
 
 	void GoTo(std::string state);
 	void DeleteState(std::string state);
+	void ForceClose();
 private:
 	InputStates* m_InputStates = nullptr;
 
@@ -29,6 +30,10 @@ private:
 	wxFindReplaceData* m_FindData = nullptr;
 	wxStyledTextCtrl* m_TextCtrl = nullptr;
 	wxFindReplaceDialog* m_FindDialog = nullptr;
+	wxMessageDialog* dlg = nullptr;
+
+	bool m_DialogShown = false;
+	bool m_ForceClose = false;
 
 	wxString m_PrevText;
 	int m_MarkLine = -1;

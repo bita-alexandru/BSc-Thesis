@@ -24,6 +24,7 @@ public:
 
 	void GoTo(std::string rule);
 	void DeleteRule(std::string rule);
+	void ForceClose();
 private:
 	InputRules* m_InputRules = nullptr;
 	Interpreter m_Interpreter;
@@ -32,6 +33,9 @@ private:
 	wxFindReplaceData* m_FindData = nullptr;
 	wxStyledTextCtrl* m_TextCtrl = nullptr;
 	wxFindReplaceDialog* m_FindDialog = nullptr;
+
+	bool m_DialogShown = false;
+	bool m_ForceClose = false;
 
 	wxString m_PrevText;
 	int m_MarkLine = -1;

@@ -71,7 +71,7 @@ vector<int> Interpreter::Process(string& rules)
 	int cursor = 0;
 	int size = 0;
 
-	while (true)
+	while (false)
 	{
 		int chars = 0;
 		Transition transition = {};
@@ -250,6 +250,13 @@ vector<int> Interpreter::Process(string& rules)
 								}
 								// invalid token
 								else if (valid) MarkInvalid(valid, invalid, cursor);
+
+								if (!valid) break;
+
+								// read assignment symbol "="
+								ss >> symbol; FindWord(cursor, rules, symbol);
+
+								if (valid && !UpdateChars(chars, neighborhood)) MarkInvalid(valid, invalid, cursor);
 
 								if (!valid) break;
 

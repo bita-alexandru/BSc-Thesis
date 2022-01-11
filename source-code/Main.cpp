@@ -214,8 +214,8 @@ void Main::MenuPerspectiveAlgorithm(wxCommandEvent& evt)
 
 void Main::OnClose(wxCloseEvent& evt)
 {
-	wxDELETE(m_EditorStates);
-	wxDELETE(m_EditorRules);
+	m_EditorStates->ForceClose();
+	m_EditorRules->ForceClose();
 
 	evt.Skip();
 }
