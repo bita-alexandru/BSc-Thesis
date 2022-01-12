@@ -82,61 +82,41 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 		"Make sure you don't have any duplicates and that you're respecting the naming conventions."
 	);*/
 
-	int ws = 0;
-	if (m_TextCtrl->GetLineCount() > 0)
-	{
-		std::string firstline = std::string(m_TextCtrl->GetLine(0));
-		if (firstline.size() > 0 && firstline[firstline.size() - 1] == '\n') ws++;
-		else if (firstline.size() > 0 && firstline[firstline.size() - 1] == '\r\n') ws = 2;
-		
-		if (firstline.size() > 1 && firstline[firstline.size() - 2] == '\r') ws++;
-		wxLogDebug("ws=%i", ws);
-	}
-
 	std::string extendedMessage = "";
 	for (auto& it : invalidPositions)
 	{
 		int ncol = it.first;
 		int nline = -1;
 		int cnt = 0;
-		
+
+		//wxLogDebug("pos=%i", ncol);
+
+		// map to real position (line, col)
 		for (int i = 0; i < m_TextCtrl->GetLineCount(); i++)
 		{
-			cnt += (m_TextCtrl->GetLine(i).size() - ws);
-			//wxLogDebug("line(%i)-size(%i)=%i", i, m_TextCtrl->GetLine(i).size(), cnt + m_TextCtrl->GetLine(i).size());
-			
-			if (cnt > ncol)
+			// count linefeed whitespace
+			wxString line = m_TextCtrl->GetLine(i);
+			int lf = (line.size() > 0 && line[line.size() - 1] == '\n') ? 1 : 0;
+			int cr = (line.size() > 1 && line[line.size() - 2] == '\r') ? 1 : 0;
+			int ws = lf + cr;
+
+			ws = 0; // nvm, i dont need it
+
+			cnt += (line.size() - ws);
+
+			//wxLogDebug("LINE=%i SIZE=%i WS=%i CNT=%i", i, line.size(), ws, cnt);
+			if (cnt >= ncol)
 			{
 				nline = i;
+				ncol = (line.size() - ws) - (cnt - ncol);
+				it.first = nline;
 				break;
 			}
 		}
 
-		//cnt += ws;
-		//ncol = std::abs(cnt - ncol);
-
-		//if (nline == -1)
-		//{
-		//	nline = m_TextCtrl->GetLineCount() - 1;
-		//	//ncol -= (m_TextCtrl->GetLine(nline - 1).size() - ws);
-		//}
-
-		wxLogDebug("cnt=%i ncol=%i", cnt,ncol);
-		//ncol -= cnt;
+		//wxLogDebug("cnt=%i, ncol=%i", cnt,ncol);
 
 		std::string line = std::to_string(nline + 1);
-
-		/*if (nline > 0)
-		{
-			for (int j = nline - 1; j >= 0; j--)
-			{
-				wxLogDebug("LINE(%i)-SIZE(%i)-NCOL(%i)", j, m_TextCtrl->GetLine(j).size(),ncol);
-				int linesize = m_TextCtrl->GetLine(j).size();
-
-				if (linesize > ws) ncol -= (linesize - ws);
-				else ncol -= ws;
-			}
-		}*/
 
 		std::string col = std::to_string(ncol);
 		extendedMessage += it.second + " at line " + line + ", column " + col + "\n";

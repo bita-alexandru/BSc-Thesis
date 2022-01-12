@@ -90,12 +90,13 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 
 		if (!UpdateChars(chars, state1)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 		
+		//wxLogDebug("OK-1");
 		// check if end of file
 		if (!FindWord(cursor, rules, state1)) break;
-		
+		//wxLogDebug("OK-2");
 		// check if state is invalid
 		if (valid && !CheckState(state1)) MarkInvalid(valid, invalid,  "<INVALID FIRST STATE>", cursor);
-
+		//wxLogDebug("OK-3");
 		// check if rule is within the size limits
 
 		// read transition symbol "/"
@@ -125,12 +126,13 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 
 			if (valid)
 			{
+				//wxLogDebug("hash=<%s>", state1 + "-" + state2);
 				// check if transition is a duplicate
 				if (duplicates.find(state1 + "-" + state2) != duplicates.end()) MarkInvalid(valid, invalid,  "<DUPLICATE RULE>", cursor);
 				else if (state1 == state2) MarkInvalid(valid, invalid,  "<ILLEGAL RULE>", cursor);
 
 				if (valid) duplicates.insert({ state1 + "-" + state2 });
-				//else wxLogDebug("cursor=%i", cursor-spaces);
+				else //wxLogDebug("cursor=%i spaces=%i", cursor,spaces);
 
 				// assign to transition
 				if (valid) transition.state = state2;
@@ -152,11 +154,8 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 				// end of transition rules
 				if (symbol == ";")
 				{
-					// check if rule is within the size limits
-					if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
-
 					// add to transition table
-					if (valid) m_Transitions.push_back({ state1,transition });
+					m_Transitions.push_back({ state1,transition });
 				}
 				// indicates that a list of rules will follow
 				else if (symbol == ":")
@@ -227,7 +226,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 
 										// expect to read either "," or "]"
 										symbol.clear();
-										ss >> symbol; FindWord(cursor, rules, direction);
+										ss >> symbol; FindWord(cursor, rules, symbol);
 										transition.condition += symbol;
 										//wxLogDebug("symbol=<%s>", symbol);
 
@@ -439,7 +438,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 
 	if (m_Transitions.size() > Sizes::RULES_MAX) invalid = { {-1,"<THE NUMBER OF RULES SURPASSES THE MAXIMUM LIMIT>"} };
 
-	//wxLogDebug("invalid_size=%i", invalid.size());
+	////wxLogDebug("invalid_size=%i", invalid.size());
 	return invalid;
 }
 
@@ -460,34 +459,57 @@ void Interpreter::SetNeighbors(unordered_set<string>& neighbors)
 
 bool Interpreter::FindWord(int& cursor, string &rules, string& s)
 {
+	int pos = 0;
+	bool ret = true;
+
+	// reached end of file	
 	if (s.empty())
 	{
-		cursor = rules.size();
-		return false;
+		pos = rules.size();
+		ret = false;
 	}
-
-	int pos = rules.find(s, cursor);
-
-	if (pos == rules.npos)
+	else
 	{
-		cursor = rules.size();
-		return false;
+		pos = rules.find(s, cursor);
+
+		// reached end of file
+		if (pos == rules.npos)
+		{
+			pos = rules.size();
+			ret = false;
+		}
+		// not a whole word
+		else if (pos > 0 && !iswspace(rules[pos - 1]))
+		{
+			pos = pos + 1;// + s.size();
+			ret = false;
+		}
+		// not a whole word
+		else if (pos + s.size() < rules.size() && !iswspace(rules[pos + s.size()]))
+		{
+			pos = pos + 1;// + s.size();
+			ret = false;
+		}
+		// whole word -> place cursor at the start of word
+		else
+		{
+			pos = pos + 1;// +s.size();
+		}
 	}
 
-	if (pos > 0 && !iswspace(rules[pos - 1]))
+	// count extra white spaces along the way
+	for (int i = cursor; i < pos; i++)
 	{
-		cursor = pos + s.size();
-		return false;
-	}
-	if (pos + s.size() < rules.size() && !iswspace(rules[pos + s.size()]))
-	{
-		cursor = pos + s.size();
-		return false;
+		char c = rules[i];
+
+		if (BOTH_SPACED.find(c) != BOTH_SPACED.npos) spaces += 2;
 	}
 
-	cursor = pos + s.size();
+	////wxLogDebug("token=%s spaces=%i", s, spaces);
 
-	return true;
+	cursor = pos;
+
+	return ret;
 }
 
 bool Interpreter::NextTransition(int& cursor, string& rules, stringstream& ss)
@@ -515,7 +537,11 @@ bool Interpreter::UpdateChars(int& chars, string& s)
 {
 	chars += s.size();
 
-	if (s.size() && BOTH_SPACED.find(s) != BOTH_SPACED.npos) spaces += 2;
+	/*if (s.size() && BOTH_SPACED.find(s) != BOTH_SPACED.npos)
+	{
+		spaces += 2;
+	}*/
+	//wxLogDebug("symbol=%s spaces=%i", s,spaces);
 
 	return chars <= Sizes::CHARS_RULE_MAX;
 }

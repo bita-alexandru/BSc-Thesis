@@ -67,7 +67,7 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
         if (m_Rules.find(rules[i].first) == m_Rules.end())
         {
             m_Rules.insert(rules[i]);
-            wxLogDebug("INSERT-1");
+            //wxLogDebug("INSERT-1");
         }
         else if (m_Rules.find(rules[i].first) != m_Rules.end())
         {
