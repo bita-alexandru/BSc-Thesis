@@ -128,7 +128,7 @@ void InputStates::SetStates(std::vector<std::string> states)
 
     // update ToolModes (state, color) list
     std::vector<std::pair<std::string, wxColour>> statesColors;
-    for (auto it : states)
+    for (auto& it : states)
     {
         statesColors.push_back({ it, wxColour(m_States[it]) });
     }
@@ -463,8 +463,6 @@ void InputStates::StateDelete()
     }
 
     SetStates(states);
-
-    // TO DO, update the editors textbox
 }
 
 void InputStates::OnEdit(wxCommandEvent& evt)

@@ -19,7 +19,7 @@ ListRules* InputRules::GetList()
     return m_List;
 }
 
-std::unordered_map<std::string, std::unordered_map<std::string, std::any>>& InputRules::GetRules()
+std::unordered_multimap<std::string, Transition>& InputRules::GetRules()
 {
 	return m_Rules;
 }
@@ -29,27 +29,61 @@ void InputRules::SetEditorRules(EditorRules* editorRules)
     m_EditorRules = editorRules;
 }
 
-void InputRules::SetRules(std::vector<std::string> rules)
+void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
 {
     // rules appear in our list but not in the given list -> they got recently deleted
-    for (auto it = m_Rules.begin(); it != m_Rules.end();)
+    /*for (auto it1 = m_Rules.begin(); it1 != m_Rules.end();)
     {
-        if (std::find(rules.begin(), rules.end(), it->first) == rules.end())
-        {
-            it = m_Rules.erase(it);
-        }
-        else
-        {
-            it++;
-        }
-    }
+        bool erased = false;
+
+        for (int i = 0; i < rules.size(); i++)
+            if (it1->first == rules[i].first)
+            {
+                if (it1->second.orRules == rules[i].second.orRules)
+                {
+                    it1 = m_Rules.erase(it1);
+                    erased = true;
+                }
+                else
+                {
+                    auto er = m_Rules.equal_range(it1->first);
+                    for (auto it2 = er.first; it2 != er.second; it2++)
+                    {
+                        if (it2->second.orRules == rules[i].second.orRules)
+                        {
+                            m_Rules.erase(it2);
+                            break;
+                        }
+                    }
+                }
+            }
+
+        if (!erased) it1++;
+    }*/
 
     // rules appear in the given list but not in our map -> they got recently introduced
     for (int i = 0; i < rules.size(); i++)
     {
-        if (m_Rules.find(rules[i]) == m_Rules.end())
+        if (m_Rules.find(rules[i].first) == m_Rules.end())
         {
-            m_Rules.insert({ rules[i], { } });
+            m_Rules.insert(rules[i]);
+            wxLogDebug("INSERT-1");
+        }
+        else if (m_Rules.find(rules[i].first) != m_Rules.end())
+        {
+            auto er = m_Rules.equal_range(rules[i].first);
+            bool present = false;
+
+            for (auto it = er.first; it != er.second; it++)
+            {
+                if (rules[i].second.orRules == it->second.orRules)
+                {
+                    present = true;
+                    break;
+                }
+            }
+
+            if (!present) m_Rules.insert(rules[i]);
         }
     }
 
@@ -60,56 +94,67 @@ void InputRules::SetRules(std::vector<std::string> rules)
     for (i = 0; i < rules.size(); i++)
     {
         int id = i + 1;
-        std::string rule = rules[i];
+        std::string state1 = rules[i].first;
+        std::string state2 = rules[i].second.state;
+        std::string condition = rules[i].second.condition;
 
-        if (alreadyUpdated.find(rule) != alreadyUpdated.end()) continue;
+        if (alreadyUpdated.find(state1 + "-" + state2 + "-" + condition) != alreadyUpdated.end()) continue;
 
         if (i > nOfItems - 1)
         {
             wxColour bgColorA("white"), bgColorB("white");
             wxColour txtColorA("black"), txtColorB("black");
             // TO DO, actually separate the <stateA> <stateB> <condition>
-            if (m_States.find(rule) != m_States.end())
+            if (m_States.find(state1) != m_States.end() && m_States.find(state2) != m_States.end())
             {
-                bgColorA = wxColour(m_States[rule]); bgColorB = wxColour(m_States[rule]);
+                bgColorA = wxColour(m_States[state1]); bgColorB = wxColour(m_States[state2]);
                 txtColorA = (bgColorA.Red() * 0.299 + bgColorA.Green() * 0.587 + bgColorA.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
                 txtColorB = (bgColorB.Red() * 0.299 + bgColorB.Green() * 0.587 + bgColorB.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
             }
 
-            m_List->PushBack({ id, rule, "", "" }, { bgColorA, txtColorA }, { bgColorB, txtColorB });
-            m_List->ChangeItemState1(i, rule);
+            m_List->PushBack({ id, state1, state2, condition }, { bgColorA, txtColorA }, { bgColorB, txtColorB });
 
             continue;
         }
 
         wxString itmId = m_List->GetItemText(i, 0);
-        wxString itmRule = m_List->GetItemText(i, 1);
+        wxString itmState1 = m_List->GetState1(i);
+        wxString itmState2 = m_List->GetState2(i);
+        wxString itmCondition = m_List->GetCond(i);
         wxColour itmColor = m_List->GetItemBackgroundColour(i);
 
         if (itmId != id)
         {
             m_List->ChangeItemId(i, id);
         }
-        if (itmRule != rule)
+        if (itmState1 != state1)
         {
-            m_List->ChangeItemState1(i, rule);
+            m_List->ChangeItemState1(i, state1);
+        }
+        if (itmState2 != state2)
+        {
+            m_List->ChangeItemState2(i, state2);
+        }
+        if (itmCondition != condition)
+        {
+            m_List->ChangeItemCond(i, condition);
         }
 
-        alreadyUpdated.insert(rule);
+        alreadyUpdated.insert(state1 + "-" + state2 + "-" + condition);
     }
 
     while (i < nOfItems--)
     {
         std::string state1 = m_List->GetState1(i);
         std::string state2 = m_List->GetState2(i);
-        std::string cond = m_List->GetCond(i);
+        std::string condition = m_List->GetCond(i);
 
         // to do, come back when items are inserted properly
-        std::string rule = state1;// +"->" + state2;
-        if (!cond.empty()) rule += ":" + cond;
+        //std::string rule = state1;// +"->" + state2;
+        //if (!cond.empty()) rule += ":" + cond;
 
         m_List->Erase(i);
-        if (alreadyUpdated.find(rule) != alreadyUpdated.end()) continue;
+        if (alreadyUpdated.find(state1 + "-" + state2 + "-" + condition) != alreadyUpdated.end()) continue;
     }
 
     m_List->RefreshAfterUpdate();
@@ -314,9 +359,8 @@ void InputRules::RuleDelete()
         if (toBeDeleted.find(rule) == toBeDeleted.end()) rules.push_back(rule);
     }
 
-    SetRules(rules);
-
-    // TO DO, update the editors textbox
+    // to do, update m_Rules
+    //SetRules(rules);
 }
 
 void InputRules::OnEdit(wxCommandEvent& evt)

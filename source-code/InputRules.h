@@ -5,8 +5,7 @@
 #include "Ids.h"
 #include "ListRules.h"
 #include "EditorRules.h"
-
-#include <any>
+#include "Transition.h"
 
 class EditorRules;
 
@@ -17,11 +16,11 @@ public:
 	~InputRules();
 
 	ListRules* GetList();
-	std::unordered_map<std::string, std::unordered_map<std::string, std::any>>& GetRules();
+	std::unordered_multimap<std::string, Transition>& GetRules();
 	
 	void SetEditorRules(EditorRules* editorRules);
 
-	void SetRules(std::vector<std::string> rules);
+	void SetRules(std::vector<std::pair<std::string, Transition>> rules);
 	void SetStates(std::unordered_map<std::string, std::string>& states);
 private:
 	ListRules* m_List = nullptr;
@@ -30,7 +29,7 @@ private:
 	wxMenu* m_Menu = nullptr;
 	wxSearchCtrl* m_Search = nullptr;
 
-	std::unordered_map<std::string, std::unordered_map<std::string, std::any>> m_Rules;
+	std::unordered_multimap<std::string, Transition> m_Rules;
 	std::unordered_map<std::string, std::string> m_States;
 
 	void BuildInterface();

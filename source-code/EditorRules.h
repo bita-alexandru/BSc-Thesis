@@ -8,6 +8,7 @@
 #include "Sizes.h"
 #include "InputRules.h"
 #include "Interpreter.h"
+#include "Transition.h"
 
 class InputRules;
 
@@ -20,7 +21,7 @@ public:
 	void SetStates(std::unordered_map<std::string, std::string>& states);
 	void SetNeighbors(std::unordered_set<std::string>& neighbors);
 	void SetInputRules(InputRules* inputRules);
-	std::vector<std::string> GetData();
+	vector<pair<string, Transition>> GetData();
 
 	void GoTo(std::string rule);
 	void DeleteRule(std::string rule);

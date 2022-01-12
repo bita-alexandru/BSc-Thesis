@@ -43,71 +43,28 @@ void EditorRules::SetInputRules(InputRules* inputRules)
 	m_InputRules = inputRules;
 }
 
-std::vector<std::string> EditorRules::GetData()
+std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 {
 	std::string text = (std::string)m_TextCtrl->GetText().Upper();
 
-	wxLogDebug("[START]");
-	m_Interpreter.Process(text);
-	wxLogDebug("[END]");
+	std::vector<std::pair<int, std::string>> invalidPositions = m_Interpreter.Process(text);
 
-	// remove empty lines, white spaces and carriage symbols
-	text.erase(remove(text.begin(), text.end(), ' '), text.end());
-	text.erase(remove(text.begin(), text.end(), '\t'), text.end());
-	text.erase(remove(text.begin(), text.end(), '\r'), text.end());
-	text.erase(std::unique(text.begin(), text.end(), [](char a, char b) {return a == '\n' && b == '\n'; }), text.end());
+	vector<pair<string, Transition>> transitions = m_Interpreter.GetTransitions();
 
-	// count lines (rules) and mark duplicates/invalid rules
-	std::unordered_set<std::string> setRules;
-	std::vector<int> indexInvalid;
-
-	std::stringstream ssText(text);
-	std::string rule;
-	std::vector<std::string> rules;
-
-	int cntLine = -1;
-	while (std::getline(ssText, rule, '\n'))
+	if (invalidPositions.empty())
 	{
-		cntLine++;
-
-		if (rule.size() < 1) continue;
-
-		// rule's name does not respect the character limits
-		if (rule.size() < Sizes::CHARS_RULE_MIN || rule.size() > Sizes::CHARS_RULE_MAX)
-		{
-			indexInvalid.push_back(cntLine);
-			continue;
-		}
-
-		// rule's name contains illegal characters
-		if (std::find_if(rule.begin(), rule.end(), [](char c) { return !(isalnum(c) || (std::string("_->@()&<>+=#:").find(c)) != std::string::npos); }) != rule.end())
-		{
-			indexInvalid.push_back(cntLine);
-			continue;
-		}
-
-		// duplicate found
-		if (setRules.find(rule) != setRules.end())
-		{
-			indexInvalid.push_back(cntLine);
-			continue;
-		}
-		else
-		{
-			setRules.insert(rule);
-		}
-
-		rules.push_back(rule);
+		m_InvalidInput = false;
+		return transitions;
 	}
 
-	if (rules.size() > Sizes::RULES_MAX)
+	if (invalidPositions[0].first == -1)
 	{
 		wxMessageDialog dialog(
 			this, "The maximum allowed number of rules has been surpassed.\nMake sure you're within the given limit before saving.", "Error",
 			wxOK | wxICON_ERROR
 		);
 		dialog.SetExtendedMessage(
-			"Limit: " + std::to_string(Sizes::RULES_MAX) + "\nCurrent number: " + std::to_string(rules.size())
+			"Limit: " + std::to_string(Sizes::RULES_MAX) + "\nCurrent number: " + std::to_string(transitions.size())
 		);
 		
 		int answer = dialog.ShowModal();
@@ -115,47 +72,109 @@ std::vector<std::string> EditorRules::GetData()
 		m_InvalidInput = true;
 		return {};
 	}
-	else if (indexInvalid.size())
-	{
-		wxMessageDialog dialog(
-			this, "Some of the rules appear to be invalid.", "Warning",
-			wxYES_NO | wxCANCEL | wxICON_EXCLAMATION
-		);
-		dialog.SetYesNoLabels("Mark && Resolve", "Ignore");
-		dialog.SetExtendedMessage(
-			"Make sure you don't have any duplicates and that you're respecting the naming conventions."
-		);
-
-		int answer = dialog.ShowModal();
-
-		if (answer == wxID_YES)
-		{
-			m_TextCtrl->MarkerDeleteAll(wxSTC_MARK_CIRCLE);
-
-			for (int i = 0; i < indexInvalid.size(); i++)
-			{
-				m_TextCtrl->MarkerAdd(indexInvalid[i], wxSTC_MARK_CIRCLE);
-			}
-			m_MenuBar->Enable(Ids::ID_MARK_NEXT_RULES, true);
-			m_MenuBar->Enable(Ids::ID_MARK_PREV_RULES, true);
-
-			m_InvalidInput = true;
-			return {};
-		}
-		if (answer == wxID_NO)
-		{
-			m_InvalidInput = false;
-			return rules;
-		}
-		if (answer == wxID_CANCEL)
-		{
-			m_InvalidInput = true;
-			return {};
-		}
-	}
 	
-	m_InvalidInput = false;
-	return rules;
+	wxMessageDialog dialog(
+		this, "Some of the rules appear to be invalid.", "Warning",
+		wxYES_NO | wxCANCEL | wxICON_EXCLAMATION
+	);
+	dialog.SetYesNoLabels("Mark && Resolve", "Ignore");
+	/*dialog.SetExtendedMessage(
+		"Make sure you don't have any duplicates and that you're respecting the naming conventions."
+	);*/
+
+	int ws = 0;
+	if (m_TextCtrl->GetLineCount() > 0)
+	{
+		std::string firstline = std::string(m_TextCtrl->GetLine(0));
+		if (firstline.size() > 0 && firstline[firstline.size() - 1] == '\n') ws++;
+		else if (firstline.size() > 0 && firstline[firstline.size() - 1] == '\r\n') ws = 2;
+		
+		if (firstline.size() > 1 && firstline[firstline.size() - 2] == '\r') ws++;
+		wxLogDebug("ws=%i", ws);
+	}
+
+	std::string extendedMessage = "";
+	for (auto& it : invalidPositions)
+	{
+		int ncol = it.first;
+		int nline = -1;
+		int cnt = 0;
+		
+		for (int i = 0; i < m_TextCtrl->GetLineCount(); i++)
+		{
+			cnt += (m_TextCtrl->GetLine(i).size() - ws);
+			//wxLogDebug("line(%i)-size(%i)=%i", i, m_TextCtrl->GetLine(i).size(), cnt + m_TextCtrl->GetLine(i).size());
+			
+			if (cnt > ncol)
+			{
+				nline = i;
+				break;
+			}
+		}
+
+		//cnt += ws;
+		//ncol = std::abs(cnt - ncol);
+
+		//if (nline == -1)
+		//{
+		//	nline = m_TextCtrl->GetLineCount() - 1;
+		//	//ncol -= (m_TextCtrl->GetLine(nline - 1).size() - ws);
+		//}
+
+		wxLogDebug("cnt=%i ncol=%i", cnt,ncol);
+		//ncol -= cnt;
+
+		std::string line = std::to_string(nline + 1);
+
+		/*if (nline > 0)
+		{
+			for (int j = nline - 1; j >= 0; j--)
+			{
+				wxLogDebug("LINE(%i)-SIZE(%i)-NCOL(%i)", j, m_TextCtrl->GetLine(j).size(),ncol);
+				int linesize = m_TextCtrl->GetLine(j).size();
+
+				if (linesize > ws) ncol -= (linesize - ws);
+				else ncol -= ws;
+			}
+		}*/
+
+		std::string col = std::to_string(ncol);
+		extendedMessage += it.second + " at line " + line + ", column " + col + "\n";
+
+		it.first = nline;
+	}
+	dialog.SetExtendedMessage(extendedMessage);
+
+	int answer = dialog.ShowModal();
+
+	if (answer == wxID_YES)
+	{
+		m_TextCtrl->MarkerDeleteAll(wxSTC_MARK_CIRCLE);
+		m_TextCtrl->Refresh(false);
+
+		for (int i = 0; i < invalidPositions.size(); i++)
+		{
+			int line = invalidPositions[i].first;
+			m_TextCtrl->MarkerAdd(line, wxSTC_MARK_CIRCLE);
+		}
+		m_MenuBar->Enable(Ids::ID_MARK_NEXT_RULES, true);
+		m_MenuBar->Enable(Ids::ID_MARK_PREV_RULES, true);
+
+		m_InvalidInput = true;
+		return {};
+	}
+	if (answer == wxID_NO)
+	{
+		m_InvalidInput = false;
+		return transitions;
+	}
+	if (answer == wxID_CANCEL)
+	{
+		m_InvalidInput = true;
+		return {};
+	}
+
+	return {};
 }
 
 void EditorRules::GoTo(std::string rule)
@@ -166,13 +185,13 @@ void EditorRules::GoTo(std::string rule)
 	if (result == -1)
 	{
 		if (m_DialogShown) return;
-		wxMessageDialog* dialog = new wxMessageDialog(
+		wxMessageDialog dialog (
 			this, "No occurence found.", "Go To",
 			wxOK | wxICON_INFORMATION
 		);
 
 		m_DialogShown = true;
-		int answer = dialog->ShowModal();
+		int answer = dialog.ShowModal();
 		m_DialogShown = false;
 
 		return;
@@ -315,11 +334,12 @@ void EditorRules::OnCloseEvent(wxCloseEvent& evt)
 	// changes unsaved -> show dialog
 	if (m_PrevText != m_TextCtrl->GetText())
 	{
-		wxMessageDialog* dialog = new wxMessageDialog(
+		wxMessageDialog dialog(
 			this, "Do you want to save the changes?", "Save",
 			wxYES_NO | wxCANCEL | wxICON_INFORMATION
 		);
-		int answer = dialog->ShowModal();
+
+		int answer = dialog.ShowModal();
 
 		if (answer == wxID_YES)
 		{
@@ -346,12 +366,12 @@ void EditorRules::OnClose(wxCommandEvent& evt)
 	// changes unsaved -> show dialog
 	if (m_PrevText != m_TextCtrl->GetText())
 	{
-		wxMessageDialog* dialog = new wxMessageDialog(
+		wxMessageDialog dialog(
 			this, "Do you want to save the changes?", "Save",
 			wxYES_NO | wxCANCEL | wxICON_INFORMATION
 		);
 
-		int answer = dialog->ShowModal();
+		int answer = dialog.ShowModal();
 
 		if (answer == wxID_YES)
 		{
@@ -370,10 +390,11 @@ void EditorRules::OnClose(wxCommandEvent& evt)
 
 void EditorRules::OnSave(wxCommandEvent& evt)
 {
-	std::vector<std::string> data = GetData();
+	std::vector<std::pair<std::string, Transition>> data = GetData();
 	if (m_InvalidInput) return;
 
 	m_TextCtrl->MarkerDeleteAll(wxSTC_MARK_CIRCLE);
+	m_TextCtrl->Refresh(false);
 	m_MenuBar->Enable(Ids::ID_MARK_NEXT_RULES, false);
 	m_MenuBar->Enable(Ids::ID_MARK_PREV_RULES, false);
 
@@ -410,13 +431,13 @@ void EditorRules::OnFind(wxFindDialogEvent& evt)
 	if (result == -1)
 	{
 		if (m_DialogShown) return;
-		wxMessageDialog* dialog = new wxMessageDialog(
+		wxMessageDialog dialog(
 			this, "No occurences found.", "Find",
 			wxOK | wxICON_INFORMATION
 		);
 
 		m_DialogShown = true;
-		int answer = dialog->ShowModal();
+		int answer = dialog.ShowModal();
 		m_DialogShown = false;
 
 		return;
@@ -439,13 +460,13 @@ void EditorRules::OnFindNext(wxFindDialogEvent& evt)
 	if (result == -1)
 	{
 		if (m_DialogShown) return;
-		wxMessageDialog* dialog = new wxMessageDialog(
+		wxMessageDialog dialog(
 			this, "No more occurences found.", "Find",
 			wxOK | wxICON_INFORMATION
 		);
 
 		m_DialogShown = true;
-		int answer = dialog->ShowModal();
+		int answer = dialog.ShowModal();
 		m_DialogShown = false;
 
 		return;
@@ -486,13 +507,13 @@ void EditorRules::OnReplaceAll(wxFindDialogEvent& evt)
 	message += (occurences == 1) ? " occurence has been replaced." : " occurences have been replaced.";
 
 	if (m_DialogShown) return;
-	wxMessageDialog* dialog = new wxMessageDialog(
+	wxMessageDialog dialog(
 		this, message, "Replace All",
 		wxOK | wxICON_INFORMATION
 	);
 
 	m_DialogShown = true;
-	int answer = dialog->ShowModal();
+	int answer = dialog.ShowModal();
 	m_DialogShown = false;
 }
 
@@ -558,10 +579,11 @@ void EditorRules::CloseEditor(bool save)
 	
 	if (save)
 	{
-		std::vector<std::string> data = GetData();
+		std::vector<std::pair<std::string, Transition>> data = GetData();
 		if (m_InvalidInput) return;
 
 		m_TextCtrl->MarkerDeleteAll(wxSTC_MARK_CIRCLE);
+		m_TextCtrl->Refresh(false);
 		m_MenuBar->Enable(Ids::ID_MARK_NEXT_RULES, false);
 		m_MenuBar->Enable(Ids::ID_MARK_PREV_RULES, false);
 

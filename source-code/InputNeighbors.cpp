@@ -21,6 +21,21 @@ std::unordered_set<std::string>& InputNeighbors::GetNeighbors()
 
 void InputNeighbors::SetNeighbors(std::vector<std::string> neighbors)
 {
+	for (auto& it : m_Buttons)
+	{
+		it.second->SetValue(0);
+	}
+
+	for (int i = 0; i < neighbors.size(); i++)
+	{
+		if (m_Neighbors.find(neighbors[i]) == m_Neighbors.end())
+		{
+			m_Neighbors.insert(neighbors[i]);
+			m_Buttons[neighbors[i]]->SetValue(1);
+		}
+	}
+
+	m_EditorRules->SetNeighbors(m_Neighbors);
 }
 
 void InputNeighbors::BuildInterface()
@@ -79,7 +94,7 @@ void InputNeighbors::BuildInterface()
 		{Ids::ID_NEIGHBOR_SW, "SW"}, {Ids::ID_NEIGHBOR_S, "S"}, {Ids::ID_NEIGHBOR_SE, "SE"}
 	};
 
-	for (auto it : m_Ids)
+	for (auto& it : m_Ids)
 	{
 		m_Buttons[it.second]->Bind(wxEVT_COMMAND_TOGGLEBUTTON_CLICKED, &InputNeighbors::OnToggleButton, this);
 	}

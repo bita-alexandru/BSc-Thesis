@@ -44,8 +44,8 @@ std::vector<std::string> EditorStates::GetData()
 	text.erase(remove(text.begin(), text.end(), '\t'), text.end());
 
 	// count lines (states) and mark duplicates/invalid states
-	std::unordered_set<std::string> setStates;
-	std::vector<int> indexInvalid;
+	std::unordered_set<std::string> setStates({ "FREE" });
+	std::vector<std::pair<int, std::string>> indexInvalid;
 
 	std::stringstream ssText(text);
 	std::string state;
@@ -59,29 +59,29 @@ std::vector<std::string> EditorStates::GetData()
 		if (state.size() < 1) continue;
 
 		// separate line comment
-		if (state.size() > 1 && state.substr(0, 2) == "//") continue;
+		if (state.size() > 1 && state[0] == '!') continue;
 
 		// inline comment, ignore it but continue with the state before it
-		if (state.find("//") != state.npos) state = state.substr(0, state.find("//"));
+		if (state.find("!") != state.npos) state = state.substr(0, state.find("!"));
 
 		// state's name does not respect the character limits
 		if (state.size() < Sizes::CHARS_STATE_MIN || state.size() > Sizes::CHARS_STATE_MAX)
 		{
-			indexInvalid.push_back(cntLine);
+			indexInvalid.push_back({ cntLine, "<INVALID STATE SIZE>"});
 			continue;
 		}
 
 		// state's name contains illegal characters
 		if (std::find_if(state.begin(), state.end(), [](char c) { return !(isalnum(c) || (c == '_')); }) != state.end())
 		{
-			indexInvalid.push_back(cntLine);
+			indexInvalid.push_back({ cntLine, "<ILLEGAL CHARACTERS>"});
 			continue;
 		}
 
 		// duplicate found
 		if (setStates.find(state) != setStates.end())
 		{
-			indexInvalid.push_back(cntLine);
+			indexInvalid.push_back({ cntLine,"<DUPLICATE STATE>" });
 			continue;
 		}
 		else
@@ -114,19 +114,29 @@ std::vector<std::string> EditorStates::GetData()
 			wxYES_NO | wxCANCEL | wxICON_EXCLAMATION
 		);
 		dialog.SetYesNoLabels("Mark && Resolve", "Ignore");
-		dialog.SetExtendedMessage(
+		/*dialog.SetExtendedMessage(
 			"Make sure you don't have any duplicates and that you're respecting the naming conventions."
-		);
+		);*/
+		std::string extendedMessage = "";
+		for (auto& it : indexInvalid)
+		{
+			int nline = it.first;
+			std::string line = std::to_string(nline + 1);
+
+			extendedMessage += it.second + " at line " + line + "\n";
+		}
+		dialog.SetExtendedMessage(extendedMessage);
 
 		int answer = dialog.ShowModal();
 
 		if (answer == wxID_YES)
 		{
 			m_TextCtrl->MarkerDeleteAll(wxSTC_MARK_CIRCLE);
+			m_TextCtrl->Refresh(false);
 
 			for (int i = 0; i < indexInvalid.size(); i++)
 			{
-				m_TextCtrl->MarkerAdd(indexInvalid[i], wxSTC_MARK_CIRCLE);
+				m_TextCtrl->MarkerAdd(indexInvalid[i].first, wxSTC_MARK_CIRCLE);
 			}
 			m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, true);
 			m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, true);
@@ -157,12 +167,12 @@ void EditorStates::GoTo(std::string state)
 	// not found
 	if (result == -1)
 	{
-		wxMessageDialog* dialog = new wxMessageDialog(
+		wxMessageDialog dialog(
 			this, "No occurence found.", "Go To",
 			wxOK | wxICON_INFORMATION
 		);
 
-		int answer = dialog->ShowModal();
+		int answer = dialog.ShowModal();
 
 		return;
 	}
@@ -362,6 +372,7 @@ void EditorStates::OnSave(wxCommandEvent& evt)
 	if (m_InvalidInput) return;
 
 	m_TextCtrl->MarkerDeleteAll(wxSTC_MARK_CIRCLE);
+	m_TextCtrl->Refresh(false);
 	m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, false);
 	m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, false);
 
@@ -549,6 +560,7 @@ void EditorStates::CloseEditor(bool save)
 		if (m_InvalidInput) return;
 
 		m_TextCtrl->MarkerDeleteAll(wxSTC_MARK_CIRCLE);
+		m_TextCtrl->Refresh(false);
 		m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, false);
 		m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, false);
 
