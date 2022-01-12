@@ -90,13 +90,10 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 
 		if (!UpdateChars(chars, state1)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 		
-		//wxLogDebug("OK-1");
 		// check if end of file
 		if (!FindWord(cursor, rules, state1)) break;
-		//wxLogDebug("OK-2");
 		// check if state is invalid
 		if (valid && !CheckState(state1)) MarkInvalid(valid, invalid,  "<INVALID FIRST STATE>", cursor);
-		//wxLogDebug("OK-3");
 		// check if rule is within the size limits
 
 		// read transition symbol "/"
@@ -126,13 +123,11 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 
 			if (valid)
 			{
-				//wxLogDebug("hash=<%s>", state1 + "-" + state2);
 				// check if transition is a duplicate
 				if (duplicates.find(state1 + "-" + state2) != duplicates.end()) MarkInvalid(valid, invalid,  "<DUPLICATE RULE>", cursor);
 				else if (state1 == state2) MarkInvalid(valid, invalid,  "<ILLEGAL RULE>", cursor);
 
 				if (valid) duplicates.insert({ state1 + "-" + state2 });
-				else //wxLogDebug("cursor=%i spaces=%i", cursor,spaces);
 
 				// assign to transition
 				if (valid) transition.state = state2;
@@ -541,7 +536,7 @@ bool Interpreter::UpdateChars(int& chars, string& s)
 	{
 		spaces += 2;
 	}*/
-	//wxLogDebug("symbol=%s spaces=%i", s,spaces);
+	//////wxLogDebug("symbol=%s spaces=%i", s,spaces);
 
 	return chars <= Sizes::CHARS_RULE_MAX;
 }

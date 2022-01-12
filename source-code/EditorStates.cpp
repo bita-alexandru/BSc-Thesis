@@ -256,6 +256,9 @@ void EditorStates::BuildInputPanel()
 	m_TextCtrl->SetScrollWidth(1);
 	m_TextCtrl->MarkerSetBackground(wxSTC_MARK_CIRCLE, wxColour("red"));
 
+	m_TextCtrl->Bind(wxEVT_KEY_UP, &EditorStates::UpdateLineColKey, this);
+	m_TextCtrl->Bind(wxEVT_LEFT_UP, &EditorStates::UpdateLineColMouse, this);
+
 	wxFont font = wxFont(16, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false);
 	m_TextCtrl->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
 
@@ -277,6 +280,8 @@ void EditorStates::BuildInputPanel()
 	sizer->Add(help, 0, wxALL, 6);
 	sizer->Add(m_TextCtrl, 1, wxEXPAND);
 	sizer->Add(panelButtons, 0, wxALIGN_RIGHT | wxALL, 6);
+
+	CreateStatusBar();
 
 	this->SetSizer(sizer);
 }
@@ -548,6 +553,48 @@ void EditorStates::OnImport(wxCommandEvent& evt)
 
 void EditorStates::OnExport(wxCommandEvent& evt)
 {
+}
+
+void EditorStates::UpdateLineColMouse(wxMouseEvent& evt)
+{
+	long line = 0;
+	long col = 0;
+	long pos = m_TextCtrl->GetInsertionPoint();
+
+	//if (pos == m_TextCtrl->GetLastPosition()) pos = (pos - 1 > 1) ? pos - 1 : 1;
+
+	if (!m_TextCtrl->PositionToXY(pos, &col, &line))
+	{
+		line = m_TextCtrl->GetLineCount() - 1;
+		col = m_TextCtrl->GetLine(line).size() - m_TextCtrl->GetWhitespaceSize() + 1;
+	}
+
+	std::string message = "Line=" + std::to_string(line + 1) + "\tColumn=" + std::to_string(col + 1);
+
+	GetStatusBar()->SetStatusText(message);
+
+	evt.Skip();
+}
+
+void EditorStates::UpdateLineColKey(wxKeyEvent& evt)
+{
+	long line = 0;
+	long col = 0;
+	int pos = m_TextCtrl->GetInsertionPoint();
+
+	//if (pos == m_TextCtrl->GetLastPosition()) pos = (pos - 1 > 1) ? pos - 1 : 1;
+
+	if (!m_TextCtrl->PositionToXY(pos, &col, &line))
+	{
+		line = m_TextCtrl->GetLineCount() - 1;
+		col = m_TextCtrl->GetLine(line).size() - m_TextCtrl->GetWhitespaceSize() + 1;
+	}
+
+	std::string message = "Line=" + std::to_string(line + 1) + "\tColumn=" + std::to_string(col + 1);
+
+	GetStatusBar()->SetStatusText(message);
+
+	evt.Skip();
 }
 
 void EditorStates::CloseEditor(bool save)

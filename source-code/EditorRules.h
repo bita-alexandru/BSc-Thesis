@@ -72,5 +72,8 @@ private:
 	void OnExport(wxCommandEvent& evt);
 
 	void CloseEditor(bool save = false);
+
+	void UpdateLineColMouse(wxMouseEvent& evt);
+	void UpdateLineColKey(wxKeyEvent& evt);
 };
 
