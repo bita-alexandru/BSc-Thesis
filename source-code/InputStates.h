@@ -57,6 +57,7 @@ private:
 	void StateSelect();
 	void StateGoTo();
 	void StateChangeColor();
+	void StateErase();
 	void StateDelete();
 
 	void OnEdit(wxCommandEvent& evt);

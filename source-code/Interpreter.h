@@ -30,7 +30,7 @@ private:
 	string NON_SPACED = "+-#";
 	int spaces = 0;
 
-	bool FindWord(int& cursor, string& rules, string& s);
+	bool FindWord(int& cursor, string& rules, string& s, bool comment = false);
 	bool NextTransition(int& cursor, string& rules, stringstream& ss);
 	bool CheckState(string& state);
 	bool UpdateChars(int& chars, string& s);
@@ -38,5 +38,6 @@ private:
 	void MarkInvalid(bool& valid, vector<pair<int, string>>& invalid, string reason, int& cursor);
 	bool CheckDirection(string& direction);
 	int CheckNumber(string& number, Transition& transition, int& count);
+	bool SkipIfComment(int& cursor, string& rules, stringstream& ss, string& s);
 };
 

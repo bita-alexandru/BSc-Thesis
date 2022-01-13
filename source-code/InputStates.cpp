@@ -110,16 +110,20 @@ void InputStates::SetStates(std::vector<std::string> states)
         alreadyUpdated.insert(state);
     }
 
+    bool deletion = false;
     while (i < nOfItems--)
     {
+        deletion = true;
+
         std::string state = m_List->Get(i).second;
 
         m_List->Erase(i);
         if (alreadyUpdated.find(state) != alreadyUpdated.end()) continue;
 
         wxColour color = m_List->GetItemBackgroundColour(i);
-        m_Grid->RemoveState(state);
+        m_Grid->RemoveState(state, false);
     }
+    if (deletion) m_Grid->RefreshUpdate();
 
     m_List->RefreshAfterUpdate();
 
@@ -329,6 +333,7 @@ void InputStates::BuildMenu()
     m_Menu->Append(Ids::ID_GOTO_STATE, "Go To");
     m_Menu->Append(Ids::ID_COLOR_STATE, "Change Color");
     m_Menu->AppendSeparator();
+    m_Menu->Append(Ids::ID_ERASE_STATE, "Erase");
     m_Menu->Append(Ids::ID_DELETE_STATE, "Delete");
 
     m_Menu->Bind(wxEVT_COMMAND_MENU_SELECTED, &InputStates::OnMenuSelected, this);
@@ -385,6 +390,9 @@ void InputStates::OnMenuSelected(wxCommandEvent& evt)
     case Ids::ID_COLOR_STATE:
         StateChangeColor();
         break;
+    case Ids::ID_ERASE_STATE:
+        StateErase();
+        break;
     case Ids::ID_DELETE_STATE:
         StateDelete();
         break;
@@ -435,6 +443,23 @@ void InputStates::StateChangeColor()
     m_ToolStates->SetStateColor(selection, wxColour(newColor));
 
     m_List->Select(selection, false);
+}
+
+void InputStates::StateErase()
+{
+    int selection = m_List->GetFirstSelected();
+
+    while (selection != -1)
+    {
+        std::string state = m_List->Get(selection).second;
+        selection = m_List->GetNextSelected(selection);
+
+        if (state == "FREE") continue;
+
+        m_Grid->RemoveState(state, false);
+    }
+
+    m_Grid->RefreshUpdate();
 }
 
 void InputStates::StateDelete()

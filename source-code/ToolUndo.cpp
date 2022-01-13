@@ -19,54 +19,54 @@ void ToolUndo::SetGrid(Grid* grid)
 }
 
 void ToolUndo::PushBack(
-	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> &cells,
-	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> &statePositions,
-	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> &prevCells,
-	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> &prevStatePositions
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt>& cells,
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>>& statePositions,
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt>& prevCells,
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>>& prevStatePositions
 )
 {
 	// store the actual changes
 	std::vector<std::pair<std::pair<int, int>, std::pair<std::string, wxColour>>> cellChanges;
 	std::vector<std::pair<std::string, std::pair<int, int>>> statePositionsChanges;
 
-	for (auto i : cells)
+	for (auto& i : cells)
 	{
 		// new cell
 		if (prevCells.find(i.first) == prevCells.end()) cellChanges.push_back({ i.first,i.second });
 		// new state/color
 		else if (prevCells[i.first] != cells[i.first]) cellChanges.push_back({ i.first,i.second });
 	}
-	for (auto i : statePositions)
+	for (auto& i : statePositions)
 	{
 		// new state
 		if (prevStatePositions.find(i.first) == prevStatePositions.end())
-			for (auto j : statePositions[i.first]) statePositionsChanges.push_back({ i.first,j });
+			for (auto& j : statePositions[i.first]) statePositionsChanges.push_back({ i.first,j });
 		// check the positions
 		else
 		{
-			for (auto j : statePositions[i.first])
+			for (auto& j : statePositions[i.first])
 				// new position
 				if (prevStatePositions[i.first].find(j) == prevStatePositions[i.first].end()) 
 					statePositionsChanges.push_back({ i.first,j });
 		}
 	}
 
-	for (auto i : prevCells)
+	for (auto& i : prevCells)
 	{
 		// new cell
 		if (cells.find(i.first) == cells.end()) cellChanges.push_back({ i.first,i.second });
 		// new state/color
 		else if (cells[i.first] != prevCells[i.first]) cellChanges.push_back({ i.first,i.second });
 	}
-	for (auto i : prevStatePositions)
+	for (auto& i : prevStatePositions)
 	{
 		// new state
 		if (statePositions.find(i.first) == statePositions.end())
-			for (auto j : statePositions[i.first]) statePositionsChanges.push_back({ i.first,j });
+			for (auto& j : prevStatePositions[i.first]) statePositionsChanges.push_back({ i.first,j });
 		// check the positions
 		else
 		{
-			for (auto j : prevStatePositions[i.first])
+			for (auto& j : prevStatePositions[i.first])
 				// new position
 				if (statePositions[i.first].find(j) == statePositions[i.first].end())
 					statePositionsChanges.push_back({ i.first,j });
@@ -105,14 +105,14 @@ void ToolUndo::Undo(wxCommandEvent& evt)
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions = m_Grid->GetStatePositions();
 
 	// iterate through the most recent changes
-	for (auto it : m_UndoCells.top())
+	for (auto& it : m_UndoCells.top())
 	{
 		// if i find a change in the current configuration -> delete it
 		if (cells.find(it.first) != cells.end()) cells.erase(it.first);
 		// otherwise -> add it
 		else cells.insert(it);
 	}
-	for (auto it : m_UndoStatePositions.top())
+	for (auto& it : m_UndoStatePositions.top())
 	{
 		// if i find a change in the current configuration -> update/insert it
 		if (statePositions.find(it.first) != statePositions.end())
@@ -152,7 +152,7 @@ void ToolUndo::Redo(wxCommandEvent& evt)
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions = m_Grid->GetStatePositions();
 
 	// iterate through the most recent changes
-	for (auto it : m_RedoCells.top())
+	for (auto& it : m_RedoCells.top())
 	{
 		// if i find a change in the current configuration -> delete it
 		if (cells.find(it.first) != cells.end()) cells.erase(it.first);
@@ -163,7 +163,7 @@ void ToolUndo::Redo(wxCommandEvent& evt)
 			cells.insert(it);
 		}
 	}
-	for (auto it : m_RedoStatePositions.top())
+	for (auto& it : m_RedoStatePositions.top())
 	{
 		// if i find a change in the current configuration -> update/insert it
 		if (statePositions.find(it.first) != statePositions.end())

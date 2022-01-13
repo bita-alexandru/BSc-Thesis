@@ -35,6 +35,7 @@ public:
 		ID_SELECT_STATE,
 		ID_GOTO_STATE,
 		ID_COLOR_STATE,
+		ID_ERASE_STATE,
 		ID_DELETE_STATE,
 
 		// InputNeighbors

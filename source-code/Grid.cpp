@@ -94,7 +94,7 @@ void Grid::ScrollToCenter(int x, int y)
 
 void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells, std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions)
 {
-	for (auto it : m_PrevCells)
+	for (auto& it : m_PrevCells)
 	{
 		m_RedrawAll = false;
 		m_RedrawXYs.push_back({ it.first.first,it.first.second });
@@ -106,7 +106,7 @@ void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::strin
 	m_PrevCells = m_Cells;
 	m_PrevStatePositions = m_StatePositions;
 
-	for (auto it : m_Cells)
+	for (auto& it : m_Cells)
 	{
 		m_RedrawAll = false;
 		m_RedrawXYs.push_back({ it.first.first,it.first.second });
@@ -225,13 +225,13 @@ void Grid::RemoveCell(int x, int y, std::string state, wxColour color, bool mult
 	}
 }
 
-void Grid::RemoveState(std::string state)
+void Grid::RemoveState(std::string state, bool update)
 {
 	// cells of this state have been placed on the grid
 	if (m_StatePositions.find(state) != m_StatePositions.end())
 	{
 		// remove every cell of this state from our map
-		for (auto it : m_StatePositions[state])
+		for (auto& it : m_StatePositions[state])
 		{
 			// remove from m_Cells, one by one
 			m_Cells.erase(it);
@@ -241,8 +241,13 @@ void Grid::RemoveState(std::string state)
 			m_RedrawColors.push_back(wxColour("white"));
 		}
 
-		Refresh(false);
-		Update();
+		if (update)
+		{
+			Refresh(false);
+			Update();
+
+			m_StatusCells->SetCountPopulation(m_Cells.size());
+		}
 
 		// remove the corresponding map
 		m_StatePositions[state].clear();
@@ -263,7 +268,7 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 		// same state but a new color
 		if (oldState == newState)
 		{
-			for (auto it : m_StatePositions[oldState])
+			for (auto& it : m_StatePositions[oldState])
 			{
 				m_Cells[it].second = newColor;
 
@@ -278,7 +283,7 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 		// same color but a new state
 		else if (oldColor == newColor)
 		{
-			for (auto it : m_StatePositions[oldState])
+			for (auto& it : m_StatePositions[oldState])
 			{
 				m_Cells[it].first = newState;
 				m_StatePositions[newState].insert(it);
@@ -293,7 +298,6 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 		}
 		else
 		{
-			wxLogDebug("SERVUS");
 			RemoveState(oldState);
 		}
 	}
@@ -353,6 +357,14 @@ void Grid::Reset()
 
 	Refresh(false);
 	Update();
+}
+
+void Grid::RefreshUpdate()
+{
+	Refresh(false);
+	Update();
+
+	m_StatusCells->SetCountPopulation(m_Cells.size());
 }
 
 std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> Grid::GetCells()
@@ -723,15 +735,15 @@ void Grid::OnDraw(wxDC& dc)
 	{
 		std::unordered_set<std::pair<int, int>, Hashes::PairInt> alreadyDrawn;
 		std::vector<std::pair<int, int>> beforeScrolling;
-
+		
 		// iterate through the cells in order of their states
-		for (auto sp : m_StatePositions)
+		for (auto& sp : m_StatePositions)
 		{
 			brush.SetColour(m_Cells[{sp.second.begin()->first, sp.second.begin()->second}].second);
 			dc.SetBrush(brush);
 
 			// redraw only the cells affected by the scroll
-			for (auto it : sp.second)
+			for (auto& it : sp.second)
 			{
 				// the cell state before scrolling
 				int x = it.first;
@@ -756,9 +768,67 @@ void Grid::OnDraw(wxDC& dc)
 			}
 		}
 
+		if (!m_RedrawAll)
+		{
+			if (m_RedrawXYs.size())
+			{
+				for (int i = 0; i < m_RedrawXYs.size(); i++)
+				{
+					int x = m_RedrawXYs[i].first;
+					int y = m_RedrawXYs[i].second;
+
+					if ((x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow())
+						&& alreadyDrawn.find({ x,y }) == alreadyDrawn.end())
+					{
+						alreadyDrawn.insert({ x,y });
+
+						brush.SetColour(m_RedrawColors[i]);
+						dc.SetBrush(brush);
+						dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
+					}
+
+					x += m_JustScrolled.first;
+					y += m_JustScrolled.second;
+
+					// visible
+					if ((x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow()))
+					{
+						beforeScrolling.push_back({ x,y });
+					}
+				}
+				
+				m_RedrawXYs.clear();
+				m_RedrawColors.clear();
+			}
+			else
+			{
+				int x = m_RedrawXY.first;
+				int y = m_RedrawXY.second;
+
+				if ((x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow())
+					&& alreadyDrawn.find({ x,y }) == alreadyDrawn.end())
+				{
+					alreadyDrawn.insert({ x,y });
+
+					brush.SetColour(m_RedrawColor);
+					dc.SetBrush(brush);
+					dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
+				}
+
+				x += m_JustScrolled.first;
+				y += m_JustScrolled.second;
+
+				// visible
+				if ((x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow()))
+				{
+					beforeScrolling.push_back({ x,y });
+				}
+			}
+		}
+
 		brush.SetColour(wxColour("white"));
 		dc.SetBrush(brush);
-		for (auto it : beforeScrolling)
+		for (auto& it : beforeScrolling)
 		{
 			int x = it.first;
 			int y = it.second;
@@ -829,8 +899,10 @@ void Grid::OnDraw(wxDC& dc)
 		}
 
 		m_JustScrolled = { 0,0 };
+		m_RedrawAll = true;
 
-		if (m_RedrawAll) return;
+		//if (m_RedrawAll) return;
+		return;
 	}
 	if (!m_RedrawAll)
 	{

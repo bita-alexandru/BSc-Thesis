@@ -281,7 +281,7 @@ void EditorStates::BuildInputPanel()
 	sizer->Add(m_TextCtrl, 1, wxEXPAND);
 	sizer->Add(panelButtons, 0, wxALIGN_RIGHT | wxALL, 6);
 
-	CreateStatusBar();
+	CreateStatusBar(); GetStatusBar()->SetStatusText("Line=1\tColumn=1");
 
 	this->SetSizer(sizer);
 }

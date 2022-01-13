@@ -20,23 +20,31 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 	// keep count of duplicates/invalid rules
 	vector<pair<int, string>> invalid;
 
-	// TO DO, MARCHEAZA COMENTARII CU "!" SI GO TO "\n" WHEN DETECTED
+	// allow illegal characters into comments (when detecting '!'), disallow after new lines (when detecting '\n')
+	bool comment = false;
+	int comments = 0;
 
 	// add spaces around specific symbols and convert characters to uppercase
 	for (int i = 0; i < rules.size(); i++)
 	{
 		char c = rules[i];
 
-		if (BOTH_SPACED.find(c) != BOTH_SPACED.npos)
+		if (!comment && BOTH_SPACED.find(c) != BOTH_SPACED.npos)
 		{
 			// add space at the both sides of the symbol
 			rules.insert(i + 1, " ");
 			rules.insert(i, " ");
 
+			if (c == '!')
+			{
+				comment = true;
+				comments++;
+			}
+
 			i += 2;
 			continue;
 		}
-		if (LEFT_SPACED.find(c) != LEFT_SPACED.npos)
+		if (!comment && LEFT_SPACED.find(c) != LEFT_SPACED.npos)
 		{
 			// add space before the symbol
 			rules.insert(i, " ");
@@ -44,7 +52,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 			i++;
 			continue;
 		}
-		if (RIGHT_SPACED.find(c) != RIGHT_SPACED.npos)
+		if (!comment && RIGHT_SPACED.find(c) != RIGHT_SPACED.npos)
 		{
 			// add space after the symbol
 			rules.insert(i + 1, " ");
@@ -53,9 +61,9 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 			continue;
 		}
 
-		if (NON_SPACED.find(c) != NON_SPACED.npos) continue;
+		if (!comment && NON_SPACED.find(c) != NON_SPACED.npos) continue;
 
-		if (isalnum(c))
+		if (!comment && isalnum(c))
 		{
 			// convert to uppercase
 			rules[i] = toupper(rules[i]);
@@ -63,10 +71,15 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 			continue;
 		}
 
-		if (iswspace(c)) continue;
+		if (iswspace(c))
+		{
+			if (c == '\n') comment = false;
+
+			continue;
+		}
 
 		// character is illegal
-		invalid.push_back({ i,"<ILLEGAL CHARACTER>" });
+		if (!comment) invalid.push_back({ i + 1 - comments*2,"<ILLEGAL CHARACTER>" });
 	}
 
 	stringstream ss(rules);
@@ -87,11 +100,12 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 		// read transitory state
 		ss >> state1;
 		//wxLogDebug("state1=<%s>", state1);
-
-		if (!UpdateChars(chars, state1)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 		
 		// check if end of file
-		if (!FindWord(cursor, rules, state1)) break;
+		if (!FindWord(cursor, rules, state1) || !SkipIfComment(cursor, rules, ss, state1)) break;
+
+		if (!UpdateChars(chars, state1)) MarkInvalid(valid, invalid, "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
+
 		// check if state is invalid
 		if (valid && !CheckState(state1)) MarkInvalid(valid, invalid,  "<INVALID FIRST STATE>", cursor);
 		// check if rule is within the size limits
@@ -99,7 +113,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 		// read transition symbol "/"
 		if (valid)
 		{
-			ss >> symbol; FindWord(cursor, rules, symbol);
+			ss >> symbol; FindWord(cursor, rules, symbol); SkipIfComment(cursor, rules, ss, symbol);
 			//wxLogDebug("symbol=<%s>", symbol);
 
 			// check if rule is within the size limits
@@ -112,7 +126,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 		// read transition state
 		if (valid)
 		{
-			ss >> state2; FindWord(cursor, rules, state2);
+			ss >> state2; FindWord(cursor, rules, state2); SkipIfComment(cursor, rules, ss, state2);
 			//wxLogDebug("state2=<%s>", state2);
 
 			// check if rule is within the size limits
@@ -138,7 +152,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 		if (valid)
 		{
 			symbol.clear();
-			ss >> symbol; FindWord(cursor, rules, symbol);
+			ss >> symbol; FindWord(cursor, rules, symbol); SkipIfComment(cursor, rules, ss, symbol);
 			//wxLogDebug("symbol=<%s>", symbol);
 
 			// check if rule is within the size limits
@@ -163,7 +177,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 					while (valid)
 					{
 						symbol.clear();
-						ss >> symbol; FindWord(cursor, rules, symbol);
+						ss >> symbol; FindWord(cursor, rules, symbol); SkipIfComment(cursor, rules, ss, symbol);
 						transition.condition += symbol;
 						//wxLogDebug("symbol=<%s>", symbol);
 
@@ -177,7 +191,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 						if (valid)
 						{
 							symbol.clear();
-							ss >> symbol; FindWord(cursor, rules, symbol);
+							ss >> symbol; FindWord(cursor, rules, symbol); SkipIfComment(cursor, rules, ss, symbol);
 							transition.condition += symbol;
 
 							// check if symbol is "@"
@@ -190,7 +204,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 							{
 								// could indicate either a group of directions or a specific one
 								string neighborhood;
-								ss >> neighborhood; FindWord(cursor, rules, neighborhood);
+								ss >> neighborhood; FindWord(cursor, rules, neighborhood); SkipIfComment(cursor, rules, ss, neighborhood);
 								transition.condition += neighborhood;
 								//wxLogDebug("neighborhood=<%s>", neighborhood);
 
@@ -205,7 +219,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 									while (valid)
 									{
 										string direction;
-										ss >> direction; FindWord(cursor, rules, direction);
+										ss >> direction; FindWord(cursor, rules, direction); SkipIfComment(cursor, rules, ss, direction);
 										transition.condition += direction;
 										//wxLogDebug("direction=<%s>", direction);
 
@@ -221,7 +235,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 
 										// expect to read either "," or "]"
 										symbol.clear();
-										ss >> symbol; FindWord(cursor, rules, symbol);
+										ss >> symbol; FindWord(cursor, rules, symbol); SkipIfComment(cursor, rules, ss, symbol);
 										transition.condition += symbol;
 										//wxLogDebug("symbol=<%s>", symbol);
 
@@ -265,7 +279,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 
 								// read assignment symbol "="
 								symbol.clear();
-								ss >> symbol; FindWord(cursor, rules, symbol);
+								ss >> symbol; FindWord(cursor, rules, symbol); SkipIfComment(cursor, rules, ss, symbol);
 								transition.condition += symbol;
 								//wxLogDebug("symbol=<%s>", symbol);
 
@@ -288,7 +302,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 									// eg. "<number>#<state>" / "<sign><number>#<state>"
 									// or  "#<state>" / "<sign>#<state>"
 									string condition;
-									ss >> condition; FindWord(cursor, rules, condition);
+									ss >> condition; FindWord(cursor, rules, condition); SkipIfComment(cursor, rules, ss, condition);
 									transition.condition += condition;
 									//wxLogDebug("condition=<%s>", condition);
 
@@ -356,7 +370,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 
 									// expect to read either an AND/OR symbol or ")"
 									symbol.clear();
-									ss >> symbol; FindWord(cursor, rules, symbol);
+									ss >> symbol; FindWord(cursor, rules, symbol); SkipIfComment(cursor, rules, ss, symbol);
 									if (symbol == "AND") transition.condition += " AND ";
 									else if (symbol == "OR") transition.condition += " OR ";
 									else transition.condition += symbol;
@@ -389,7 +403,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 
 						// expect to read either an AND/OR symbol or ";"
 						symbol.clear();
-						ss >> symbol; FindWord(cursor, rules, symbol);
+						ss >> symbol; FindWord(cursor, rules, symbol); SkipIfComment(cursor, rules, ss, symbol);
 						if (symbol != ";") transition.condition += symbol;
 						//wxLogDebug("symbol=<%s>", symbol);
 
@@ -452,7 +466,7 @@ void Interpreter::SetNeighbors(unordered_set<string>& neighbors)
 	m_Neighbors = neighbors;
 }
 
-bool Interpreter::FindWord(int& cursor, string &rules, string& s)
+bool Interpreter::FindWord(int& cursor, string &rules, string& s, bool comment)
 {
 	int pos = 0;
 	bool ret = true;
@@ -492,14 +506,16 @@ bool Interpreter::FindWord(int& cursor, string &rules, string& s)
 		}
 	}
 
-	// count extra white spaces along the way
-	for (int i = cursor; i < pos; i++)
+	// count extra white spaces along the way; ignore if it's a comment
+	if (!comment)
 	{
-		char c = rules[i];
+		for (int i = cursor; i < pos; i++)
+		{
+			char c = rules[i];
 
-		if (BOTH_SPACED.find(c) != BOTH_SPACED.npos) spaces += 2;
+			if (BOTH_SPACED.find(c) != BOTH_SPACED.npos) spaces += 2;
+		}
 	}
-
 	////wxLogDebug("token=%s spaces=%i", s, spaces);
 
 	cursor = pos;
@@ -532,12 +548,6 @@ bool Interpreter::UpdateChars(int& chars, string& s)
 {
 	chars += s.size();
 
-	/*if (s.size() && BOTH_SPACED.find(s) != BOTH_SPACED.npos)
-	{
-		spaces += 2;
-	}*/
-	//////wxLogDebug("symbol=%s spaces=%i", s,spaces);
-
 	return chars <= Sizes::CHARS_RULE_MAX;
 }
 
@@ -550,8 +560,16 @@ bool Interpreter::UpdateSize(int& size)
 
 void Interpreter::MarkInvalid(bool& valid, vector<pair<int, string>>& invalid, string reason, int& cursor)
 {
-	// mark it in our list
-	invalid.push_back({ cursor - spaces, reason });
+	// mark it in our list if it doesn't overlap with another error at this position
+	bool overlap = false;
+	/*for (auto& it : invalid)
+		if (it.first == cursor - spaces)
+		{
+			overlap = true;
+			break;
+		}*/
+
+	if (!overlap) invalid.push_back({ cursor - spaces, reason });
 
 	valid = false;
 }
@@ -574,4 +592,22 @@ int Interpreter::CheckNumber(string& number, Transition& transition, int& count)
 	else if (transition.andRules.back().first[0] != "ALL" && n + count > transition.andRules.back().first.size()) n = -1;
 
 	return n;
+}
+
+bool Interpreter::SkipIfComment(int& cursor, string& rules, stringstream& ss, string& s)
+{
+	bool ret = true;
+
+	while (s == "!")
+	{
+		string endline = "\n";
+		FindWord(cursor, rules, endline, true);
+
+		ss.seekg(cursor);
+
+		s = "";
+		ss >> s; ret = FindWord(cursor, rules, s);
+	}
+
+	return ret;
 }

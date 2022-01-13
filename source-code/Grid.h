@@ -46,12 +46,13 @@ public:
 
 	void InsertCell(int x, int y, std::string state, wxColour color, bool multiple = false);
 	void RemoveCell(int x, int y, std::string state, wxColour color, bool multiple = false);
-	void RemoveState(std::string state);
+	void RemoveState(std::string state, bool update = true);
 	void UpdateState(std::string oldState, wxColour oldColor, std::string newState, wxColour newColor);
 	void EraseCell(int x, int y, bool multiple = false);
 	std::string GetState(int x, int y);
 
 	void Reset();
+	void RefreshUpdate();
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> GetCells();
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> GetStatePositions();
 	std::unordered_map<std::string, wxColour>& GetColors();
