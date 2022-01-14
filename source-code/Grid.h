@@ -124,7 +124,8 @@ private:
 	void OnScroll(wxScrollWinEvent& evt);
 	void OnSize(wxSizeEvent& evt);
 
-	void DeleteStructure(int x, int y, std::string state = "");
+	void DeleteStructure(int X, int Y, std::string state = "");
+	void DrawStructure(int X, int Y, std::string state, wxColour color);
 	void DrawLine(int x, int y, std::string state, wxColour color, bool remove = false);
 	bool InBounds(int x, int y);
 };

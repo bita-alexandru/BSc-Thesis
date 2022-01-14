@@ -178,6 +178,7 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 				m_RedrawAll = false;
 				m_RedrawXY = { x,y };
 				m_RedrawColor = color;
+
 				Refresh(false);
 				Update();
 			}
@@ -189,8 +190,6 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 		m_Cells[{x, y}] = { state, color };
 		m_StatePositions[state].insert({ x,y });
 
-		m_StatusCells->UpdateCountPopulation(1);
-
 		if (multiple)
 		{
 			m_RedrawAll = false;
@@ -199,6 +198,8 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 		}
 		else
 		{
+			m_StatusCells->UpdateCountPopulation(1);
+
 			m_RedrawAll = false;
 			m_RedrawXY = { x,y };
 			m_RedrawColor = color;
@@ -215,10 +216,10 @@ void Grid::RemoveCell(int x, int y, std::string state, wxColour color, bool mult
 	{
 		EraseCell(x, y, multiple);
 
-		m_StatusCells->UpdateCountPopulation(-1);
-
 		if (!multiple)
 		{
+			m_StatusCells->UpdateCountPopulation(-1);
+
 			Refresh(false);
 			Update();
 		}
@@ -504,6 +505,14 @@ bool Grid::ModeDraw(int x, int y, char mode)
 			SetFocus();
 			std::pair<std::string, wxColour> state = m_ToolStates->GetState();
 
+			bool structure = false;
+			if (wxGetKeyState(WXK_CONTROL))
+			{
+				DrawStructure(x, y, state.first, state.second);
+
+				structure = true;
+			}
+
 			// just clicked
 			if (!m_IsDrawing)
 			{
@@ -511,14 +520,14 @@ bool Grid::ModeDraw(int x, int y, char mode)
 				m_IsErasing = false;
 				m_LastDrawn = { x,y };
 
-				InsertCell(x, y, state.first, state.second);
+				if (!structure) InsertCell(x, y, state.first, state.second);
 			}
 			// holding click
 			else
 			{
 				// mouse was dragged so fast that it didn't register
 				// some of the cells meant to be drawn
-				DrawLine(x, y, state.first, state.second);
+				if (!structure) DrawLine(x, y, state.first, state.second);
 			}
 		}
 		// right click -> remove a cell
@@ -533,10 +542,13 @@ bool Grid::ModeDraw(int x, int y, char mode)
 
 			std::pair<std::string, wxColour> state = m_Cells[{x, y}];
 
+			bool structure = false;
 			if (wxGetKeyState(WXK_CONTROL))
 			{
 				if (wxGetKeyState(WXK_ALT)) DeleteStructure(x, y, "");
 				else DeleteStructure(x, y, state.first);
+
+				structure = true;
 			}
 
 			// just clicked
@@ -546,14 +558,14 @@ bool Grid::ModeDraw(int x, int y, char mode)
 				m_IsDrawing = false;
 				m_LastDrawn = { x,y };
 
-				RemoveCell(x, y, state.first, state.second);
+				if(!structure) RemoveCell(x, y, state.first, state.second);
 			}
 			// holding click
 			else
 			{
 				// mouse was dragged so fast that it didn't register
 				// some of the cells meant to be drawn
-				DrawLine(x, y, "FREE", wxColour("white"), true);
+				if (!structure) DrawLine(x, y, "FREE", wxColour("white"), true);
 			}
 		}
 		else if (m_IsDrawing || m_IsErasing)
@@ -1183,6 +1195,55 @@ void Grid::DeleteStructure(int X, int Y, std::string state)
 
 			// valid neighbor -> push onto stack
 			if (GetState(x, y) != "FREE" && visited.find({ x, y }) == visited.end())
+			{
+				neighbors.push({ x,y });
+			}
+		}
+	}
+
+	m_StatusCells->SetCountPopulation(m_Cells.size());
+
+	Refresh(false);
+	Update();
+}
+
+void Grid::DrawStructure(int X, int Y, std::string state, wxColour color)
+{
+	int dx[4] = { 0, 1, 0, -1};
+	int dy[4] = { -1, 0, 1, 0 };
+
+	std::unordered_set<std::pair<int, int>, Hashes::PairInt> visited;
+	std::stack<std::pair<int, int>> neighbors;
+	neighbors.push({ X,Y });
+
+	wxPosition visibleBegin = GetVisibleBegin();
+	wxPosition visibleEnd = GetVisibleEnd();
+
+	while (neighbors.size())
+	{
+		std::pair<int, int> neighbor = neighbors.top();
+		neighbors.pop();
+
+		visited.insert(neighbor);
+
+		std::string neighborState = GetState(neighbor.first, neighbor.second);
+
+		//wxLogDebug("x,y=%i,%i state=%s", neighbor.first, neighbor.second,neighborState);
+
+		// only fill the different cells
+		if (neighborState == state) continue;
+
+		InsertCell(neighbor.first, neighbor.second, state, color, true);
+
+		for (int d = 0; d < 4; d++)
+		{
+			int x = neighbor.first + dx[d];
+			int y = neighbor.second + dy[d];
+
+			// not in visible bounds
+			if (!(x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow())) continue;
+			// valid neighbor -> push onto stack
+			if (GetState(x, y) != state && visited.find({ x, y }) == visited.end())
 			{
 				neighbors.push({ x,y });
 			}
