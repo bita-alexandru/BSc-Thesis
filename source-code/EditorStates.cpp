@@ -124,6 +124,7 @@ std::vector<std::string> EditorStates::GetData()
 			std::string line = std::to_string(nline + 1);
 
 			extendedMessage += it.second + " at line " + line + "\n";
+			//extendedMessage += it.second + ", Line=" + line + "\n";
 		}
 		dialog.SetExtendedMessage(extendedMessage);
 

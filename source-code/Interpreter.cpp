@@ -37,8 +37,8 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 
 			if (c == '!')
 			{
+				if (!comment) comments++;
 				comment = true;
-				comments++;
 			}
 
 			i += 2;
@@ -82,10 +82,15 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 		if (!comment) invalid.push_back({ i + 1 - comments*2,"<ILLEGAL CHARACTER>" });
 	}
 
+	//wxLogDebug("<%s>%i", rules, rules.size());
+
 	stringstream ss(rules);
 	int cursor = 0;
 	int size = 0;
+
 	spaces = 0;
+	cursorBeforeComment = 0;
+	isComment = false;
 
 	while (true)
 	{
@@ -104,10 +109,10 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 		// check if end of file
 		if (!FindWord(cursor, rules, state1) || !SkipIfComment(cursor, rules, ss, state1)) break;
 
-		if (!UpdateChars(chars, state1)) MarkInvalid(valid, invalid, "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
+		if (!UpdateChars(chars, state1)) MarkInvalid(valid, invalid, state1, "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
 		// check if state is invalid
-		if (valid && !CheckState(state1)) MarkInvalid(valid, invalid,  "<INVALID FIRST STATE>", cursor);
+		if (valid && !CheckState(state1)) MarkInvalid(valid, invalid, state1,  "<INVALID FIRST STATE>", cursor);
 		// check if rule is within the size limits
 
 		// read transition symbol "/"
@@ -117,10 +122,10 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 			//wxLogDebug("symbol=<%s>", symbol);
 
 			// check if rule is within the size limits
-			if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
+			if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, symbol,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 			
 			// check if it's the right symbol
-			if (valid && symbol != "/") MarkInvalid(valid, invalid,  "<INVALID TRANSITION SYMBOL, EXPECTED '/'>", cursor);
+			if (valid && symbol != "/") MarkInvalid(valid, invalid, symbol,  "<INVALID TRANSITION SYMBOL, EXPECTED '/'>", cursor);
 		}
 
 		// read transition state
@@ -130,16 +135,16 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 			//wxLogDebug("state2=<%s>", state2);
 
 			// check if rule is within the size limits
-			if (!UpdateChars(chars, state2)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
+			if (!UpdateChars(chars, state2)) MarkInvalid(valid, invalid, state2,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 			
 			// check if state is invalid
-			if (valid && !CheckState(state2)) MarkInvalid(valid, invalid,  "<INVALID SECOND STATE>", cursor);
+			if (valid && !CheckState(state2)) MarkInvalid(valid, invalid, state2,  "<INVALID SECOND STATE>", cursor);
 
 			if (valid)
 			{
 				// check if transition is a duplicate
-				if (duplicates.find(state1 + "-" + state2) != duplicates.end()) MarkInvalid(valid, invalid,  "<DUPLICATE RULE>", cursor);
-				else if (state1 == state2) MarkInvalid(valid, invalid,  "<ILLEGAL RULE>", cursor);
+				if (duplicates.find(state1 + "-" + state2) != duplicates.end()) MarkInvalid(valid, invalid, state2,  "<DUPLICATE RULE>", cursor);
+				else if (state1 == state2) MarkInvalid(valid, invalid, state2,  "<ILLEGAL RULE>", cursor);
 
 				if (valid) duplicates.insert({ state1 + "-" + state2 });
 
@@ -156,7 +161,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 			//wxLogDebug("symbol=<%s>", symbol);
 
 			// check if rule is within the size limits
-			if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
+			if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, symbol,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
 			if (valid)
 			{
@@ -182,10 +187,10 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 						//wxLogDebug("symbol=<%s>", symbol);
 
 						// check if rule is marked accordingly with a "("
-						if (symbol != "(") MarkInvalid(valid, invalid,  "<INVALID RULE SYMBOL, EXPECTED '('>", cursor);
+						if (symbol != "(") MarkInvalid(valid, invalid, symbol,  "<INVALID RULE SYMBOL, EXPECTED '('>", cursor);
 
 						// check if rule is within the size limits
-						if (valid && !UpdateChars(chars, symbol)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
+						if (valid && !UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, symbol,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
 						// read neighborhood and conditions
 						if (valid)
@@ -195,10 +200,10 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 							transition.condition += symbol;
 
 							// check if symbol is "@"
-							if (symbol != "@") MarkInvalid(valid, invalid,  "<INVALID NEIGHBORHOOD SYMBOL, EXPECTED '@'", cursor);
+							if (symbol != "@") MarkInvalid(valid, invalid, symbol,  "<INVALID NEIGHBORHOOD SYMBOL, EXPECTED '@'", cursor);
 
 							// check if rule is within the size limits
-							if (valid && !UpdateChars(chars, symbol)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
+							if (valid && !UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, symbol,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
 							if (valid)
 							{
@@ -208,7 +213,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 								transition.condition += neighborhood;
 								//wxLogDebug("neighborhood=<%s>", neighborhood);
 
-								if (!UpdateChars(chars, neighborhood)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
+								if (!UpdateChars(chars, neighborhood)) MarkInvalid(valid, invalid, neighborhood,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
 								// a group of directions, eg. "[n,s,w,e]"
 								if (valid && neighborhood == "[")
@@ -224,10 +229,10 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 										//wxLogDebug("direction=<%s>", direction);
 
 										// check if rule is within the size limits
-										if (valid && !UpdateChars(chars, direction)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
+										if (valid && !UpdateChars(chars, direction)) MarkInvalid(valid, invalid, direction,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
 										// check if direction is valid according to the current neighborhood
-										if (valid && !CheckDirection(direction)) MarkInvalid(valid, invalid,  "<INVALID DIRECTION>", cursor);
+										if (valid && !CheckDirection(direction)) MarkInvalid(valid, invalid, direction,  "<INVALID DIRECTION>", cursor);
 
 										if (valid) neighbors.push_back(direction);
 
@@ -242,16 +247,16 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 										// more directions to follow
 										if (symbol == ",")
 										{
-											if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
+											if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, symbol,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 											continue;
 										}
 										// neighborhood completed
 										else if (symbol == "]")
 										{
-											if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
+											if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, symbol,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
 											// check if neighborhood is within the size limit
-											if (valid && neighbors.size() > m_Neighbors.size()) MarkInvalid(valid, invalid,  "<INVALID NEIGHBORHOOD SIZE>", cursor);
+											if (valid && neighbors.size() > m_Neighbors.size()) MarkInvalid(valid, invalid, symbol,  "<INVALID NEIGHBORHOOD SIZE>", cursor);
 
 											// assign to transition
 											if (valid) transition.andRules.back().first = neighbors;
@@ -261,7 +266,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 										// invalid symbol
 										else
 										{
-											MarkInvalid(valid, invalid,  "<INVALID SYMBOL, EXPECTED ',' OR ']'>", cursor);
+											MarkInvalid(valid, invalid, symbol,  "<INVALID SYMBOL, EXPECTED ',' OR ']'>", cursor);
 											break;
 										}
 									}
@@ -273,7 +278,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 									transition.andRules.back().first = { neighborhood };
 								}
 								// invalid token
-								else if (!valid) MarkInvalid(valid, invalid,  "<INVALID NEIGHBORHOOD>", cursor);
+								else MarkInvalid(valid, invalid, neighborhood,  "<INVALID NEIGHBORHOOD>", cursor);
 
 								if (!valid) break;
 
@@ -283,9 +288,9 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 								transition.condition += symbol;
 								//wxLogDebug("symbol=<%s>", symbol);
 
-								if (symbol != "=") MarkInvalid(valid, invalid,  "<INVALID ASSIGNMENT SYMBOL>", cursor);
+								if (symbol != "=") MarkInvalid(valid, invalid, symbol,  "<INVALID ASSIGNMENT SYMBOL>", cursor);
 								
-								if (valid && !UpdateChars(chars, symbol)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
+								if (valid && !UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, symbol,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 								
 								if (!valid) break;
 
@@ -306,7 +311,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 									transition.condition += condition;
 									//wxLogDebug("condition=<%s>", condition);
 
-									if (!UpdateChars(chars, condition)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
+									if (!UpdateChars(chars, condition)) MarkInvalid(valid, invalid, condition,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
 									if (!valid) break;
 
@@ -337,10 +342,10 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 
 										// check if number is valid
 										int n = CheckNumber(number, transition, count);
-										if (n == -1) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
+										if (n == -1) MarkInvalid(valid, invalid, number,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
 										// check if state is valid
-										if (valid && !CheckState(state)) MarkInvalid(valid, invalid,  "<INVALID CONDITIONAL STATE>", cursor);
+										if (valid && !CheckState(state)) MarkInvalid(valid, invalid, state,  "<INVALID CONDITIONAL STATE>", cursor);
 
 										// assign to transition
 										if (valid)
@@ -364,7 +369,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 										}
 									}
 									// invalid tokens
-									else MarkInvalid(valid, invalid,  "<INVALID CONDITION>", cursor);
+									else MarkInvalid(valid, invalid, condition,  "<INVALID CONDITION>", cursor);
 
 									if (!valid) break;
 
@@ -375,7 +380,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 									else if (symbol == "OR") transition.condition += " OR ";
 									else transition.condition += symbol;
 									//wxLogDebug("symbol=<%s>", symbol);
-									if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
+									if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, symbol,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
 									if (find(AND.begin(), AND.end(), symbol) != AND.end())
 									{
@@ -407,7 +412,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 						if (symbol != ";") transition.condition += symbol;
 						//wxLogDebug("symbol=<%s>", symbol);
 
-						if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
+						if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, symbol,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
 						if (!valid) break;
 
@@ -426,13 +431,13 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 							transition.orRules.push_back(transition.andRules);
 							break;
 						}
-						else MarkInvalid(valid, invalid, "<INVALID CHAINING SYMBOL, EXPECTED EITHER '&', '|' OR ';'>", cursor);
+						else MarkInvalid(valid, invalid, symbol, "<INVALID CHAINING SYMBOL, EXPECTED EITHER '&', '|' OR ';'>", cursor);
 					}
 					
 					// add to transition table
 					if (valid) m_Transitions.push_back({ state1,transition });
 				}
-				else MarkInvalid(valid, invalid, "<INVALID RULE MARKING SYMBOL, EXPECTED EITHER ':' OR ';'>", cursor);
+				else MarkInvalid(valid, invalid, symbol, "<INVALID RULE MARKING SYMBOL, EXPECTED EITHER ':' OR ';'>", cursor);
 			}
 		}
 		
@@ -447,7 +452,8 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 
 	if (m_Transitions.size() > Sizes::RULES_MAX) invalid = { {-1,"<THE NUMBER OF RULES SURPASSES THE MAXIMUM LIMIT>"} };
 
-	////wxLogDebug("invalid_size=%i", invalid.size());
+	//wxLogDebug("spaces=%i", spaces);
+
 	return invalid;
 }
 
@@ -558,7 +564,7 @@ bool Interpreter::UpdateSize(int& size)
 	return size <= Sizes::RULES_MAX;
 }
 
-void Interpreter::MarkInvalid(bool& valid, vector<pair<int, string>>& invalid, string reason, int& cursor)
+void Interpreter::MarkInvalid(bool& valid, vector<pair<int, string>>& invalid, string& s, string reason, int& cursor)
 {
 	// mark it in our list if it doesn't overlap with another error at this position
 	bool overlap = false;
@@ -569,7 +575,13 @@ void Interpreter::MarkInvalid(bool& valid, vector<pair<int, string>>& invalid, s
 			break;
 		}*/
 
-	if (!overlap) invalid.push_back({ cursor - spaces, reason });
+	int spaced = 0;
+	
+	if (s.size() && BOTH_SPACED.find(s) != BOTH_SPACED.npos) spaced = 1;
+
+	int pos = (!isComment) ? cursor : cursorBeforeComment;
+
+	if (!overlap) invalid.push_back({ pos - spaces + spaced, reason });
 
 	valid = false;
 }
@@ -598,6 +610,16 @@ bool Interpreter::SkipIfComment(int& cursor, string& rules, stringstream& ss, st
 {
 	bool ret = true;
 
+	isComment = false;
+
+	// save last position before the beggining of a comment
+	if (s == "!")
+	{
+		isComment = true;
+		cursorBeforeComment = cursor + 1;
+	}
+
+	// if this string represents a comment, skip to non-comment next line
 	while (s == "!")
 	{
 		string endline = "\n";

@@ -119,7 +119,8 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 		std::string line = std::to_string(nline + 1);
 
 		std::string col = std::to_string(ncol);
-		extendedMessage += it.second + " at line " + line + ", column " + col + "\n";
+		extendedMessage += it.second + " at line " + line + ", after column " + col + "\n";
+		//extendedMessage += it.second + " Line=" + line + ", Column=" + col + "\n";
 
 		it.first = nline;
 	}
