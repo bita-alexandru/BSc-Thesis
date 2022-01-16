@@ -81,8 +81,15 @@ void Grid::ScrollToCenter(int x, int y)
 	row = row - (visibleEnd.GetRow() - visibleBegin.GetRow()) / 2;
 	column = column - (visibleEnd.GetCol() - visibleBegin.GetCol()) / 2;
 
-	row = std::max(0, row); row = std::min(Sizes::TOTAL_CELLS - 1, row);
-	column = std::max(0, column); column = std::min(Sizes::TOTAL_CELLS - 1, column);
+	row = std::max(0, row); row = std::min(Sizes::N_ROWS - 1, row);
+	column = std::max(0, column); column = std::min(Sizes::N_COLS - 1, column);
+
+	// even length, current positions differ by one unit -> don't reposition
+	if ((visibleEnd.GetCol() - visibleBegin.GetCol()) % 2 == 0)
+	{
+		if (std::abs(column - visibleBegin.GetCol()) == 1) column = visibleBegin.GetCol();
+		if (std::abs(row - visibleBegin.GetRow()) == 1) row = visibleBegin.GetRow();
+	}
 
 	ScrollToRowColumn(row, column);
 
@@ -155,7 +162,7 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 	{
 		// current cell is of state "FREE" but there's already a cell of another state
 		// on this exact position -> remove it
-		if (color == wxColour("white")) RemoveCell(x, y, state, color);
+		if (color == wxColour("white")) RemoveCell(x, y, state, color, multiple);
 		// position is occupied
 		else
 		{
@@ -404,7 +411,7 @@ void Grid::BuildInterface()
 {
 	SetBackgroundColour(wxColor(255, 214, 165));
 
-	SetRowColumnCount(Sizes::TOTAL_CELLS, Sizes::TOTAL_CELLS);
+	SetRowColumnCount(Sizes::N_ROWS, Sizes::N_COLS);
 
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
 }
@@ -487,7 +494,7 @@ std::string Grid::ControlUpdateCoords(int x, int y)
 	// update coordinates displayed on screen
 	std::string name = GetState(x, y);
 
-	m_ToolCoords->Set(x - m_Offset, y - m_Offset, name);
+	m_ToolCoords->Set(x - m_OffsetX, y - m_OffsetY, name);
 
 	return name;
 }
@@ -677,7 +684,7 @@ bool Grid::ModeMove(int x, int y, char mode)
 						// don't scroll beyond the minimum limit
 						if (deltaX < 0) deltaX = std::max(-GetScrollPos(wxHORIZONTAL), deltaX);
 						// don't scroll beyond the maximum limit
-						if (deltaX > 0) deltaX = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxHORIZONTAL) - GetScrollThumb(wxHORIZONTAL), deltaX);
+						if (deltaX > 0) deltaX = std::min(Sizes::N_COLS - GetScrollPos(wxHORIZONTAL) - GetScrollThumb(wxHORIZONTAL), deltaX);
 					}
 				}
 				if (deltaY)
@@ -696,7 +703,7 @@ bool Grid::ModeMove(int x, int y, char mode)
 						// don't scroll beyond the minimum limit
 						if (deltaY < 0) deltaY = std::max(-GetScrollPos(wxVERTICAL), deltaY);
 						// don't scroll beyond the maximum limit
-						if (deltaY > 0) deltaY = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxVERTICAL) - GetScrollThumb(wxVERTICAL), deltaY);
+						if (deltaY > 0) deltaY = std::min(Sizes::N_ROWS - GetScrollPos(wxVERTICAL) - GetScrollThumb(wxVERTICAL), deltaY);
 					}
 				}
 
@@ -734,7 +741,7 @@ void Grid::OnDraw(wxDC& dc)
 	pen.SetColour(wxColour(200, 200, 200));
 
 	dc.SetPen(pen);
-	if (m_Size == Sizes::CELL_SIZE_MIN) dc.SetPen(*wxTRANSPARENT_PEN);
+	if (m_Size <= Sizes::CELL_SIZE_MIN * 2) dc.SetPen(*wxTRANSPARENT_PEN);
 
 	wxPosition visibleBegin = GetVisibleBegin();
 	wxPosition visibleEnd = GetVisibleEnd();
@@ -856,9 +863,9 @@ void Grid::OnDraw(wxDC& dc)
 		// scrolled right -> redraw right border
 		if (m_JustScrolled.first > 0)
 		{
-			for (int i = visibleEnd.GetCol(); i > visibleEnd.GetCol() - 1 - m_JustScrolled.first; i--)
+			for (int i = visibleEnd.GetCol() - 1; i > visibleEnd.GetCol() - 1 - m_JustScrolled.first; i--)
 			{
-				for (int j = visibleBegin.GetRow(); j <= visibleEnd.GetRow(); j++)
+				for (int j = visibleBegin.GetRow(); j < visibleEnd.GetRow(); j++)
 				{
 					if (alreadyDrawn.find({ i,j }) == alreadyDrawn.end())
 					{
@@ -872,7 +879,7 @@ void Grid::OnDraw(wxDC& dc)
 		{
 			for (int i = visibleBegin.GetCol(); i <= visibleBegin.GetCol() - m_JustScrolled.first; i++)
 			{
-				for (int j = visibleBegin.GetRow(); j <= visibleEnd.GetRow(); j++)
+				for (int j = visibleBegin.GetRow(); j < visibleEnd.GetRow(); j++)
 				{
 					if (alreadyDrawn.find({ i,j }) == alreadyDrawn.end())
 					{
@@ -884,9 +891,9 @@ void Grid::OnDraw(wxDC& dc)
 		// scrolled down -> redraw bottom border
 		if (m_JustScrolled.second > 0)
 		{
-			for (int i = visibleEnd.GetRow(); i > visibleEnd.GetRow() - 1 - m_JustScrolled.second; i--)
+			for (int i = visibleEnd.GetRow() - 1; i > visibleEnd.GetRow() - 1 - m_JustScrolled.second; i--)
 			{
-				for (int j = visibleBegin.GetCol(); j <= visibleEnd.GetCol(); j++)
+				for (int j = visibleBegin.GetCol(); j < visibleEnd.GetCol(); j++)
 				{
 					if (alreadyDrawn.find({ j,i }) == alreadyDrawn.end())
 					{
@@ -900,7 +907,7 @@ void Grid::OnDraw(wxDC& dc)
 		{
 			for (int i = visibleBegin.GetRow(); i <= visibleBegin.GetRow() - m_JustScrolled.second; i++)
 			{
-				for (int j = visibleBegin.GetCol(); j <= visibleEnd.GetCol(); j++)
+				for (int j = visibleBegin.GetCol(); j < visibleEnd.GetCol(); j++)
 				{
 					if (alreadyDrawn.find({ j,i }) == alreadyDrawn.end())
 					{
@@ -910,10 +917,27 @@ void Grid::OnDraw(wxDC& dc)
 			}
 		}
 
+		// redraw the background out of the borders
+		dc.SetPen(*wxTRANSPARENT_PEN);
+		brush.SetColour(GetBackgroundColour());
+		dc.SetBrush(brush);
+
+		if (m_JustScrolled.first > 0 && GetVisibleColumnsEnd() == Sizes::N_COLS)
+		{
+			int i = GetVisibleColumnsEnd();
+			for (int j = visibleBegin.GetRow(); j < visibleEnd.GetRow(); j++)
+					dc.DrawRectangle(i * m_Size, j * m_Size, m_Size, m_Size);
+		}
+		if (m_JustScrolled.second > 0 && GetVisibleRowsEnd() == Sizes::N_ROWS)
+		{
+			int i = GetVisibleRowsEnd();
+			for (int j = visibleBegin.GetCol(); j < visibleEnd.GetCol(); j++)
+				dc.DrawRectangle(j * m_Size, i * m_Size, m_Size, m_Size);
+		}
+
 		m_JustScrolled = { 0,0 };
 		m_RedrawAll = true;
 
-		//if (m_RedrawAll) return;
 		return;
 	}
 	if (!m_RedrawAll)
@@ -1134,8 +1158,8 @@ void Grid::ProcessKeys()
 	if (deltaY < 0) deltaY = std::max(-GetScrollPos(wxVERTICAL), deltaY);
 	if (deltaX < 0) deltaX = std::max(-GetScrollPos(wxHORIZONTAL), deltaX);
 	// don't scroll beyond the maximum limit
-	if (deltaX > 0) deltaX = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxHORIZONTAL) - GetScrollThumb(wxHORIZONTAL), deltaX);
-	if (deltaY > 0) deltaY = std::min(Sizes::TOTAL_CELLS - GetScrollPos(wxVERTICAL) - GetScrollThumb(wxVERTICAL), deltaY);
+	if (deltaX > 0) deltaX = std::min(Sizes::N_COLS - GetScrollPos(wxHORIZONTAL) - GetScrollThumb(wxHORIZONTAL), deltaX);
+	if (deltaY > 0) deltaY = std::min(Sizes::N_ROWS - GetScrollPos(wxVERTICAL) - GetScrollThumb(wxVERTICAL), deltaY);
 
 	if (deltaX || deltaY)
 	{
@@ -1285,7 +1309,7 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 				std::string currState = GetState(ii, jj);
 				if (currState != state)
 				{
-					if (!remove)
+					if (!remove && state != "FREE")
 					{
 						InsertCell(ii, jj, state, color, true);
 						m_StatusCells->UpdateCountPopulation(1);
@@ -1314,7 +1338,7 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 				std::string currState = GetState(ii, jj);
 				if (currState != state)
 				{
-					if (!remove)
+					if (!remove && state != "FREE")
 					{
 						InsertCell(ii, jj, state, color, true);
 						m_StatusCells->UpdateCountPopulation(1);
@@ -1341,7 +1365,7 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 		std::string currState = GetState(x, y);
 		if (currState != state)
 		{
-			if (!remove)
+			if (!remove && state != "FREE")
 			{
 				InsertCell(ii, jj, state, color, true);
 				m_StatusCells->UpdateCountPopulation(1);
@@ -1364,7 +1388,7 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 
 bool Grid::InBounds(int x, int y)
 {
-	return (x >= 0 && x < Sizes::TOTAL_CELLS&& y >= 0 && y < Sizes::TOTAL_CELLS);
+	return (x >= 0 && x < Sizes::N_COLS && y >= 0 && y < Sizes::N_ROWS);
 }
 
 void Grid::OnScroll(wxScrollWinEvent& evt)

@@ -84,12 +84,12 @@ void ToolZoom::UpdateTextScale()
 
 void ToolZoom::OnZoomIn(wxCommandEvent& evt)
 {
-	ZoomIn();
+	ZoomIn(true);
 	m_Grid->SetFocus();
 }
 
 void ToolZoom::OnZoomOut(wxCommandEvent& evt)
 {
-	ZoomOut();
+	ZoomOut(true);
 	m_Grid->SetFocus();
 }

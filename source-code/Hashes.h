@@ -13,7 +13,7 @@ private:
 public:
 	struct PairInt {
 		inline size_t operator() (const pair<int, int>& p) const {
-			return p.second * Sizes::TOTAL_CELLS + p.first;
+			return p.second * Sizes::N_COLS + p.first;
 		}
 	};
 };

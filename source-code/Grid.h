@@ -30,7 +30,7 @@ public:
 
 	int GetSize();
 	void SetSize(int size, bool center = true);
-	void ScrollToCenter(int x = Sizes::TOTAL_CELLS / 2, int y = Sizes::TOTAL_CELLS / 2);
+	void ScrollToCenter(int x = Sizes::N_COLS / 2, int y = Sizes::N_ROWS / 2);
 
 	void SetCells(
 		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells,
@@ -58,7 +58,8 @@ public:
 	std::unordered_map<std::string, wxColour>& GetColors();
 private:
 	int m_Size = Sizes::CELL_SIZE_DEFAULT;
-	const int m_Offset = Sizes::TOTAL_CELLS / 2;
+	const int m_OffsetX = Sizes::N_COLS / 2;
+	const int m_OffsetY = Sizes::N_ROWS / 2;
 	bool m_Centered = false;
 
 	ToolZoom* m_ToolZoom = nullptr;
