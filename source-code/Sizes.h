@@ -5,7 +5,7 @@ private:
 	Sizes() {};
 	~Sizes() {};
 public:
-	static const int TOTAL_CELLS = 401;
+	static const int TOTAL_CELLS = 101;
 
 	static const int CELL_SIZE_DEFAULT = 16;
 	static const int CELL_SIZE_MIN = 4;

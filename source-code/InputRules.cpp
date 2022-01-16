@@ -52,44 +52,27 @@ void InputRules::SetInputNeighbors(InputNeighbors* inputNeighbors)
 
 void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
 {
-    // rules appear in our list but not in the given list -> they got recently deleted
-    /*for (auto it1 = m_Rules.begin(); it1 != m_Rules.end();)
+    // rules appear in our multimap but not in the given list -> they got recently deleted
+    for (auto it = m_Rules.begin(); it != m_Rules.end();)
     {
-        bool erased = false;
-
+        bool present = false;
         for (int i = 0; i < rules.size(); i++)
-            if (it1->first == rules[i].first)
+        {
+            if (it->first == rules[i].first && it->second.condition == rules[i].second.condition)
             {
-                if (it1->second.orRules == rules[i].second.orRules)
-                {
-                    it1 = m_Rules.erase(it1);
-                    erased = true;
-                }
-                else
-                {
-                    auto er = m_Rules.equal_range(it1->first);
-                    for (auto it2 = er.first; it2 != er.second; it2++)
-                    {
-                        if (it2->second.orRules == rules[i].second.orRules)
-                        {
-                            m_Rules.erase(it2);
-                            break;
-                        }
-                    }
-                }
+                present = true;
+                break;
             }
+        }
 
-        if (!erased) it1++;
-    }*/
+        if (!present) it = m_Rules.erase(it);
+        else it++;
+    }
 
     // rules appear in the given list but not in our map -> they got recently introduced
     for (int i = 0; i < rules.size(); i++)
     {
-        if (m_Rules.find(rules[i].first) == m_Rules.end())
-        {
-            m_Rules.insert(rules[i]);
-            //wxLogDebug("INSERT-1");
-        }
+        if (m_Rules.find(rules[i].first) == m_Rules.end()) m_Rules.insert(rules[i]);
         else if (m_Rules.find(rules[i].first) != m_Rules.end())
         {
             auto er = m_Rules.equal_range(rules[i].first);
@@ -97,7 +80,7 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
 
             for (auto& it = er.first; it != er.second; it++)
             {
-                if (rules[i].second.orRules == it->second.orRules)
+                if (rules[i].second.condition == it->second.condition)
                 {
                     present = true;
                     break;
@@ -121,13 +104,13 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
         std::string state2 = rules[i].second.state;
         std::string condition = rules[i].second.condition;
 
-        if (alreadyUpdated.find(state1 + "-" + state2 + "-" + condition) != alreadyUpdated.end()) continue;
+        if (alreadyUpdated.find(state1 + "/" + state2 + ":" + condition) != alreadyUpdated.end()) continue;
 
         if (i > nOfItems - 1)
         {
             wxColour bgColorA("white"), bgColorB("white");
             wxColour txtColorA("black"), txtColorB("black");
-            // TO DO, actually separate the <stateA> <stateB> <condition>
+            
             if (m_States.find(state1) != m_States.end() && m_States.find(state2) != m_States.end())
             {
                 bgColorA = wxColour(m_States[state1]); bgColorB = wxColour(m_States[state2]);
@@ -163,7 +146,7 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
             m_List->ChangeItemCond(i, condition);
         }
 
-        alreadyUpdated.insert(state1 + "-" + state2 + "-" + condition);
+        alreadyUpdated.insert(state1 + "/" + state2 + ":" + condition);
     }
 
     while (i < nOfItems--)
@@ -172,12 +155,8 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
         std::string state2 = m_List->GetState2(i);
         std::string condition = m_List->GetCond(i);
 
-        // to do, come back when items are inserted properly
-        //std::string rule = state1;// +"->" + state2;
-        //if (!cond.empty()) rule += ":" + cond;
-
         m_List->Erase(i);
-        if (alreadyUpdated.find(state1 + "-" + state2 + "-" + condition) != alreadyUpdated.end()) continue;
+        if (alreadyUpdated.find(state1 + "/" + state2 + ":" + condition) != alreadyUpdated.end()) continue;
     }
 
     m_List->RefreshAfterUpdate();
