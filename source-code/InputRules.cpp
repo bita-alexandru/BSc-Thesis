@@ -1,4 +1,5 @@
 #include "InputRules.h"
+#include "Interpreter.h"
 
 #include <unordered_set>
 
@@ -24,9 +25,29 @@ std::unordered_multimap<std::string, Transition>& InputRules::GetRules()
 	return m_Rules;
 }
 
+InputStates* InputRules::GetInputStates()
+{
+    return m_InputStates;
+}
+
+InputNeighbors* InputRules::GetInputNeighbors()
+{
+    return m_InputNeighbors;
+}
+
 void InputRules::SetEditorRules(EditorRules* editorRules)
 {
     m_EditorRules = editorRules;
+}
+
+void InputRules::SetInputStates(InputStates* inputStates)
+{
+    m_InputStates = inputStates;
+}
+
+void InputRules::SetInputNeighbors(InputNeighbors* inputNeighbors)
+{
+    m_InputNeighbors = inputNeighbors;
 }
 
 void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
@@ -74,7 +95,7 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
             auto er = m_Rules.equal_range(rules[i].first);
             bool present = false;
 
-            for (auto it = er.first; it != er.second; it++)
+            for (auto& it = er.first; it != er.second; it++)
             {
                 if (rules[i].second.orRules == it->second.orRules)
                 {
@@ -86,6 +107,8 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
             if (!present) m_Rules.insert(rules[i]);
         }
     }
+
+    m_States = m_InputStates->GetStates();
 
     // update list display
     int nOfItems = m_List->GetItemCount();
@@ -158,12 +181,6 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
     }
 
     m_List->RefreshAfterUpdate();
-}
-
-void InputRules::SetStates(std::unordered_map<std::string, std::string>& states)
-{
-    m_States = states;
-    m_EditorRules->SetStates(states);
 }
 
 void InputRules::BuildInterface()
@@ -316,9 +333,9 @@ void InputRules::RuleGoTo()
     std::string state2 = m_List->GetState2(selection);
     std::string cond = m_List->GetCond(selection);
 
-    // to do, come back when items are inserted properly
-    std::string rule = state1;// +"->" + state2;
+    std::string rule = state1 +"/" + state2;
     if (!cond.empty()) rule += ":" + cond;
+    rule += ";";
 
     m_EditorRules->GoTo(rule);
 }
@@ -334,9 +351,9 @@ void InputRules::RuleDelete()
         std::string state2 = m_List->GetState2(selection);
         std::string cond = m_List->GetCond(selection);
 
-        // to do, come back when items are inserted properly
-        std::string rule = state1;// +"->" + state2;
+        std::string rule = state1 +"/" + state2;
         if (!cond.empty()) rule += ":" + cond;
+        rule += ";";
 
         selection = m_List->GetNextSelected(selection);
 
@@ -345,22 +362,29 @@ void InputRules::RuleDelete()
         m_EditorRules->DeleteRule(rule);
     }
 
-    std::vector<std::string> rules;
+    std::string rules = "";
     for (int i = 0; i < m_List->GetItemCount(); i++)
     {
         std::string state1 = m_List->GetState1(i);
         std::string state2 = m_List->GetState2(i);
         std::string cond = m_List->GetCond(i);
 
-        // to do, come back when items are inserted properly
-        std::string rule = state1;// +"->" + state2;
+        std::string rule = state1 + "/" + state2;
         if (!cond.empty()) rule += ":" + cond;
+        rule += ";";
 
-        if (toBeDeleted.find(rule) == toBeDeleted.end()) rules.push_back(rule);
+        if (toBeDeleted.find(rule) == toBeDeleted.end()) rules += rule + "\n";
     }
 
+    //wxLogDebug("RULES=\n<%s>", rules);
+
     // to do, update m_Rules
-    //SetRules(rules);
+    Interpreter interpreter;
+    interpreter.SetStates(m_InputStates->GetStates());
+    interpreter.SetNeighbors(m_InputNeighbors->GetNeighbors());
+    interpreter.Process(rules);
+    
+    SetRules(interpreter.GetTransitions());
 }
 
 void InputRules::OnEdit(wxCommandEvent& evt)

@@ -1,4 +1,5 @@
 #include "EditorRules.h"
+#include "Interpreter.h"
 
 #include <algorithm>
 #include <sstream>
@@ -28,16 +29,6 @@ EditorRules::~EditorRules()
 	wxDELETE(m_FindDialog);
 }
 
-void EditorRules::SetStates(std::unordered_map<std::string, std::string>& states)
-{
-	m_Interpreter.SetStates(states);
-}
-
-void EditorRules::SetNeighbors(std::unordered_set<std::string>& neighbors)
-{
-	m_Interpreter.SetNeighbors(neighbors);
-}
-
 void EditorRules::SetInputRules(InputRules* inputRules)
 {
 	m_InputRules = inputRules;
@@ -47,9 +38,12 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 {
 	std::string text = (std::string)m_TextCtrl->GetText().Upper();
 
-	std::vector<std::pair<int, std::string>> invalidPositions = m_Interpreter.Process(text);
+	Interpreter interpreter;
+	interpreter.SetStates(m_InputRules->GetInputStates()->GetStates());
+	interpreter.SetNeighbors(m_InputRules->GetInputNeighbors()->GetNeighbors());
 
-	vector<pair<string, Transition>> transitions = m_Interpreter.GetTransitions();
+	std::vector<std::pair<int, std::string>> invalidPositions = interpreter.Process(text);
+	vector<pair<string, Transition>> transitions = interpreter.GetTransitions();
 
 	if (invalidPositions.empty())
 	{
@@ -160,10 +154,12 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 
 void EditorRules::GoTo(std::string rule)
 {
-	int result = FindRule(rule);
+	std::pair<int, int> lines = FindRule(rule);
+	int lineBegin = lines.first;
+	int lineEnd = lines.second;
 
 	// not found
-	if (result == -1)
+	if (lineBegin == -1)
 	{
 		if (m_DialogShown) return;
 		wxMessageDialog dialog (
@@ -178,12 +174,11 @@ void EditorRules::GoTo(std::string rule)
 		return;
 	}
 
-	int position = m_TextCtrl->PositionFromLine(result);
-	m_TextCtrl->ShowPosition(position);
+	int positionBegin = m_TextCtrl->PositionFromLine(lineBegin);
+	int positionEnd = m_TextCtrl->GetLineEndPosition(lineEnd);
+	m_TextCtrl->ShowPosition(positionBegin);
 
-	m_TextCtrl->SetSelectionMode(wxSTC_SEL_LINES);
-	m_TextCtrl->SetSelection(position, position);
-	m_TextCtrl->SetSelectionMode(wxSTC_SEL_STREAM);
+	m_TextCtrl->SetSelection(positionBegin, positionEnd);
 
 	Show();
 	SetFocus();
@@ -191,17 +186,19 @@ void EditorRules::GoTo(std::string rule)
 
 void EditorRules::DeleteRule(std::string rule)
 {	
-	int result = FindRule(rule);
+	std::pair<int, int> lines = FindRule(rule);
+	int lineBegin = lines.first;
+	int lineEnd = lines.second;
 
-	if (result != -1)
+	if (lineBegin != -1)
 	{
-		int selectionEnd = m_TextCtrl->GetLineEndPosition(result);
+		int positionBegin = m_TextCtrl->PositionFromLine(lineBegin);
+		int positionEnd = m_TextCtrl->GetLineEndPosition(lineEnd);
+		m_TextCtrl->ShowPosition(positionBegin);
 
-		m_TextCtrl->SetSelectionMode(wxSTC_SEL_LINES);
-		m_TextCtrl->SetSelection(selectionEnd, selectionEnd);
-		m_TextCtrl->SetSelectionMode(wxSTC_SEL_STREAM);
+		m_TextCtrl->SetSelection(positionBegin, positionEnd);
 
-		m_TextCtrl->LineDelete();
+		m_TextCtrl->DeleteBack();
 		m_PrevText = m_TextCtrl->GetText();
 	}
 }
@@ -623,17 +620,63 @@ void EditorRules::UpdateLineColKey(wxKeyEvent& evt)
 	evt.Skip();
 }
 
-int EditorRules::FindRule(std::string rule)
+std::pair<int, int> EditorRules::FindRule(std::string rule)
 {
+	int lineBegin = 0;
+	int n = rule.size();
+	int cnt = 0;
+	std::string s = "";
+
 	for (int i = 0; i < m_TextCtrl->GetLineCount(); i++)
 	{
-		std::string line = std::string(m_TextCtrl->GetLine(i).Upper());
-		line.erase(remove(line.begin(), line.end(), ' '), line.end());
-		line.erase(remove(line.begin(), line.end(), '\r'), line.end());
-		line.erase(remove(line.begin(), line.end(), '\n'), line.end());
+		if (cnt == 0) lineBegin = i;
 
-		if (rule == line) return i;
+		wxString line = m_TextCtrl->GetLine(i);
+
+		// inline comment, ignore it but continue with the state before it
+		if (line.find("!") != line.npos) line = line.substr(0, line.find("!"));
+
+		if (line.empty()) continue;
+		line.MakeUpper();
+
+		//wxLogDebug("line=<%s>", line);
+		
+		bool substr = true;
+		// see if the line is a substring of the given rule
+		for (int j = 0; j < line.size(); j++)
+		{
+			if (std::isspace(line[j])) continue;
+
+			if (cnt == n)
+			{
+				substr = false;
+				break;
+			}
+
+			if (line[j] == rule[cnt])
+			{
+				cnt++;
+				s.push_back(line[j]);
+			}
+			else
+			{
+				substr = false;
+				break;
+			}
+		}
+
+		//wxLogDebug("s=<%s> substr=%i pos=%i,%i", s, substr, lineBegin, i);
+
+		if (!substr)
+		{
+			s = "";
+			cnt = 0;
+			lineBegin = i + 1;
+		}
+		// we found stacking lines that produce the given rule
+		else if (cnt == n) return { lineBegin, i };
 	}
 
-	return -1;
+	return { -1,-1 };
 }
+

@@ -38,31 +38,40 @@ std::vector<std::string> EditorStates::GetData()
 {
 	std::string text = (std::string)m_TextCtrl->GetText().Upper();
 
-	// remove empty lines, white spaces and carriage symbols
-	text.erase(remove(text.begin(), text.end(), ' '), text.end());
-	text.erase(remove(text.begin(), text.end(), '\r'), text.end());
-	text.erase(remove(text.begin(), text.end(), '\t'), text.end());
-
 	// count lines (states) and mark duplicates/invalid states
 	std::unordered_set<std::string> setStates({ "FREE" });
 	std::vector<std::pair<int, std::string>> indexInvalid;
 
 	std::stringstream ssText(text);
-	std::string state;
+	std::string line;
 	std::vector<std::string> states({ "FREE" });
 
 	int cntLine = -1;
-	while (std::getline(ssText, state, '\n'))
+	while (std::getline(ssText, line, '\n'))
 	{
 		cntLine++;
 
-		if (state.size() < 1) continue;
-
-		// separate line comment
-		if (state.size() > 1 && state[0] == '!') continue;
+		if (line.empty()) continue;
 
 		// inline comment, ignore it but continue with the state before it
-		if (state.find("!") != state.npos) state = state.substr(0, state.find("!"));
+		if (line.find("!") != line.npos) line = line.substr(0, line.find("!"));
+
+		if (line.empty()) continue;
+
+		std::stringstream ss(line);
+		std::string state = "";
+		std::string s = "";
+		
+		ss >> state;
+		ss >> s;
+
+		if (state.empty()) continue;
+
+		if (!s.empty())
+		{
+			indexInvalid.push_back({ cntLine, "<ILLEGAL SPACE CHARACTER, USE '_' INSTEAD>" });
+			continue;
+		}
 
 		// state's name does not respect the character limits
 		if (state.size() < Sizes::CHARS_STATE_MIN || state.size() > Sizes::CHARS_STATE_MAX)
@@ -163,10 +172,10 @@ std::vector<std::string> EditorStates::GetData()
 
 void EditorStates::GoTo(std::string state)
 {
-	int result = m_TextCtrl->SearchNext(wxSTC_FIND_WHOLEWORD, state);
+	int line = FindState(state);
 
 	// not found
-	if (result == -1)
+	if (line == -1)
 	{
 		wxMessageDialog dialog(
 			this, "No occurence found.", "Go To",
@@ -179,8 +188,10 @@ void EditorStates::GoTo(std::string state)
 	}
 	else
 	{
-		m_TextCtrl->ShowPosition(result);
-		m_TextCtrl->SetSelection(result, result + state.size());
+		int position = m_TextCtrl->PositionFromLine(line);
+		m_TextCtrl->ShowPosition(position);
+
+		m_TextCtrl->SetSelection(position, position + state.size());
 
 		Show();
 		SetFocus();
@@ -189,11 +200,15 @@ void EditorStates::GoTo(std::string state)
 
 void EditorStates::DeleteState(std::string state)
 {
-	int result = m_TextCtrl->SearchNext(wxSTC_FIND_WHOLEWORD, state);
+	int line = FindState(state);
 
-	if (result != -1)
+	if (line != -1)
 	{
-		m_TextCtrl->LineDelete();
+		int position = m_TextCtrl->PositionFromLine(line);
+
+		m_TextCtrl->SetSelection(position, position + state.size());
+
+		m_TextCtrl->DeleteBack();
 		m_PrevText = m_TextCtrl->GetText();
 	}
 }
@@ -596,6 +611,33 @@ void EditorStates::UpdateLineColKey(wxKeyEvent& evt)
 	GetStatusBar()->SetStatusText(message);
 
 	evt.Skip();
+}
+
+int EditorStates::FindState(std::string state)
+{
+	for (int i = 0; i < m_TextCtrl->GetLineCount(); i++)
+	{
+		wxString line = m_TextCtrl->GetLine(i);
+
+		// inline comment, ignore it but continue with the state before it
+		if (line.find("!") != line.npos) line = line.substr(0, line.find("!"));
+
+		if (line.empty()) continue;
+		line.MakeUpper();
+
+		std::stringstream ss(line.ToStdString());
+		std::string token = "";
+		std::string s = "";
+
+		ss >> token;
+		ss >> s;
+
+		if (token.empty() || !s.empty()) continue;
+
+		if (token == state) return i;
+	}
+
+	return -1;
 }
 
 void EditorStates::CloseEditor(bool save)

@@ -7,7 +7,6 @@
 #include "Ids.h"
 #include "Sizes.h"
 #include "InputRules.h"
-#include "Interpreter.h"
 #include "Transition.h"
 
 class InputRules;
@@ -18,8 +17,6 @@ public:
 	EditorRules(wxFrame* parent);
 	~EditorRules();
 
-	void SetStates(std::unordered_map<std::string, std::string>& states);
-	void SetNeighbors(std::unordered_set<std::string>& neighbors);
 	void SetInputRules(InputRules* inputRules);
 	vector<pair<string, Transition>> GetData();
 
@@ -28,7 +25,6 @@ public:
 	void ForceClose();
 private:
 	InputRules* m_InputRules = nullptr;
-	Interpreter m_Interpreter;
 
 	wxMenuBar* m_MenuBar = nullptr;
 	wxFindReplaceData* m_FindData = nullptr;
@@ -46,8 +42,6 @@ private:
 	void BuildInputPanel();
 	void BuildDialogFind(std::string title, long style);
 	
-	int FindRule(std::string rule);
-
 	wxDECLARE_EVENT_TABLE();
 	void OnCloseEvent(wxCloseEvent& evt);
 	void OnFocusEvent(wxFocusEvent& evt);
@@ -75,5 +69,7 @@ private:
 
 	void UpdateLineColMouse(wxMouseEvent& evt);
 	void UpdateLineColKey(wxKeyEvent& evt);
+
+	std::pair<int, int> FindRule(std::string rule);
 };
 

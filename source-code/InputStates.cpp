@@ -127,9 +127,6 @@ void InputStates::SetStates(std::vector<std::string> states)
 
     m_List->RefreshAfterUpdate();
 
-    // notify InputRules about the new states list
-    m_InputRules->SetStates(m_States);
-
     // update ToolModes (state, color) list
     std::vector<std::pair<std::string, wxColour>> statesColors;
     for (auto& it : states)
@@ -148,11 +145,6 @@ void InputStates::SetToolStates(ToolStates* toolStates)
 void InputStates::SetGrid(Grid* grid)
 {
     m_Grid = grid;
-}
-
-void InputStates::SetInputRules(InputRules* inputRules)
-{
-    m_InputRules = inputRules;
 }
 
 void InputStates::SetEditorStates(EditorStates* editorStates)

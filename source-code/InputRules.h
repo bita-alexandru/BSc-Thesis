@@ -5,9 +5,13 @@
 #include "Ids.h"
 #include "ListRules.h"
 #include "EditorRules.h"
+#include "InputStates.h"
+#include "InputNeighbors.h"
 #include "Transition.h"
 
 class EditorRules;
+class InputStates;
+class InputNeighbors;
 
 class InputRules : public wxPanel
 {
@@ -17,14 +21,20 @@ public:
 
 	ListRules* GetList();
 	std::unordered_multimap<std::string, Transition>& GetRules();
+
+	InputStates* GetInputStates();
+	InputNeighbors* GetInputNeighbors();
 	
 	void SetEditorRules(EditorRules* editorRules);
+	void SetInputStates(InputStates* inputStates);
+	void SetInputNeighbors(InputNeighbors* inputNeighbors);
 
 	void SetRules(std::vector<std::pair<std::string, Transition>> rules);
-	void SetStates(std::unordered_map<std::string, std::string>& states);
 private:
 	ListRules* m_List = nullptr;
 	EditorRules* m_EditorRules = nullptr;
+	InputStates* m_InputStates = nullptr;
+	InputNeighbors* m_InputNeighbors = nullptr;
 
 	wxMenu* m_Menu = nullptr;
 	wxSearchCtrl* m_Search = nullptr;

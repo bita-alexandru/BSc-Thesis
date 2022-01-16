@@ -160,12 +160,11 @@ void Main::PrepareInput()
 
 	inputStates->SetToolStates(toolStates);
 	inputStates->SetGrid(grid);
-	inputStates->SetInputRules(inputRules);
 	inputStates->SetEditorStates(m_EditorStates);
 
 	inputRules->SetEditorRules(m_EditorRules);
-
-	inputNeighbors->SetEditorRules(m_EditorRules);
+	inputRules->SetInputStates(inputStates);
+	inputRules->SetInputNeighbors(inputNeighbors);
 
 	toolZoom->SetGrid(grid);
 	toolUndo->SetGrid(grid);

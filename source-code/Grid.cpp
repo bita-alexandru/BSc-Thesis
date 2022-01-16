@@ -1282,7 +1282,11 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 				std::string currState = GetState(ii, jj);
 				if (currState != state)
 				{
-					if (!remove) InsertCell(ii, jj, state, color, true);
+					if (!remove)
+					{
+						InsertCell(ii, jj, state, color, true);
+						m_StatusCells->UpdateCountPopulation(1);
+					}
 					else
 					{
 						EraseCell(ii, jj, true);
@@ -1307,7 +1311,11 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 				std::string currState = GetState(ii, jj);
 				if (currState != state)
 				{
-					if (!remove) InsertCell(ii, jj, state, color, true);
+					if (!remove)
+					{
+						InsertCell(ii, jj, state, color, true);
+						m_StatusCells->UpdateCountPopulation(1);
+					}
 					else
 					{
 						EraseCell(ii, jj, true);
@@ -1330,7 +1338,11 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 		std::string currState = GetState(x, y);
 		if (currState != state)
 		{
-			if (!remove) InsertCell(ii, jj, state, color, true);
+			if (!remove)
+			{
+				InsertCell(ii, jj, state, color, true);
+				m_StatusCells->UpdateCountPopulation(1);
+			}
 			else
 			{
 				EraseCell(ii, jj, true);
