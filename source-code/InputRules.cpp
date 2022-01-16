@@ -223,10 +223,15 @@ void InputRules::Search(wxCommandEvent& evt)
 
     for (int i = 0; i < m_List->GetItemCount(); i++)
     {
-        // to do, come back here when the items are inserted properly
-        std::string row = m_List->GetState1(i) + "-" + m_List->GetState2(i) + "-" + m_List->GetCond(i);
+        std::string state1 = m_List->GetState1(i);
+        std::string state2 = m_List->GetState2(i);
+        std::string cond = m_List->GetCond(i);
 
-        if (row.find(query) != row.npos)
+        std::string rule = state1 + "/" + state2;
+        if (!cond.empty()) rule += ":" + cond;
+        rule += ";";
+
+        if (rule.find(query) != rule.npos)
         {
             m_List->Select(i);
             m_List->EnsureVisible(i);
@@ -250,9 +255,15 @@ void InputRules::SearchEnter(wxCommandEvent& evt)
         // search upwards
         for (int i = selection - 1; i > -1; i--)
         {
-            std::string row = m_List->GetState1(i) + "-" + m_List->GetState2(i) + "-" + m_List->GetCond(i);
+            std::string state1 = m_List->GetState1(i);
+            std::string state2 = m_List->GetState2(i);
+            std::string cond = m_List->GetCond(i);
 
-            if (row.find(query) != row.npos)
+            std::string rule = state1 + "/" + state2;
+            if (!cond.empty()) rule += ":" + cond;
+            rule += ";";
+
+            if (rule.find(query) != rule.npos)
             {
                 m_List->Select(selection, false);
                 m_List->Select(i);
@@ -268,9 +279,15 @@ void InputRules::SearchEnter(wxCommandEvent& evt)
     // search downwards
     for (int i = selection + 1; i < m_List->GetItemCount(); i++)
     {
-        std::string row = m_List->GetState1(i) + "-" + m_List->GetState2(i) + "-" + m_List->GetCond(i);
+        std::string state1 = m_List->GetState1(i);
+        std::string state2 = m_List->GetState2(i);
+        std::string cond = m_List->GetCond(i);
 
-        if (row.find(query) != row.npos)
+        std::string rule = state1 + "/" + state2;
+        if (!cond.empty()) rule += ":" + cond;
+        rule += ";";
+
+        if (rule.find(query) != rule.npos)
         {
             m_List->Select(selection, false);
             m_List->Select(i);
@@ -376,9 +393,6 @@ void InputRules::RuleDelete()
         if (toBeDeleted.find(rule) == toBeDeleted.end()) rules += rule + "\n";
     }
 
-    //wxLogDebug("RULES=\n<%s>", rules);
-
-    // to do, update m_Rules
     Interpreter interpreter;
     interpreter.SetStates(m_InputStates->GetStates());
     interpreter.SetNeighbors(m_InputNeighbors->GetNeighbors());

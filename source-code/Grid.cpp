@@ -1216,6 +1216,8 @@ void Grid::DrawStructure(int X, int Y, std::string state, wxColour color)
 	std::stack<std::pair<int, int>> neighbors;
 	neighbors.push({ X,Y });
 
+	std::string replace = GetState(X, Y);
+
 	wxPosition visibleBegin = GetVisibleBegin();
 	wxPosition visibleEnd = GetVisibleEnd();
 
@@ -1232,6 +1234,7 @@ void Grid::DrawStructure(int X, int Y, std::string state, wxColour color)
 
 		// only fill the different cells
 		if (neighborState == state) continue;
+		if (neighborState != replace) continue;
 
 		InsertCell(neighbor.first, neighbor.second, state, color, true);
 

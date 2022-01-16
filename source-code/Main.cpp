@@ -82,10 +82,10 @@ void Main::BuildMenubar()
 	menuClear->Append(Ids::ID_CLEAR_G, "&Genetic Algorithm Input\tCtrl-Shift-L");
 
 	menuView->Append(Ids::ID_VIEW_DEFAULT, "&Default Perspective\tF1");
-	menuView->AppendSeparator();
-	menuView->Append(Ids::ID_VIEW_INPUT, "&Input Perspective\tF2");
-	menuView->Append(Ids::ID_VIEW_GRID, "&Grid Perspective\tF3");
-	menuView->Append(Ids::ID_VIEW_ALGORITHM, "&Algorithm Perspective\tF4");
+	//menuView->AppendSeparator();
+	//menuView->Append(Ids::ID_VIEW_INPUT, "&Input Perspective\tF2");
+	menuView->Append(Ids::ID_VIEW_GRID, "&Grid Perspective\tF2");
+	//menuView->Append(Ids::ID_VIEW_ALGORITHM, "&Algorithm Perspective\tF4");
 
 	menuHelp->Append(Ids::ID_USERMANUAL, "&User Manual\tCtrl-U");
 	menuHelp->Append(Ids::ID_SHORTCUTS, "&Shortcuts\tCtrl-J");
@@ -108,15 +108,15 @@ void Main::SetShortcuts()
 {
 	wxAcceleratorEntry entries[15];
 	// ToolZoom
-	entries[0].Set(wxACCEL_NORMAL, (int)'+', Ids::ID_ZOOM_IN);
-	entries[1].Set(wxACCEL_NORMAL, (int)'-', Ids::ID_ZOOM_OUT);
+	entries[0].Set(wxACCEL_CTRL, (int)'+', Ids::ID_ZOOM_IN);
+	entries[1].Set(wxACCEL_CTRL, (int)'-', Ids::ID_ZOOM_OUT);
 	// ToolUndo
 	entries[2].Set(wxACCEL_CTRL, (int)'Z', Ids::ID_BUTTON_UNDO);
 	entries[3].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'Z', Ids::ID_BUTTON_REDO);
 	// ToolModes
-	entries[4].Set(wxACCEL_NORMAL, (int)'Z', Ids::ID_MODE_DRAW);
-	entries[5].Set(wxACCEL_NORMAL, (int)'X', Ids::ID_MODE_PICK);
-	entries[6].Set(wxACCEL_NORMAL, (int)'C', Ids::ID_MODE_MOVE);
+	entries[4].Set(wxACCEL_CTRL, (int)'Q', Ids::ID_MODE_DRAW);
+	entries[5].Set(wxACCEL_CTRL, (int)'W', Ids::ID_MODE_PICK);
+	entries[6].Set(wxACCEL_CTRL, (int)'E', Ids::ID_MODE_MOVE);
 	// ToolStates
 	entries[7].Set(wxACCEL_CTRL, WXK_LEFT, Ids::ID_BUTTON_PREV);
 	entries[8].Set(wxACCEL_CTRL, WXK_RIGHT, Ids::ID_BUTTON_NEXT);
