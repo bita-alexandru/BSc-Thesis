@@ -12,6 +12,7 @@
 #include <deque>
 
 class EditorStates;
+class ToolStates;
 
 class InputStates : public wxPanel
 {

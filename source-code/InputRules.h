@@ -57,4 +57,3 @@ private:
 	void OnEdit(wxCommandEvent& evt);
 	void FocusSearch(wxCommandEvent& evt);
 };
-

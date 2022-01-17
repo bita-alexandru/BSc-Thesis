@@ -49,9 +49,9 @@ void StatusCells::UpdateCountPopulation(int n)
 	UpdateTextCountPopulation();
 }
 
-void StatusCells::SetTextCountGeneration(std::string message)
+void StatusCells::SetGenerationMessage(std::string message)
 {
-	std::string label = "Generation=" + message;
+	std::string label = "Generation=" + std::to_string(m_CountGeneration) + message;
 
 	m_TextCountGeneration->SetLabel(label);
 
@@ -59,9 +59,9 @@ void StatusCells::SetTextCountGeneration(std::string message)
 	//Update();
 }
 
-void StatusCells::SetTextCountPopulation(std::string message)
+void StatusCells::SetPopulationMessage(std::string message)
 {
-	std::string label = "Population=" + message;
+	std::string label = "Population=" + std::to_string(m_CountPopulation) + message;
 
 	m_TextCountPopulation->SetLabel(label);
 

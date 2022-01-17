@@ -24,5 +24,6 @@ private:
 
 	void GoToCenter(wxCommandEvent& evt);
 	void Reset(wxCommandEvent& evt);
+	void NextGeneration(wxCommandEvent& evt);
 };
 

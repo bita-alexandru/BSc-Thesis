@@ -126,6 +126,11 @@ void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::strin
 	Update();
 }
 
+void Grid::SetInputRules(InputRules* inputRules)
+{
+	m_InputRules = inputRules;
+}
+
 void Grid::SetToolZoom(ToolZoom* toolZoom)
 {
 	m_ToolZoom = toolZoom;
@@ -360,11 +365,57 @@ void Grid::Reset()
 	m_IsMoving = false;
 
 	m_ToolUndo->Reset();
+
+	// to do; reminder to come back here
 	m_StatusCells->SetCountGeneration(0);
 	m_StatusCells->SetCountPopulation(0);
 
+	m_Paused = false;
+	m_Finished = false;
+	m_StartedParsing = false;
+
 	Refresh(false);
 	Update();
+}
+
+bool Grid::StartUniverse()
+{
+	return false;
+}
+
+bool Grid::PauseUniverse()
+{
+	return false;
+}
+
+bool Grid::NextStep()
+{
+	return false;
+}
+
+bool Grid::NextGeneration()
+{
+	if (m_Finished) return false;
+
+	int n = ParseAllRules();
+
+	wxLogDebug("PARSE_ALL_RULES=%i", n);
+
+	if (n == -1) return false;
+
+	UpdateGeneration();
+
+	m_StatusCells->UpdateCountGeneration(+1);
+	m_StatusCells->SetCountPopulation(m_Cells.size());
+
+	if (n == 0)
+	{
+		m_Finished = true;
+		m_Paused = false;
+		m_StatusCells->SetGenerationMessage("[OVER]");
+	}
+
+	return true;
 }
 
 void Grid::RefreshUpdate()
@@ -1389,6 +1440,249 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 bool Grid::InBounds(int x, int y)
 {
 	return (x >= 0 && x < Sizes::N_COLS && y >= 0 && y < Sizes::N_ROWS);
+}
+
+int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
+{
+	std::unordered_map<std::string, std::string> states = m_InputRules->GetInputStates()->GetStates();
+	std::unordered_set<std::string> neighbors = m_InputRules->GetInputNeighbors()->GetNeighbors();
+	std::vector<std::pair<int, int>> applied;
+
+	// check if rule might contain invalid states
+	for (auto& state : rule.second.states)
+	{
+		if (states.find(state) == states.end()) return -1;
+	}
+	// maybe add a check for neighborhood as well
+
+	// if state is "FREE", get all "FREE" cells adjacent to the ones on our grid
+	if (rule.first == "FREE")
+	{
+		std::unordered_set<std::pair<int, int>, Hashes::PairInt> visited;
+
+		int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
+		int dy[8] = { -1,-1,0,1,1,1,0,-1 };
+
+		for (auto& cell : m_Cells)
+		{
+			int x = cell.first.first;
+			int y = cell.first.second;
+
+			for (int d = 0; d < 8; d++)
+			{
+				int nx = x + dx[d];
+				int ny = y + dy[d];
+
+				// valid position and unvisited yet
+				if (InBounds(nx, ny) && visited.find({ x,y }) == visited.end())
+				{
+					visited.insert({ nx,ny });
+
+					if (ApplyOnCell(nx, ny, rule.second, neighbors)) applied.push_back({ nx,ny });
+				}
+			}
+		}
+	}
+	// else, get all cells of that type
+	else
+	{
+		if (m_StatePositions.find(rule.first) == m_StatePositions.end()) return -1;
+
+		for (auto& cell : m_StatePositions[rule.first])
+		{
+			if (ApplyOnCell(cell.first, cell.second, rule.second, neighbors)) applied.push_back({ cell.first,cell.second});
+		}
+	}
+
+	std::string newstate = rule.first + "*" + rule.second.state + "*";
+	for (auto& cell : applied) m_StatePositions[newstate].insert(cell);
+
+	return applied.size();
+}
+
+int Grid::ParseAllRules()
+{
+	std::unordered_multimap<std::string, Transition> rules = m_InputRules->GetRules();
+	int changes = 0;
+
+	for (auto& rule : rules)
+	{
+		int n = ParseRule(rule);
+
+		//wxLogDebug("RULE=%s/%s:%s", rule.first, rule.second.state, rule.second.condition);
+
+		if (n == -1) return -1;
+		else changes += n;
+	}
+
+	return changes;
+}
+
+int Grid::ParseNextRule()
+{
+	return 0;
+}
+
+bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::string>& neighbors)
+{
+	std::unordered_map<std::string, std::string> neighborhood = GetNeighborhood({ x,y }, neighbors);
+
+	bool ruleValid = true;
+	// iterate through the chain of "OR" rules
+	for (auto& rulesOr : rule.orRules)
+	{
+		ruleValid = true;
+
+		// iterate through the chain of "AND" rules
+		for (auto& rulesAnd : rulesOr)
+		{
+			std::vector<std::string> ruleNeighborhood = rulesAnd.first;
+
+			bool conditionValid = true;
+			// iterate through the chain of "OR" conditions
+			for (auto& conditionsOr : rulesAnd.second)
+			{
+				conditionValid = true;
+
+				// iterate through the chain of "AND" conditions
+				for (auto& conditionsAnd : conditionsOr)
+				{
+					std::string conditionState = conditionsAnd.second;
+
+					int occurences = 0;
+					if (ruleNeighborhood[0] == "ALL")
+					{
+						for (auto& neighbor : neighborhood)
+							if (neighbor.second == conditionState) occurences++;
+					}
+					else for (auto& neighbor : ruleNeighborhood)
+					{
+						if (neighbors.find(neighbor) != neighbors.end())
+						{
+							if (neighborhood[neighbor] == conditionState) occurences++;
+						}
+						// otherwise, maybe throw error; to do: decide (line 1434)
+					}
+
+					int conditionNumber = conditionsAnd.first.first;
+					int conditionType = conditionsAnd.first.second;
+
+					switch (conditionType)
+					{
+					case TYPE_EQUAL:
+						if (occurences != conditionNumber) conditionValid = false;
+						break;
+					case TYPE_LESS:
+						if (occurences > conditionNumber) conditionValid = false;
+						break;
+					case TYPE_MORE:
+						if (occurences < conditionNumber) conditionValid = false;
+						break;
+					default:
+						break;
+					}
+				}
+
+				if (conditionValid) break;
+			}
+
+			if (!conditionValid)
+			{
+				ruleValid = false;
+				break;
+			}
+		}
+
+		if (ruleValid) break;
+	}
+	
+	return ruleValid;
+}
+
+std::unordered_map<std::string, std::string> Grid::GetNeighborhood(std::pair<int, int> xy, std::unordered_set<std::string>& neighbors)
+{
+	std::unordered_map<std::string, std::string> neighborhood;
+	std::unordered_map<std::string, std::pair<int, int>> dxy(
+		{
+			{ "NW",{-1,-1} }, { "N",{0,-1} }, { "NE",{1,-1} },
+			{ "W",{-1,0} }, { "C",{0,0} }, { "E",{1,0} },
+			{ "SW",{-1,1} }, { "S",{0,1} }, { "SE",{1,1} },
+		}
+	);
+
+	// iterate through neighbors and mark the state they have
+	for (auto& neighbor : neighbors)
+	{
+		int x = xy.first;
+		int y = xy.second;
+
+		std::pair<int, int> d = dxy[neighbor];
+		
+		int nx = x + d.first;
+		int ny = y + d.second;
+
+		if (InBounds(nx, ny)) neighborhood.insert({ neighbor,GetState(nx,ny) });
+	}
+
+	return neighborhood;
+}
+
+void Grid::UpdateGeneration()
+{
+	std::unordered_map<std::string, wxColour> colors = GetColors();
+
+	for (auto it = m_StatePositions.begin(); it != m_StatePositions.end();)
+	{
+		std::string state = it->first;
+
+		if (state.back() == '*')
+		{
+			wxLogDebug("STATE=%s", state);
+
+			state.pop_back();
+
+			std::string prevState = "";
+			std::string currState = "";
+			bool separator = false;
+			// regain information of previous and current state
+			for (int i = 0; i < state.size(); i++)
+			{
+				if (state[i] == '*')
+				{
+					separator = true;
+					continue;
+				}
+
+				if (!separator) prevState.push_back(state[i]);
+				else currState.push_back(state[i]);
+			}
+
+			wxLogDebug("PREV=<%s> CURR=<%s>", prevState, currState);
+
+			// insert positions into the current state map and remove them from the previous one
+			for (auto& position : it->second)
+			{
+				//if (currState != "FREE") m_StatePositions[currState].insert(position);
+
+				InsertCell(position.first, position.second, currState, colors[currState], true);
+
+				m_StatePositions[prevState].erase(position);
+				if (m_StatePositions[prevState].size() == 0) m_StatePositions.erase(state);
+				// update the color
+				//m_Cells[position] = { currState, colors[currState] };
+				
+				/*m_RedrawAll = false;
+				m_RedrawXYs.push_back(position);
+				m_RedrawColors.push_back(colors[currState]);*/
+			}
+
+			it = m_StatePositions.erase(it);
+		}
+		else it++;
+	}
+
+	Refresh(false);
+	Update();
 }
 
 void Grid::OnScroll(wxScrollWinEvent& evt)

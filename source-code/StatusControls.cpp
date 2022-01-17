@@ -60,7 +60,9 @@ void StatusControls::BuildInterface()
     reset->Bind(wxEVT_BUTTON, &StatusControls::Reset, this);
 
     step->SetToolTip("Next Step");
+
     generation->SetToolTip("Next Generation");
+    generation->Bind(wxEVT_BUTTON, &StatusControls::NextGeneration, this);
 
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
     sizer->Add(start, 0, wxALIGN_CENTER_VERTICAL);
@@ -82,4 +84,12 @@ void StatusControls::Reset(wxCommandEvent& evt)
 {
     m_Grid->Reset();
     m_Grid->SetFocus();
+}
+
+void StatusControls::NextGeneration(wxCommandEvent& evt)
+{
+    bool result = m_Grid->NextGeneration();
+
+    if (result) wxLogDebug("SUCCES");
+    else wxLogDebug("FAIL");
 }

@@ -149,7 +149,11 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 				if (valid) duplicates.insert({ state1 + "-" + state2 });
 
 				// assign to transition
-				if (valid) transition.state = state2;
+				if (valid)
+				{
+					transition.state = state2;
+					transition.states.insert(state2);
+				}
 			}
 		}
 
@@ -366,6 +370,9 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 											transition.andConditions.back().first.first = comparisonType;
 											// state
 											transition.andConditions.back().second = state;
+
+											if (transition.states.find(state) == transition.states.end())
+												transition.states.insert(state);
 										}
 									}
 									// invalid tokens

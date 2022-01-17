@@ -177,6 +177,7 @@ void Main::PrepareInput()
 	grid->SetToolModes(toolModes);
 	grid->SetToolStates(toolStates);
 	grid->SetToolCoords(toolCoords);
+	grid->SetInputRules(inputRules);
 
 	grid->SetStatusCells(statusCells);
 
