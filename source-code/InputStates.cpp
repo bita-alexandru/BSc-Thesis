@@ -36,13 +36,14 @@ void InputStates::SetStates(std::vector<std::string> states)
     {
         if (std::find(states.begin(), states.end(), it->first) == states.end())
         {
+            // update color on rules list
+            m_InputRules->UpdateColor(it->first, wxColor("white"));
+
             MakeColorAvailable(it->second);
             it = m_States.erase(it);
+
         }
-        else
-        {
-            it++;
-        }
+        else it++;
     }
 
     // states appear in the given list but not in our map -> they got recently introduced
@@ -74,6 +75,8 @@ void InputStates::SetStates(std::vector<std::string> states)
             m_List->PushBack({ id, state }, { color, blackwhite });
             m_List->ChangeItemState(i, state);
 
+            m_InputRules->UpdateColor(state, color);
+
             continue;
         }
 
@@ -81,30 +84,21 @@ void InputStates::SetStates(std::vector<std::string> states)
         std::string itmState = m_List->Get(itmId).second;
         wxColour itmColor = m_List->GetItemColor(itmId);
 
-        if (itmId != id)
-        {
-            m_List->ChangeItemId(i, id);
-        }
-        if (itmState != state || itmColor != color)
+        if (itmId != id) m_List->ChangeItemId(i, id);
+        if (itmState != state)
         {
             m_List->ChangeItemState(i, state);
+
+            // old state deleted -> update on grid (if necessary)
+            if (m_States.find(itmState) == m_States.end()) m_Grid->RemoveState(itmState);
+            else m_Grid->UpdateState(itmState, itmColor, state, color);
+        }
+        if (itmColor != color)
+        {
             m_List->ChangeItemColor(i, color, blackwhite);
 
-            // update color
-            if (itmState == state)
-            {
-                m_Grid->UpdateState(itmState, itmColor, state, color);
-            }
-            // old state deleted -> update on grid (if necessary)
-            else if (m_States.find(itmState) == m_States.end())
-            {
-                //m_Grid->RemoveState(itmState);
-                m_Grid->UpdateState(itmState, itmColor, state, color);
-            }
-            else // this state still exists but the orders got changed
-            {
-                //m_Grid->UpdateState(itmState, itmColor, state, color);
-            }
+            m_Grid->UpdateState(itmState, itmColor, state, color);
+            m_InputRules->UpdateColor(state, color);
         }
 
         alreadyUpdated.insert(state);
@@ -118,9 +112,11 @@ void InputStates::SetStates(std::vector<std::string> states)
         std::string state = m_List->Get(i).second;
 
         m_List->Erase(i);
+
         if (alreadyUpdated.find(state) != alreadyUpdated.end()) continue;
 
-        wxColour color = m_List->GetItemBackgroundColour(i);
+        // update on grid
+        //wxColour color = m_List->GetItemBackgroundColour(i);
         m_Grid->RemoveState(state, false);
     }
     if (deletion) m_Grid->RefreshUpdate();
@@ -129,10 +125,7 @@ void InputStates::SetStates(std::vector<std::string> states)
 
     // update ToolModes (state, color) list
     std::vector<std::pair<std::string, wxColour>> statesColors;
-    for (auto& it : states)
-    {
-        statesColors.push_back({ it, wxColour(m_States[it]) });
-    }
+    for (auto& it : states) statesColors.push_back({ it, wxColour(m_States[it]) });
 
     m_ToolStates->SetStates(statesColors);
 }
@@ -150,6 +143,11 @@ void InputStates::SetGrid(Grid* grid)
 void InputStates::SetEditorStates(EditorStates* editorStates)
 {
     m_EditorStates = editorStates;
+}
+
+void InputStates::SetInputRules(InputRules* inputRules)
+{
+    m_InputRules = inputRules;
 }
 
 void InputStates::BuildInterface()
@@ -217,8 +215,8 @@ void InputStates::InitializeColors()
         "#DFFB71", "#868E7E", "#98D058", "#6C8F7D", "#D7BFC2", "#3C3E6E", "#D83D66"
         });
 
-    //unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    shuffle(m_Colors.begin(), m_Colors.end(), std::default_random_engine(0));
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    shuffle(m_Colors.begin(), m_Colors.end(), std::default_random_engine(seed));
     m_Colors.push_back("#FFFFFF");
 
     m_States.insert({ "FREE", "#FFFFFF" });
@@ -414,24 +412,35 @@ void InputStates::StateChangeColor()
     std::string color = m_States[state];
 
     int availableColors = m_Colors.size() - m_States.size();
+
+    // if no color available then do nothing
     if (!availableColors)
     {
         m_List->Select(selection, false);
         return;
     }
-
+    
+    // get random available color
+    std::srand(std::time(NULL));
     int randInt = std::rand() % availableColors;
     std::string newColor = m_Colors[randInt];
 
+    // assign new color to selected state
     m_States[state] = newColor;
     MakeColorUnavailable(newColor);
     MakeColorAvailable(color);
 
+    // update color on states list
     m_List->SetItemColor(selection, wxColour(newColor));
     m_List->RefreshAfterUpdate();
 
+    // update color on rules list
+    m_InputRules->UpdateColor(state, wxColor(newColor));
+
+    // update color on grid
     m_Grid->UpdateState(state, wxColour(color), state, wxColour(newColor));
 
+    // update color on the states tool
     m_ToolStates->SetStateColor(selection, wxColour(newColor));
 
     m_List->Select(selection, false);

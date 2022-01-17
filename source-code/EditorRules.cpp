@@ -39,8 +39,6 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 	std::string text = (std::string)m_TextCtrl->GetText().Upper();
 
 	Interpreter interpreter;
-	interpreter.SetStates(m_InputRules->GetInputStates()->GetStates());
-	interpreter.SetNeighbors(m_InputRules->GetInputNeighbors()->GetNeighbors());
 
 	std::vector<std::pair<int, std::string>> invalidPositions = interpreter.Process(text);
 	vector<pair<string, Transition>> transitions = interpreter.GetTransitions();

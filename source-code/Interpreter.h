@@ -13,13 +13,8 @@ public:
 
 	vector<pair<int, string>> Process(string& rules);
 	vector<pair<string, Transition>>& GetTransitions();
-	
-	void SetStates(unordered_map<string, string>& states);
-	void SetNeighbors(unordered_set<string>& neighbors);
 private:
 	vector<pair<string, Transition>> m_Transitions;
-	unordered_map<string, string> m_States;
-	unordered_set<string> m_Neighbors;
 
 	vector<string> AND = { ",", "&", "AND" };
 	vector<string> OR = { "|", "OR" };

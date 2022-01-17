@@ -131,6 +131,7 @@ void ToolStates::BuildInterface()
 	m_State->SetBackgroundColour(wxColour("white"));
 	m_State->SetToolTip("FREE");
 	m_State->Refresh();
+	m_State->Bind(wxEVT_LEFT_UP, &ToolStates::OnPanelClick, this);
 
 	wxBitmapButton* previous = new wxBitmapButton(this, Ids::ID_BUTTON_PREV, wxBitmap("BTN_PREVIOUS", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
 	wxBitmapButton* next = new wxBitmapButton(this, Ids::ID_BUTTON_NEXT, wxBitmap("BTN_NEXT", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
@@ -175,5 +176,19 @@ void ToolStates::OnPrev(wxCommandEvent& evt)
 void ToolStates::OnNext(wxCommandEvent& evt)
 {
 	SelectNextState();
+	m_Grid->SetFocus();
+}
+
+void ToolStates::OnPanelClick(wxMouseEvent& evt)
+{
+	int selection = m_ListStates->GetFirstSelected();
+	while (selection != -1)
+	{
+		m_ListStates->Select(selection, false);
+		selection = m_ListStates->GetNextSelected(selection);
+	}
+	m_ListStates->Select(m_Index);
+	m_ListStates->EnsureVisible(m_Index);
+
 	m_Grid->SetFocus();
 }

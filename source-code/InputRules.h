@@ -30,6 +30,7 @@ public:
 	void SetInputNeighbors(InputNeighbors* inputNeighbors);
 
 	void SetRules(std::vector<std::pair<std::string, Transition>> rules);
+	void UpdateColor(std::string state, wxColour color);
 private:
 	ListRules* m_List = nullptr;
 	EditorRules* m_EditorRules = nullptr;

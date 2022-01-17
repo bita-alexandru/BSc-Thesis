@@ -149,11 +149,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 				if (valid) duplicates.insert({ state1 + "-" + state2 });
 
 				// assign to transition
-				if (valid)
-				{
-					transition.state = state2;
-					transition.states.insert(state2);
-				}
+				if (valid) transition.state = state2;
 			}
 		}
 
@@ -235,10 +231,22 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 										// check if rule is within the size limits
 										if (valid && !UpdateChars(chars, direction)) MarkInvalid(valid, invalid, direction,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
-										// check if direction is valid according to the current neighborhood
+										// check if direction is valid
 										if (valid && !CheckDirection(direction)) MarkInvalid(valid, invalid, direction,  "<INVALID DIRECTION>", cursor);
 
-										if (valid) neighbors.push_back(direction);
+										if (valid)
+										{
+											if (find(neighbors.begin(), neighbors.end(), direction) != neighbors.end()) 
+												MarkInvalid(valid, invalid, direction, "<DUPLICATE NEIGHBOR>", cursor);
+
+											if (valid)
+											{
+												neighbors.push_back(direction);
+
+												if (transition.directions.find(direction) == transition.directions.end())
+													transition.directions.insert(direction);
+											}
+										}
 
 										if (!valid) break;
 
@@ -260,7 +268,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 											if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, symbol,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
 											// check if neighborhood is within the size limit
-											if (valid && neighbors.size() > m_Neighbors.size()) MarkInvalid(valid, invalid, symbol,  "<INVALID NEIGHBORHOOD SIZE>", cursor);
+											//if (valid && neighbors.size() > m_Neighbors.size()) MarkInvalid(valid, invalid, symbol,  "<INVALID NEIGHBORHOOD SIZE>", cursor);
 
 											// assign to transition
 											if (valid) transition.andRules.back().first = neighbors;
@@ -469,16 +477,6 @@ vector<pair<string, Transition>>& Interpreter::GetTransitions()
 	return m_Transitions;
 }
 
-void Interpreter::SetStates(unordered_map<string, string>& states)
-{
-	m_States = states;
-}
-
-void Interpreter::SetNeighbors(unordered_set<string>& neighbors)
-{
-	m_Neighbors = neighbors;
-}
-
 bool Interpreter::FindWord(int& cursor, string &rules, string& s, bool comment)
 {
 	int pos = 0;
@@ -552,9 +550,7 @@ bool Interpreter::NextTransition(int& cursor, string& rules, stringstream& ss)
 bool Interpreter::CheckState(string& state)
 {
 	return state.size() >= Sizes::CHARS_STATE_MIN
-			&& state.size() <= Sizes::CHARS_STATE_MAX
-			&& find_if(state.begin(), state.end(), [](char c) { return !(isalnum(c) || (c == ' ')); }) == state.end()
-			&& m_States.find(state) != m_States.end();
+		&& state.size() <= Sizes::CHARS_STATE_MAX;
 }
 
 bool Interpreter::UpdateChars(int& chars, string& s)
@@ -595,7 +591,14 @@ void Interpreter::MarkInvalid(bool& valid, vector<pair<int, string>>& invalid, s
 
 bool Interpreter::CheckDirection(string& direction)
 {
-	return m_Neighbors.find(direction) != m_Neighbors.end();
+	unordered_set<string> directions(
+		{"NW", "N", "NE",
+		 "W", "C", "E",
+		"SW", "S", "SE"
+		}
+	);
+
+	return directions.find(direction) != directions.end();
 }
 
 int Interpreter::CheckNumber(string& number, Transition& transition, int& count)
@@ -607,8 +610,8 @@ int Interpreter::CheckNumber(string& number, Transition& transition, int& count)
 
 	// check that it does not surpass the neighborhood size limit
 	// also keep count of the total number tracked by the previous "AND" condition
-	if (transition.andRules.back().first[0] == "ALL" && n + count > m_Neighbors.size()) n = -1;
-	else if (transition.andRules.back().first[0] != "ALL" && n + count > transition.andRules.back().first.size()) n = -1;
+	//if (transition.andRules.back().first[0] == "ALL" && n + count > m_Neighbors.size()) n = -1;
+	//else if (transition.andRules.back().first[0] != "ALL" && n + count > transition.andRules.back().first.size()) n = -1;
 
 	return n;
 }

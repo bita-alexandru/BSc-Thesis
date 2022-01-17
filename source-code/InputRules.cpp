@@ -106,6 +106,12 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
 
         if (alreadyUpdated.find(state1 + "/" + state2 + ":" + condition) != alreadyUpdated.end()) continue;
 
+        wxColour color1 = wxColour("white");
+        if (m_States.find(state1) != m_States.end()) color1 = wxColour(m_States[state1]);
+
+        wxColour color2 = wxColour("white");
+        if (m_States.find(state2) != m_States.end()) color2 = wxColour(m_States[state2]);
+
         if (i > nOfItems - 1)
         {
             wxColour bgColorA("white"), bgColorB("white");
@@ -118,7 +124,7 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
                 txtColorB = (bgColorB.Red() * 0.299 + bgColorB.Green() * 0.587 + bgColorB.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
             }
 
-            m_List->PushBack({ id, state1, state2, condition }, { bgColorA, txtColorA }, { bgColorB, txtColorB });
+            m_List->PushBack({ id, state1, state2, condition }, bgColorA, bgColorB);
 
             continue;
         }
@@ -127,24 +133,15 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
         wxString itmState1 = m_List->GetState1(i);
         wxString itmState2 = m_List->GetState2(i);
         wxString itmCondition = m_List->GetCond(i);
-        wxColour itmColor = m_List->GetItemBackgroundColour(i);
+        wxColour itmColor1 = m_List->GetColor1(i);
+        wxColour itmColor2 = m_List->GetColor2(i);
 
-        if (itmId != id)
-        {
-            m_List->ChangeItemId(i, id);
-        }
-        if (itmState1 != state1)
-        {
-            m_List->ChangeItemState1(i, state1);
-        }
-        if (itmState2 != state2)
-        {
-            m_List->ChangeItemState2(i, state2);
-        }
-        if (itmCondition != condition)
-        {
-            m_List->ChangeItemCond(i, condition);
-        }
+        if (itmId != id) m_List->ChangeItemId(i, id);
+        if (itmState1 != state1) m_List->ChangeItemState1(i, state1);
+        if (itmState2 != state2) m_List->ChangeItemState2(i, state2);
+        if (itmCondition != condition) m_List->ChangeItemCond(i, condition);
+        if (itmColor1 != color1) m_List->ChangeColor1(i, color1);
+        if (itmColor2 != color2) m_List->ChangeColor2(i, color2);
 
         alreadyUpdated.insert(state1 + "/" + state2 + ":" + condition);
     }
@@ -156,10 +153,39 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
         std::string condition = m_List->GetCond(i);
 
         m_List->Erase(i);
+
         if (alreadyUpdated.find(state1 + "/" + state2 + ":" + condition) != alreadyUpdated.end()) continue;
     }
 
     m_List->RefreshAfterUpdate();
+}
+
+void InputRules::UpdateColor(std::string state, wxColour color)
+{
+    int changes = 0;
+    for (int i = 0; i < m_List->GetItemCount(); i++)
+    {
+        wxString itmState1 = m_List->GetState1(i);
+        wxString itmState2 = m_List->GetState2(i);
+        wxColour itmColor1 = m_List->GetColor1(i);
+        wxColour itmColor2 = m_List->GetColor2(i);
+
+        if (itmState1 == state)
+        {
+            m_List->ChangeColor1(i, color);
+            changes++;
+            continue;
+        }
+
+        if (itmState2 == state)
+        {
+            m_List->ChangeColor2(i, color);
+            changes++;
+            continue;
+        }
+    }
+
+    if (changes > 0) m_List->Refresh(false);
 }
 
 void InputRules::BuildInterface()
@@ -373,8 +399,6 @@ void InputRules::RuleDelete()
     }
 
     Interpreter interpreter;
-    interpreter.SetStates(m_InputStates->GetStates());
-    interpreter.SetNeighbors(m_InputNeighbors->GetNeighbors());
     interpreter.Process(rules);
     
     SetRules(interpreter.GetTransitions());

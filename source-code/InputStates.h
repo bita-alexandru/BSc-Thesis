@@ -8,11 +8,13 @@
 #include "ToolStates.h"
 #include "Grid.h"
 #include "EditorStates.h"
+#include "InputRules.h"
 
 #include <deque>
 
 class EditorStates;
 class ToolStates;
+class InputRules;
 
 class InputStates : public wxPanel
 {
@@ -27,18 +29,20 @@ public:
 	void SetToolStates(ToolStates* toolModes);
 	void SetGrid(Grid* grid);
 	void SetEditorStates(EditorStates* editorStates);
+	void SetInputRules(InputRules* inputRules);
 private:
 	ListStates* m_List = nullptr;
 	ToolStates* m_ToolStates = nullptr;
 	Grid* m_Grid = nullptr;
 	EditorStates* m_EditorStates = nullptr;
+	InputRules* m_InputRules = nullptr;
 
 	wxMenu* m_Menu = nullptr;
 	wxSearchCtrl* m_Search = nullptr;
 
 	std::deque<std::string> m_Colors = std::deque<std::string>();
 	std::unordered_map<std::string, std::string> m_States;
-	
+
 	void BuildInterface();
 	void InitializeColors();
 	void MakeColorAvailable(std::string color);

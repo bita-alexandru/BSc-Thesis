@@ -104,8 +104,12 @@ void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::strin
 	for (auto& it : m_PrevCells)
 	{
 		m_RedrawAll = false;
-		m_RedrawXYs.push_back({ it.first.first,it.first.second });
-		m_RedrawColors.push_back(wxColour("white"));
+
+		if (InVisibleBounds(it.first.first, it.first.second))
+		{
+			m_RedrawXYs.push_back({ it.first.first,it.first.second });
+			m_RedrawColors.push_back(wxColour("white"));
+		}
 	}
 
 	m_Cells = cells;
@@ -116,8 +120,11 @@ void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::strin
 	for (auto& it : m_Cells)
 	{
 		m_RedrawAll = false;
-		m_RedrawXYs.push_back({ it.first.first,it.first.second });
-		m_RedrawColors.push_back(it.second.second);
+		if (InVisibleBounds(it.first.first, it.first.second))
+		{
+			m_RedrawXYs.push_back({ it.first.first,it.first.second });
+			m_RedrawColors.push_back(it.second.second);
+		}
 	}
 
 	m_StatusCells->SetCountPopulation(m_Cells.size());
@@ -182,8 +189,12 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 			if (multiple)
 			{
 				m_RedrawAll = false;
-				m_RedrawXYs.push_back({ x,y });
-				m_RedrawColors.push_back(color);
+
+				if (InVisibleBounds(x, y))
+				{
+					m_RedrawXYs.push_back({ x,y });
+					m_RedrawColors.push_back(color);
+				}
 			}
 			else
 			{
@@ -205,8 +216,11 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 		if (multiple)
 		{
 			m_RedrawAll = false;
-			m_RedrawXYs.push_back({ x,y });
-			m_RedrawColors.push_back(color);
+			if (InVisibleBounds(x, y))
+			{
+				m_RedrawXYs.push_back({ x,y });
+				m_RedrawColors.push_back(color);
+			}
 		}
 		else
 		{
@@ -250,8 +264,11 @@ void Grid::RemoveState(std::string state, bool update)
 			m_Cells.erase(it);
 
 			m_RedrawAll = false;
-			m_RedrawXYs.push_back({ it.first,it.second });
-			m_RedrawColors.push_back(wxColour("white"));
+			if (InVisibleBounds(it.first, it.second))
+			{
+				m_RedrawXYs.push_back({ it.first,it.second });
+				m_RedrawColors.push_back(wxColour("white"));
+			}
 		}
 
 		if (update)
@@ -286,8 +303,11 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 				m_Cells[it].second = newColor;
 
 				m_RedrawAll = false;
-				m_RedrawXYs.push_back({ it.first,it.second });
-				m_RedrawColors.push_back(newColor);
+				if (InVisibleBounds(it.first, it.second))
+				{
+					m_RedrawXYs.push_back({ it.first,it.second });
+					m_RedrawColors.push_back(newColor);
+				}
 			}
 
 			Refresh(false);
@@ -311,7 +331,7 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 		}
 		else
 		{
-			RemoveState(oldState);
+			//RemoveState(oldState);
 		}
 	}
 }
@@ -333,8 +353,11 @@ void Grid::EraseCell(int x, int y, bool multiple)
 
 	if (multiple)
 	{
-		m_RedrawXYs.push_back({ x,y });
-		m_RedrawColors.push_back(wxColour("white"));
+		if (InVisibleBounds(x, y))
+		{
+			m_RedrawXYs.push_back({ x,y });
+			m_RedrawColors.push_back(wxColour("white"));
+		}
 	}
 	else
 	{
@@ -564,7 +587,7 @@ bool Grid::ModeDraw(int x, int y, char mode)
 			std::pair<std::string, wxColour> state = m_ToolStates->GetState();
 
 			bool structure = false;
-			if (wxGetKeyState(WXK_CONTROL))
+			if (wxGetKeyState(WXK_ALT))
 			{
 				DrawStructure(x, y, state.first, state.second);
 
@@ -847,8 +870,9 @@ void Grid::OnDraw(wxDC& dc)
 					int x = m_RedrawXYs[i].first;
 					int y = m_RedrawXYs[i].second;
 
-					if ((x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow())
-						&& alreadyDrawn.find({ x,y }) == alreadyDrawn.end())
+					/*if ((x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow())
+						&& alreadyDrawn.find({ x,y }) == alreadyDrawn.end())*/
+					if (alreadyDrawn.find({ x,y }) == alreadyDrawn.end())
 					{
 						alreadyDrawn.insert({ x,y });
 
@@ -1004,7 +1028,7 @@ void Grid::OnDraw(wxDC& dc)
 				int y = m_RedrawXYs[i].second;
 
 				// is in visible bounds?
-				if (!(x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow())) continue;
+				//if (!(x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow())) continue;
 
 				brush.SetColour(m_RedrawColors[i]);
 				dc.SetBrush(brush);
@@ -1442,6 +1466,14 @@ bool Grid::InBounds(int x, int y)
 	return (x >= 0 && x < Sizes::N_COLS && y >= 0 && y < Sizes::N_ROWS);
 }
 
+bool Grid::InVisibleBounds(int x, int y)
+{
+	return (
+		x >= GetVisibleColumnsBegin() && x < GetVisibleColumnsEnd()
+		&& y >= GetVisibleRowsBegin() && y < GetVisibleRowsEnd()
+		);
+}
+
 int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 {
 	std::unordered_map<std::string, std::string> states = m_InputRules->GetInputStates()->GetStates();
@@ -1449,36 +1481,74 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 	std::vector<std::pair<int, int>> applied;
 
 	// check if rule might contain invalid states
+	if (states.find(rule.first) == states.end()) return -1;
+	if (states.find(rule.second.state) == states.end()) return -1;
 	for (auto& state : rule.second.states)
 	{
 		if (states.find(state) == states.end()) return -1;
 	}
-	// maybe add a check for neighborhood as well
+	// check for neighborhood as well
+	for (auto& direction : rule.second.directions)
+	{
+		if (neighbors.find(direction) == neighbors.end()) return -1;
+	}
 
-	// if state is "FREE", get all "FREE" cells adjacent to the ones on our grid
+	// if state is "FREE", apply rule to all "FREE" cells
 	if (rule.first == "FREE")
 	{
-		std::unordered_set<std::pair<int, int>, Hashes::PairInt> visited;
-
-		int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
-		int dy[8] = { -1,-1,0,1,1,1,0,-1 };
-
-		for (auto& cell : m_Cells)
+		if (rule.second.condition.empty())
 		{
-			int x = cell.first.first;
-			int y = cell.first.second;
+			for (int i = 0; i < Sizes::N_ROWS; i++)
+				for (int j = 0; j < Sizes::N_COLS; j++)
+					if (m_Cells.find({ j,i }) == m_Cells.end())
+					{
+						std::string newstate = rule.first + "*" + rule.second.state + "*";
+						m_StatePositions[newstate].insert({ j,i });
+					}
+		}
+		else
+		{
+			std::unordered_set<std::pair<int, int>, Hashes::PairInt> visited;
 
-			for (int d = 0; d < 8; d++)
+			int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
+			int dy[8] = { -1,-1,0,1,1,1,0,-1 };
+
+			for (auto& state : rule.second.states)
 			{
-				int nx = x + dx[d];
-				int ny = y + dy[d];
-
-				// valid position and unvisited yet
-				if (InBounds(nx, ny) && GetState(nx,ny) == "FREE" && visited.find({nx,ny}) == visited.end())
+				if (state == "FREE")
 				{
-					visited.insert({ nx,ny });
+					for (int i = 0; i < Sizes::N_ROWS; i++)
+						for (int j = 0; j < Sizes::N_COLS; j++)
+							if (m_Cells.find({ j,i }) == m_Cells.end() && visited.find({ j,i }) == visited.end())
+							{
+								visited.insert({ j,i });
 
-					if (ApplyOnCell(nx, ny, rule.second, neighbors)) applied.push_back({ nx,ny });
+								if (ApplyOnCell(j, i, rule.second, neighbors)) applied.push_back({ j,i });
+							}
+				}
+				// cells of this type are placed on grid
+				else if (m_StatePositions.find(state) != m_StatePositions.end())
+				{
+					// get adjacent cells of type "FREE"
+					for (auto& cell : m_StatePositions[state])
+					{
+						int x = cell.first;
+						int y = cell.second;
+
+						for (int d = 0; d < 8; d++)
+						{
+							int nx = x + dx[d];
+							int ny = y + dy[d];
+
+							// valid position and unvisited yet
+							if (InBounds(nx, ny) && GetState(nx, ny) == "FREE" && visited.find({ nx,ny }) == visited.end())
+							{
+								visited.insert({ nx,ny });
+
+								if (ApplyOnCell(nx, ny, rule.second, neighbors)) applied.push_back({ nx,ny });
+							}
+						}
+					}
 				}
 			}
 		}
@@ -1486,7 +1556,7 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 	// else, get all cells of that type
 	else
 	{
-		if (m_StatePositions.find(rule.first) == m_StatePositions.end()) return -1;
+		if (m_StatePositions.find(rule.first) == m_StatePositions.end()) return 0;
 
 		for (auto& cell : m_StatePositions[rule.first])
 		{

@@ -44,5 +44,7 @@ private:
 
 	void OnPrev(wxCommandEvent& evt);
 	void OnNext(wxCommandEvent& evt);
+
+	void OnPanelClick(wxMouseEvent& evt);
 };
 

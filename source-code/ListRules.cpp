@@ -84,18 +84,21 @@ void ListRules::Select(long index, bool state)
 	else SetItemState(index, 0, wxLIST_STATE_SELECTED);
 }
 
-void ListRules::PushBack(std::tuple<int, std::string, std::string, std::string> item, std::pair<wxColour, wxColour> colorsA, std::pair<wxColour, wxColour> colorsB)
+void ListRules::PushBack(std::tuple<int, std::string, std::string, std::string> item, wxColour colorA, wxColour colorB)
 {
 	items.push_back(item);
+
+	wxColour txtcolorA = (colorA.Red() * 0.299 + colorA.Green() * 0.587 + colorA.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
+	wxColour txtcolorB = (colorB.Red() * 0.299 + colorB.Green() * 0.587 + colorB.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
 
 	itmAttrs.push_back(
 		new wxListItemAttr(wxColour("black"), wxColour("white"), font)
 	);
 	aColAttrs.push_back(
-		new wxListItemAttr(colorsA.second, colorsA.first, font)
+		new wxListItemAttr(txtcolorA, colorA, font)
 	);
 	bColAttrs.push_back(
-		new wxListItemAttr(colorsB.second, colorsB.first, font)
+		new wxListItemAttr(txtcolorB, colorB, font)
 	);
 }
 
@@ -119,15 +122,18 @@ void ListRules::ChangeItemCond(int index, std::string cond)
 	if (index < items.size()) std::get<3>(items[index]) = cond;
 }
 
-void ListRules::ChangeItemColor(long index, std::pair<wxColour, wxColour> colorsA, std::pair<wxColour, wxColour> colorsB)
+void ListRules::ChangeItemColor(long index, wxColour colorA, wxColour colorB)
 {
 	if (index < items.size())
 	{
-		aColAttrs[index]->SetBackgroundColour(colorsA.first);
-		aColAttrs[index]->SetTextColour(colorsA.second);
+		wxColour txtcolorA = (colorA.Red() * 0.299 + colorA.Green() * 0.587 + colorA.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
+		wxColour txtcolorB = (colorB.Red() * 0.299 + colorB.Green() * 0.587 + colorB.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
 
-		bColAttrs[index]->SetBackgroundColour(colorsB.first);
-		bColAttrs[index]->SetTextColour(colorsB.second);
+		aColAttrs[index]->SetBackgroundColour(colorA);
+		aColAttrs[index]->SetTextColour(txtcolorA);
+
+		bColAttrs[index]->SetBackgroundColour(colorB);
+		bColAttrs[index]->SetTextColour(txtcolorB);
 	}
 }
 
@@ -174,14 +180,34 @@ std::string ListRules::GetCond(int index)
 	return "";
 }
 
-wxColour ListRules::GetColorA(int index)
+void ListRules::ChangeColor1(int index, wxColour color)
+{
+	if (index < items.size())
+	{
+		wxColour txtcolor = (color.Red() * 0.299 + color.Green() * 0.587 + color.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
+		aColAttrs[index]->SetBackgroundColour(color);
+		aColAttrs[index]->SetTextColour(txtcolor);
+	}
+}
+
+void ListRules::ChangeColor2(int index, wxColour color)
+{
+	if (index < items.size())
+	{
+		wxColour txtcolor = (color.Red() * 0.299 + color.Green() * 0.587 + color.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
+		bColAttrs[index]->SetBackgroundColour(color);
+		bColAttrs[index]->SetTextColour(txtcolor);
+	}
+}
+
+wxColour ListRules::GetColor1(int index)
 {
 	if (index < items.size()) return aColAttrs[index]->GetBackgroundColour();
 
 	return wxColour("white");
 }
 
-wxColour ListRules::GetColorB(int index)
+wxColour ListRules::GetColor2(int index)
 {
 	if (index < items.size()) return bColAttrs[index]->GetBackgroundColour();
 

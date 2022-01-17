@@ -142,6 +142,7 @@ private:
 	void DrawStructure(int X, int Y, std::string state, wxColour color);
 	void DrawLine(int x, int y, std::string state, wxColour color, bool remove = false);
 	bool InBounds(int x, int y);
+	bool InVisibleBounds(int x, int y);
 
 	int ParseRule(std::pair<const std::string, Transition>& rule);
 	int ParseAllRules();

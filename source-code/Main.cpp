@@ -162,6 +162,7 @@ void Main::PrepareInput()
 	inputStates->SetToolStates(toolStates);
 	inputStates->SetGrid(grid);
 	inputStates->SetEditorStates(m_EditorStates);
+	inputStates->SetInputRules(inputRules);
 
 	inputRules->SetEditorRules(m_EditorRules);
 	inputRules->SetInputStates(inputStates);
