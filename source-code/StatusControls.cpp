@@ -90,6 +90,6 @@ void StatusControls::NextGeneration(wxCommandEvent& evt)
 {
     bool result = m_Grid->NextGeneration();
 
-    if (result) wxLogDebug("SUCCES");
-    else wxLogDebug("FAIL");
+    //if (result) wxLogDebug("SUCCES");
+    //else wxLogDebug("FAIL");
 }

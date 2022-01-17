@@ -399,7 +399,7 @@ bool Grid::NextGeneration()
 
 	int n = ParseAllRules();
 
-	wxLogDebug("PARSE_ALL_RULES=%i", n);
+	//wxLogDebug("PARSE_ALL_RULES=%i", n);
 
 	if (n == -1) return false;
 
@@ -1474,7 +1474,7 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 				int ny = y + dy[d];
 
 				// valid position and unvisited yet
-				if (InBounds(nx, ny) && visited.find({ x,y }) == visited.end())
+				if (InBounds(nx, ny) && GetState(nx,ny) == "FREE" && visited.find({nx,ny}) == visited.end())
 				{
 					visited.insert({ nx,ny });
 
@@ -1490,6 +1490,7 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 
 		for (auto& cell : m_StatePositions[rule.first])
 		{
+			//wxLogDebug("CELL=%i,%i", cell.first-m_OffsetX, cell.second-m_OffsetY);
 			if (ApplyOnCell(cell.first, cell.second, rule.second, neighbors)) applied.push_back({ cell.first,cell.second});
 		}
 	}
@@ -1527,16 +1528,23 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 {
 	std::unordered_map<std::string, std::string> neighborhood = GetNeighborhood({ x,y }, neighbors);
 
+	//wxLogDebug("[CELL_NEIGHBORHOOD]");
+	//for (auto& it : neighborhood) wxLogDebug("<%s>=%s", it.first, it.second);
+
 	bool ruleValid = true;
 	// iterate through the chain of "OR" rules
 	for (auto& rulesOr : rule.orRules)
 	{
 		ruleValid = true;
+		//wxLogDebug("[RULES_OR]");
 
 		// iterate through the chain of "AND" rules
 		for (auto& rulesAnd : rulesOr)
 		{
+			//wxLogDebug("[RULES_AND]");
 			std::vector<std::string> ruleNeighborhood = rulesAnd.first;
+			//wxLogDebug("[RULE_NEIGHBORHOOD]");
+			//for (auto& it : ruleNeighborhood)wxLogDebug("<%s>", it);
 
 			bool conditionValid = true;
 			// iterate through the chain of "OR" conditions
@@ -1548,6 +1556,7 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 				for (auto& conditionsAnd : conditionsOr)
 				{
 					std::string conditionState = conditionsAnd.second;
+					//wxLogDebug("CONDITION_STATE=%s", conditionState);
 
 					int occurences = 0;
 					if (ruleNeighborhood[0] == "ALL")
@@ -1564,8 +1573,12 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 						// otherwise, maybe throw error; to do: decide (line 1434)
 					}
 
+					//wxLogDebug("OCCURENCES=%i", occurences);
+
 					int conditionNumber = conditionsAnd.first.first;
 					int conditionType = conditionsAnd.first.second;
+
+					//wxLogDebug("CONDITION_NUMBER=%i, CONDITION_TYPE=%i", conditionNumber, conditionType);
 
 					switch (conditionType)
 					{
@@ -1573,10 +1586,10 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 						if (occurences != conditionNumber) conditionValid = false;
 						break;
 					case TYPE_LESS:
-						if (occurences > conditionNumber) conditionValid = false;
+						if (occurences >= conditionNumber) conditionValid = false;
 						break;
 					case TYPE_MORE:
-						if (occurences < conditionNumber) conditionValid = false;
+						if (occurences <= conditionNumber) conditionValid = false;
 						break;
 					default:
 						break;
@@ -1637,7 +1650,7 @@ void Grid::UpdateGeneration()
 
 		if (state.back() == '*')
 		{
-			wxLogDebug("STATE=%s", state);
+			//wxLogDebug("STATE=%s", state);
 
 			state.pop_back();
 
@@ -1657,7 +1670,7 @@ void Grid::UpdateGeneration()
 				else currState.push_back(state[i]);
 			}
 
-			wxLogDebug("PREV=<%s> CURR=<%s>", prevState, currState);
+			//wxLogDebug("PREV=<%s> CURR=<%s>", prevState, currState);
 
 			// insert positions into the current state map and remove them from the previous one
 			for (auto& position : it->second)
@@ -1666,8 +1679,8 @@ void Grid::UpdateGeneration()
 
 				InsertCell(position.first, position.second, currState, colors[currState], true);
 
-				m_StatePositions[prevState].erase(position);
-				if (m_StatePositions[prevState].size() == 0) m_StatePositions.erase(state);
+				//m_StatePositions[prevState].erase(position);
+				//if (m_StatePositions[prevState].size() == 0) m_StatePositions.erase(state);
 				// update the color
 				//m_Cells[position] = { currState, colors[currState] };
 				

@@ -106,7 +106,7 @@ void Main::BuildMenubar()
 
 void Main::SetShortcuts()
 {
-	wxAcceleratorEntry entries[15];
+	wxAcceleratorEntry entries[16];
 	// ToolZoom
 	entries[0].Set(wxACCEL_CTRL, (int)'+', Ids::ID_ZOOM_IN);
 	entries[1].Set(wxACCEL_CTRL, (int)'-', Ids::ID_ZOOM_OUT);
@@ -128,8 +128,9 @@ void Main::SetShortcuts()
 	// GridStatus
 	entries[13].Set(wxACCEL_CTRL, (int)'M', Ids::ID_BUTTON_CENTER);
 	entries[14].Set(wxACCEL_CTRL, (int)'R', Ids::ID_BUTTON_RESET);
+	entries[15].Set(wxACCEL_CTRL, (int)'G', Ids::ID_BUTTON_GENERATION);
 
-	wxAcceleratorTable accel(15, entries);
+	wxAcceleratorTable accel(16, entries);
 	this->SetAcceleratorTable(accel);
 }
 

@@ -367,7 +367,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 											// number of cells
 											transition.andConditions.back().first.first = n;
 											// comparison type
-											transition.andConditions.back().first.first = comparisonType;
+											transition.andConditions.back().first.second = comparisonType;
 											// state
 											transition.andConditions.back().second = state;
 
