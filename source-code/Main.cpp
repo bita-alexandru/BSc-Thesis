@@ -186,7 +186,7 @@ void Main::PrepareInput()
 	statusControls->SetGrid(grid);
 
 	inputNeighbors->SetNeighbors({ "NW","N","NE","W","C","E","SW","S","SE"});
-	inputStates->SetStates({ "FREE","A","B" });
+	inputStates->SetStates({ "FREE","LIVE" });
 }
 
 void Main::MenuExit(wxCommandEvent& evt)

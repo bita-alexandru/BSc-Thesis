@@ -63,7 +63,7 @@ void ListRules::RefreshAfterUpdate(bool eraseBackground)
 	SetColumnWidth(0, wxLIST_AUTOSIZE);
 	SetColumnWidth(1, wxLIST_AUTOSIZE);
 	SetColumnWidth(2, wxLIST_AUTOSIZE);
-	SetColumnWidth(3, wxLIST_AUTOSIZE_USEHEADER);
+	SetColumnWidth(3, wxLIST_AUTOSIZE);
 
 	Refresh(eraseBackground);
 }

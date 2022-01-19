@@ -37,7 +37,8 @@ public:
 
 	void SetCells(
 		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells,
-		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions
+		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions,
+		std::unordered_map<std::pair<int, int>, std::unordered_map<std::string, std::string>, Hashes::PairInt> neighbors
 	);
 
 	void SetInputRules(InputRules* inputRules);
@@ -49,15 +50,15 @@ public:
 	void SetStatusCells(StatusCells* statusCells);
 
 	void InsertCell(int x, int y, std::string state, wxColour color, bool multiple = false);
-	void RemoveCell(int x, int y, std::string state, wxColour color, bool multiple = false);
+	void RemoveCell(int x, int y, bool multiple = false);
 	void RemoveState(std::string state, bool update = true);
 	void UpdateState(std::string oldState, wxColour oldColor, std::string newState, wxColour newColor);
-	void EraseCell(int x, int y, bool multiple = false);
 	std::string GetState(int x, int y);
 
 	void RefreshUpdate();
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> GetCells();
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> GetStatePositions();
+	std::unordered_map<std::pair<int, int>, std::unordered_map<std::string, std::string>, Hashes::PairInt> GetNeighbors();
 	std::unordered_map<std::string, wxColour>& GetColors();
 
 	void Reset();
@@ -87,6 +88,8 @@ private:
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> m_StatePositions;
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> m_PrevCells;
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> m_PrevStatePositions;
+	std::unordered_map<std::pair<int, int>, std::unordered_map<std::string, std::string>, Hashes::PairInt> m_Neighbors;
+	std::unordered_map<std::pair<int, int>, std::unordered_map<std::string, std::string>, Hashes::PairInt> m_PrevNeighbors;
 
 	wxTimer* m_TimerSelection = nullptr;
 

@@ -22,7 +22,7 @@ private:
 	string LEFT_SPACED = "";
 	string RIGHT_SPACED = "";
 	string BOTH_SPACED = "/:()[]@=,&|;!";
-	string NON_SPACED = "+-#";
+	string NON_SPACED = "+-#_";
 	int spaces = 0;
 	int cursorBeforeComment = 0;
 	bool isComment = false;

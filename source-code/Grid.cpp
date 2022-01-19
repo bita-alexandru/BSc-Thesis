@@ -41,9 +41,11 @@ void Grid::SetSize(int size, bool center)
 
 		if (m_Cells != m_PrevCells)
 		{
-			m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
+			m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions, m_Neighbors, m_PrevNeighbors);
+
 			m_PrevCells = m_Cells;
 			m_PrevStatePositions = m_StatePositions;
+			//m_PrevNeighbors = m_Neighbors;
 		}
 	}
 
@@ -99,7 +101,11 @@ void Grid::ScrollToCenter(int x, int y)
 	Update();
 }
 
-void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells, std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions)
+void Grid::SetCells(
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells, 
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions,
+	std::unordered_map<std::pair<int, int>, std::unordered_map<std::string, std::string>, Hashes::PairInt> neighbors
+	)
 {
 	for (auto& it : m_PrevCells)
 	{
@@ -116,6 +122,8 @@ void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::strin
 	m_StatePositions = statePositions;
 	m_PrevCells = m_Cells;
 	m_PrevStatePositions = m_StatePositions;
+	//m_Neighbors = neighbors;
+	//m_PrevNeighbors = m_Neighbors;
 
 	for (auto& it : m_Cells)
 	{
@@ -174,17 +182,38 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 	{
 		// current cell is of state "FREE" but there's already a cell of another state
 		// on this exact position -> remove it
-		if (color == wxColour("white")) RemoveCell(x, y, state, color, multiple);
+		if (color == wxColour("white")) RemoveCell(x, y, multiple);
 		// position is occupied
 		else
 		{
 			// same state -> don't do anything
 			if (m_Cells[{x, y}].first == state) return;
 
-			EraseCell(x, y);
+			m_StatePositions[state].erase({ x,y });
+			// there are no more cells of this state anymore -> remove it from our map
+			if (m_StatePositions[state].size() == 0)
+			{
+				m_StatePositions.erase(state);
+			}
 
 			m_Cells[{x, y}] = { state, color };
 			m_StatePositions[state].insert({ x,y });
+
+			//int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
+			//int dy[8] = { -1,-1,0,1,1,1,0,-1 };
+			//std::vector<string> directions = { "S","SW","W","NW","N","NE","E","SE" };
+			//// remove it from other cells' neighborhoods
+			//for (int d = 0; d < 8; d++)
+			//{
+			//	int nx = x + dx[d];
+			//	int ny = y + dy[d];
+
+			//	if (InBounds(nx, ny)) m_Neighbors[{nx, ny}][directions[d]] = state;
+			//}
+			//m_Neighbors[{x, y}]["C"] = state;
+
+			//wxLogDebug("(%i,%i) inserted=%s", x - 200, y - 200, state);
+			//for (auto& nb : m_Neighbors[{x, y}]) wxLogDebug("[%s]=%s", nb.first, nb.second);
 
 			if (multiple)
 			{
@@ -213,6 +242,22 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 		m_Cells[{x, y}] = { state, color };
 		m_StatePositions[state].insert({ x,y });
 
+		//// assign this cell as neighbor to all adjacent cells
+		//int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
+		//int dy[8] = { -1,-1,0,1,1,1,0,-1 };
+		//std::vector<string> directions = {"S","SW","W","NW","N","NE","E","SE"};
+		//for (int d = 0; d < 8; d++)
+		//{
+		//	int nx = x + dx[d];
+		//	int ny = y + dy[d];
+		//	
+		//	if (InBounds(nx, ny)) m_Neighbors[{nx, ny}][directions[d]] = state;
+		//}
+		//m_Neighbors[{x, y}]["C"] = state;
+
+		//wxLogDebug("(%i,%i) inserted=%s", x - 200, y - 200, state);
+		//for (auto& nb : m_Neighbors[{x, y}]) wxLogDebug("[%s]=%s", nb.first, nb.second);
+
 		if (multiple)
 		{
 			m_RedrawAll = false;
@@ -236,32 +281,29 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 	}
 }
 
-void Grid::RemoveCell(int x, int y, std::string state, wxColour color, bool multiple)
-{
-	if (GetState(x, y) != "FREE")
-	{
-		EraseCell(x, y, multiple);
-
-		if (!multiple)
-		{
-			m_StatusCells->UpdateCountPopulation(-1);
-
-			Refresh(false);
-			Update();
-		}
-	}
-}
-
 void Grid::RemoveState(std::string state, bool update)
 {
 	// cells of this state have been placed on the grid
 	if (m_StatePositions.find(state) != m_StatePositions.end())
 	{
+		int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
+		int dy[8] = { -1,-1,0,1,1,1,0,-1 };
+		std::vector<string> directions = { "S","SW","W","NW","N","NE","E","SE" };
 		// remove every cell of this state from our map
 		for (auto& it : m_StatePositions[state])
 		{
 			// remove from m_Cells, one by one
 			m_Cells.erase(it);
+
+			// remove it from other cells' neighborhoods
+			/*for (int d = 0; d < 8; d++)
+			{
+				int nx = it.first + dx[d];
+				int ny = it.second + dy[d];
+
+				if (InBounds(nx, ny)) m_Neighbors[{nx, ny}][directions[d]] = "";
+			}
+			m_Neighbors[it]["C"] = "";*/
 
 			m_RedrawAll = false;
 			if (InVisibleBounds(it.first, it.second))
@@ -287,6 +329,7 @@ void Grid::RemoveState(std::string state, bool update)
 
 		m_PrevCells = m_Cells;
 		m_PrevStatePositions = m_StatePositions;
+		//m_PrevNeighbors = m_Neighbors;
 	}
 }
 
@@ -316,10 +359,24 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 		// same color but a new state
 		else if (oldColor == newColor)
 		{
+			/*int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
+			int dy[8] = { -1,-1,0,1,1,1,0,-1 };
+			std::vector<string> directions = { "S","SW","W","NW","N","NE","E","SE" };*/
+
 			for (auto& it : m_StatePositions[oldState])
 			{
 				m_Cells[it].first = newState;
 				m_StatePositions[newState].insert(it);
+
+				//// update every other cells' neighborhoods
+				//for (int d = 0; d < 8; d++)
+				//{
+				//	int nx = it.first + dx[d];
+				//	int ny = it.second + dy[d];
+
+				//	if (InBounds(nx, ny)) m_Neighbors[{nx, ny}][directions[d]] = newState;
+				//}
+				//m_Neighbors[it]["C"] = newState;
 			}
 
 			m_StatePositions.erase(oldState);
@@ -336,12 +393,27 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 	}
 }
 
-void Grid::EraseCell(int x, int y, bool multiple)
+void Grid::RemoveCell(int x, int y, bool multiple)
 {
-	std::string state = m_Cells[{x, y}].first;
+	std::string state = GetState(x, y);
+
+	if (state == "FREE") return;
 
 	m_Cells.erase({ x,y });
 	m_StatePositions[state].erase({ x,y });
+
+	//int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
+	//int dy[8] = { -1,-1,0,1,1,1,0,-1 };
+	//std::vector<string> directions = { "S","SW","W","NW","N","NE","E","SE" };
+	//// update every other cells' neighborhoods
+	//for (int d = 0; d < 8; d++)
+	//{
+	//	int nx = x + dx[d];
+	//	int ny = y + dy[d];
+
+	//	if (InBounds(nx, ny)) m_Neighbors[{nx, ny}][directions[d]] = "";
+	//}
+	//m_Neighbors[{ x, y }]["C"] = "";
 
 	// there are no more cells of this state anymore -> remove it from our map
 	if (m_StatePositions[state].size() == 0)
@@ -363,6 +435,11 @@ void Grid::EraseCell(int x, int y, bool multiple)
 	{
 		m_RedrawXY = { x,y };
 		m_RedrawColor = wxColour("white");
+
+		m_StatusCells->UpdateCountPopulation(-1);
+
+		Refresh(false);
+		Update();
 	}
 }
 
@@ -377,8 +454,10 @@ void Grid::Reset()
 {
 	m_Cells = std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt>();
 	m_StatePositions = std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>>();
+	//m_Neighbors = std::unordered_map<std::pair<int, int>, std::unordered_map<std::string, std::string>, Hashes::PairInt>();
 	m_PrevCells = m_Cells;
 	m_PrevStatePositions = m_StatePositions;
+	//m_PrevNeighbors = m_Neighbors;
 
 	m_RedrawAll = true;
 	m_JustResized = false;
@@ -457,6 +536,11 @@ std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes
 std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> Grid::GetStatePositions()
 {
 	return m_StatePositions;
+}
+
+std::unordered_map<std::pair<int, int>, std::unordered_map<std::string, std::string>, Hashes::PairInt> Grid::GetNeighbors()
+{
+	return m_Neighbors;
 }
 
 std::unordered_map<std::string, wxColour>& Grid::GetColors()
@@ -639,7 +723,7 @@ bool Grid::ModeDraw(int x, int y, char mode)
 				m_IsDrawing = false;
 				m_LastDrawn = { x,y };
 
-				if(!structure) RemoveCell(x, y, state.first, state.second);
+				if(!structure) RemoveCell(x, y);
 			}
 			// holding click
 			else
@@ -653,9 +737,11 @@ bool Grid::ModeDraw(int x, int y, char mode)
 		{
 			if (m_Cells != m_PrevCells)
 			{
-				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
+				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions, m_Neighbors, m_PrevNeighbors);
+
 				m_PrevCells = m_Cells;
 				m_PrevStatePositions = m_StatePositions;
+				//m_PrevNeighbors = m_Neighbors;
 			}
 
 			m_IsDrawing = false;
@@ -681,9 +767,11 @@ bool Grid::ModePick(int x, int y, char mode, std::string state)
 
 			if (m_Cells != m_PrevCells)
 			{
-				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
+				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions, m_Neighbors, m_PrevNeighbors);
+
 				m_PrevCells = m_Cells;
 				m_PrevStatePositions = m_StatePositions;
+				//m_PrevNeighbors = m_Neighbors;
 			}
 		}
 		if (m_IsMoving) m_IsMoving = false;
@@ -720,9 +808,11 @@ bool Grid::ModeMove(int x, int y, char mode)
 
 			if (m_Cells != m_PrevCells)
 			{
-				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
+				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions, m_Neighbors, m_PrevNeighbors);
+
 				m_PrevCells = m_Cells;
 				m_PrevStatePositions = m_StatePositions;
+				//m_PrevNeighbors = m_Neighbors;
 			}
 		}
 
@@ -1100,9 +1190,11 @@ void Grid::OnMouse(wxMouseEvent& evt)
 
 			if (m_Cells != m_PrevCells)
 			{
-				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
+				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions, m_Neighbors, m_PrevNeighbors);
+
 				m_PrevCells = m_Cells;
 				m_PrevStatePositions = m_StatePositions;
+				//m_PrevNeighbors = m_Neighbors;
 			}
 		}
 		//m_JustScrolled = { 0,0 };
@@ -1283,9 +1375,9 @@ void Grid::DeleteStructure(int X, int Y, std::string state)
 		std::string neighborState = GetState(neighbor.first, neighbor.second);
 
 		// doesn't matter if the structure is composed of cells of the same stats
-		if (state == "") EraseCell(neighbor.first, neighbor.second, true);
+		if (state == "") RemoveCell(neighbor.first, neighbor.second, true);
 		// otherwise erase only if they share the same state
-		else if (state == neighborState) EraseCell(neighbor.first, neighbor.second, true);
+		else if (state == neighborState) RemoveCell(neighbor.first, neighbor.second, true);
 
 		for (int d = 0; d < 8; d++)
 		{
@@ -1391,7 +1483,7 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 					}
 					else
 					{
-						EraseCell(ii, jj, true);
+						RemoveCell(ii, jj, true);
 						m_StatusCells->UpdateCountPopulation(-1);
 					}
 					changed++;
@@ -1420,7 +1512,7 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 					}
 					else
 					{
-						EraseCell(ii, jj, true);
+						RemoveCell(ii, jj, true);
 						m_StatusCells->UpdateCountPopulation(-1);
 					}
 					changed++;
@@ -1447,7 +1539,7 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 			}
 			else
 			{
-				EraseCell(ii, jj, true);
+				RemoveCell(ii, jj, true);
 				m_StatusCells->UpdateCountPopulation(-1);
 			}
 			changed++;
@@ -1492,7 +1584,7 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 	{
 		if (neighbors.find(direction) == neighbors.end()) return -1;
 	}
-
+	
 	// if state is "FREE", apply rule to all "FREE" cells
 	if (rule.first == "FREE")
 	{
@@ -1578,9 +1670,8 @@ int Grid::ParseAllRules()
 
 	for (auto& rule : rules)
 	{
-		int n = ParseRule(rule);
-
 		//wxLogDebug("RULE=%s/%s:%s", rule.first, rule.second.state, rule.second.condition);
+		int n = ParseRule(rule);
 
 		if (n == -1) return -1;
 		else changes += n;
@@ -1597,9 +1688,14 @@ int Grid::ParseNextRule()
 bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::string>& neighbors)
 {
 	std::unordered_map<std::string, std::string> neighborhood = GetNeighborhood({ x,y }, neighbors);
+	//std::unordered_map<std::string, std::string> neighborhood = m_Neighbors[{x, y}];
 
-	//wxLogDebug("[CELL_NEIGHBORHOOD]");
-	//for (auto& it : neighborhood) wxLogDebug("<%s>=%s", it.first, it.second);
+	//if (rule.condition == "(@ALL=-2#LIVE|+3#LIVE)")
+	//if (rule.condition == "(@ALL = 3#LIVE)")
+	//{
+		//wxLogDebug("(%i,%i) curr=%s", x - m_OffsetX, y - m_OffsetY,GetState(x,y));
+		//for (auto& it : neighborhood) wxLogDebug("[%s]=%s", it.first, it.second);
+	//}
 
 	bool ruleValid = true;
 	// iterate through the chain of "OR" rules
@@ -1625,14 +1721,14 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 				// iterate through the chain of "AND" conditions
 				for (auto& conditionsAnd : conditionsOr)
 				{
-					std::string conditionState = conditionsAnd.second;
+					std::string conditionState = (conditionsAnd.second == "FREE") ? "" : conditionsAnd.second;
 					//wxLogDebug("CONDITION_STATE=%s", conditionState);
 
 					int occurences = 0;
 					if (ruleNeighborhood[0] == "ALL")
 					{
-						for (auto& neighbor : neighborhood)
-							if (neighbor.second == conditionState) occurences++;
+						for (auto& neighbor : neighbors)
+							if (neighborhood[neighbor] == conditionState) occurences++;
 					}
 					else for (auto& neighbor : ruleNeighborhood)
 					{
@@ -1749,6 +1845,9 @@ void Grid::UpdateGeneration()
 
 				InsertCell(position.first, position.second, currState, colors[currState], true);
 
+				//wxLogDebug("(%i,%i), prev=%s, curr=%s",position.first-200,position.second-200,prevState,currState);
+				//for (auto& ngb : m_Neighbors[position]) wxLogDebug("[%s]=%s", ngb.first, ngb.second);
+
 				//m_StatePositions[prevState].erase(position);
 				//if (m_StatePositions[prevState].size() == 0) m_StatePositions.erase(state);
 				// update the color
@@ -1763,6 +1862,12 @@ void Grid::UpdateGeneration()
 		}
 		else it++;
 	}
+
+	m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions, m_Neighbors, m_PrevNeighbors);
+
+	m_PrevCells = m_Cells;
+	m_PrevStatePositions = m_StatePositions;
+	//m_PrevNeighbors = m_Neighbors;
 
 	Refresh(false);
 	Update();
