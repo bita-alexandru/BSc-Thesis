@@ -1,5 +1,8 @@
 #include "Grid.h"
 
+#include <chrono>
+#define _DEBUG 1
+
 wxBEGIN_EVENT_TABLE(Grid, wxHVScrolledWindow)
 EVT_PAINT(Grid::OnPaint)
 EVT_MOUSE_EVENTS(Grid::OnMouse)
@@ -212,8 +215,8 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 			//}
 			//m_Neighbors[{x, y}]["C"] = state;
 
-			//wxLogDebug("(%i,%i) inserted=%s", x - 200, y - 200, state);
-			//for (auto& nb : m_Neighbors[{x, y}]) wxLogDebug("[%s]=%s", nb.first, nb.second);
+			//if(_DEBUG) wxLogDebug("(%i,%i) inserted=%s", x - 200, y - 200, state);
+			//for (auto& nb : m_Neighbors[{x, y}]) if(_DEBUG) wxLogDebug("[%s]=%s", nb.first, nb.second);
 
 			if (multiple)
 			{
@@ -255,8 +258,8 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 		//}
 		//m_Neighbors[{x, y}]["C"] = state;
 
-		//wxLogDebug("(%i,%i) inserted=%s", x - 200, y - 200, state);
-		//for (auto& nb : m_Neighbors[{x, y}]) wxLogDebug("[%s]=%s", nb.first, nb.second);
+		//if(_DEBUG) wxLogDebug("(%i,%i) inserted=%s", x - 200, y - 200, state);
+		//for (auto& nb : m_Neighbors[{x, y}]) if(_DEBUG) wxLogDebug("[%s]=%s", nb.first, nb.second);
 
 		if (multiple)
 		{
@@ -501,12 +504,17 @@ bool Grid::NextGeneration()
 
 	int n = ParseAllRules();
 
-	//wxLogDebug("PARSE_ALL_RULES=%i", n);
+	//if(_DEBUG) wxLogDebug("PARSE_ALL_RULES=%i", n);
 
 	if (n == -1) return false;
 
+	if(_DEBUG) wxLogDebug("UPDATE_GENERATION");
+	auto start = std::chrono::high_resolution_clock::now();
 	UpdateGeneration();
-
+	auto finish = std::chrono::high_resolution_clock::now();
+	int time = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
+	if(_DEBUG) wxLogDebug("time=%i", time);
+	
 	m_StatusCells->UpdateCountGeneration(+1);
 	m_StatusCells->SetCountPopulation(m_Cells.size());
 
@@ -1421,7 +1429,7 @@ void Grid::DrawStructure(int X, int Y, std::string state, wxColour color)
 
 		std::string neighborState = GetState(neighbor.first, neighbor.second);
 
-		//wxLogDebug("x,y=%i,%i state=%s", neighbor.first, neighbor.second,neighborState);
+		//if(_DEBUG) wxLogDebug("x,y=%i,%i state=%s", neighbor.first, neighbor.second,neighborState);
 
 		// only fill the different cells
 		if (neighborState == state) continue;
@@ -1590,6 +1598,7 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 	{
 		if (rule.second.condition.empty())
 		{
+			auto start = std::chrono::high_resolution_clock::now();
 			for (int i = 0; i < Sizes::N_ROWS; i++)
 				for (int j = 0; j < Sizes::N_COLS; j++)
 					if (m_Cells.find({ j,i }) == m_Cells.end())
@@ -1597,6 +1606,9 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 						std::string newstate = rule.first + "*" + rule.second.state + "*";
 						m_StatePositions[newstate].insert({ j,i });
 					}
+			auto finish = std::chrono::high_resolution_clock::now();
+			int time = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
+			if (_DEBUG) wxLogDebug("FREE-ALL-time=%i", time);
 		}
 		else
 		{
@@ -1609,18 +1621,30 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 			{
 				if (state == "FREE")
 				{
+					auto start = std::chrono::high_resolution_clock::now();
 					for (int i = 0; i < Sizes::N_ROWS; i++)
 						for (int j = 0; j < Sizes::N_COLS; j++)
-							if (m_Cells.find({ j,i }) == m_Cells.end() && visited.find({ j,i }) == visited.end())
+							if (GetState(j, i) == "FREE" && visited.find({ j,i }) == visited.end())
 							{
 								visited.insert({ j,i });
 
-								if (ApplyOnCell(j, i, rule.second, neighbors)) applied.push_back({ j,i });
+								/*auto start = std::chrono::high_resolution_clock::now();
+								if (ApplyOnCell(j, i, rule.second, neighbors))
+								{
+									applied.push_back({ j,i });
+									auto finish = std::chrono::high_resolution_clock::now();
+									int time = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
+									if(_DEBUG) wxLogDebug("FREE-ALL-time=%i", time);
+								}*/
 							}
+					auto finish = std::chrono::high_resolution_clock::now();
+					int time = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
+					if (_DEBUG) wxLogDebug("FREE-ALL-time=%i", time);
 				}
 				// cells of this type are placed on grid
 				else if (m_StatePositions.find(state) != m_StatePositions.end())
 				{
+					auto start = std::chrono::high_resolution_clock::now();
 					// get adjacent cells of type "FREE"
 					for (auto& cell : m_StatePositions[state])
 					{
@@ -1633,14 +1657,25 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 							int ny = y + dy[d];
 
 							// valid position and unvisited yet
-							if (InBounds(nx, ny) && GetState(nx, ny) == "FREE" && visited.find({ nx,ny }) == visited.end())
+							if (GetState(nx, ny) == "FREE" && visited.find({ nx,ny }) == visited.end())
 							{
 								visited.insert({ nx,ny });
 
-								if (ApplyOnCell(nx, ny, rule.second, neighbors)) applied.push_back({ nx,ny });
+								/*auto start = std::chrono::high_resolution_clock::now();
+								if (ApplyOnCell(nx, ny, rule.second, neighbors))
+								{
+									applied.push_back({ nx,ny });
+									auto finish = std::chrono::high_resolution_clock::now();
+									int time = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
+									if(_DEBUG) wxLogDebug("FREE-NEIGH-time=%i", time);
+								}*/
 							}
 						}
 					}
+					
+					auto finish = std::chrono::high_resolution_clock::now();
+					int time = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
+					if (_DEBUG) wxLogDebug("SEARCH-FREE-NGB-time=%i", time);
 				}
 			}
 		}
@@ -1650,11 +1685,22 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 	{
 		if (m_StatePositions.find(rule.first) == m_StatePositions.end()) return 0;
 
+		auto start = std::chrono::high_resolution_clock::now();
 		for (auto& cell : m_StatePositions[rule.first])
 		{
-			//wxLogDebug("CELL=%i,%i", cell.first-m_OffsetX, cell.second-m_OffsetY);
-			if (ApplyOnCell(cell.first, cell.second, rule.second, neighbors)) applied.push_back({ cell.first,cell.second});
+			//if(_DEBUG) wxLogDebug("CELL=%i,%i", cell.first-m_OffsetX, cell.second-m_OffsetY);
+			/*auto start = std::chrono::high_resolution_clock::now();
+			if (ApplyOnCell(cell.first, cell.second, rule.second, neighbors))
+			{
+				applied.push_back({ cell.first,cell.second });
+				auto finish = std::chrono::high_resolution_clock::now();
+				int time = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
+				if(_DEBUG) wxLogDebug("CELL-time=%i", time);
+			}*/
 		}
+		auto finish = std::chrono::high_resolution_clock::now();
+		int time = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
+		if (_DEBUG) wxLogDebug("SEARCH-CELL-time=%i", time);
 	}
 
 	std::string newstate = rule.first + "*" + rule.second.state + "*";
@@ -1670,8 +1716,12 @@ int Grid::ParseAllRules()
 
 	for (auto& rule : rules)
 	{
-		//wxLogDebug("RULE=%s/%s:%s", rule.first, rule.second.state, rule.second.condition);
+		if(_DEBUG) wxLogDebug("RULE=%s/%s:%s", rule.first, rule.second.state, rule.second.condition);
+		auto start = std::chrono::high_resolution_clock::now();
 		int n = ParseRule(rule);
+		auto finish = std::chrono::high_resolution_clock::now();
+		int time = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
+		if(_DEBUG) wxLogDebug("time=%i", time);
 
 		if (n == -1) return -1;
 		else changes += n;
@@ -1693,8 +1743,8 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 	//if (rule.condition == "(@ALL=-2#LIVE|+3#LIVE)")
 	//if (rule.condition == "(@ALL = 3#LIVE)")
 	//{
-		//wxLogDebug("(%i,%i) curr=%s", x - m_OffsetX, y - m_OffsetY,GetState(x,y));
-		//for (auto& it : neighborhood) wxLogDebug("[%s]=%s", it.first, it.second);
+		//if(_DEBUG) wxLogDebug("(%i,%i) curr=%s", x - m_OffsetX, y - m_OffsetY,GetState(x,y));
+		//for (auto& it : neighborhood) if(_DEBUG) wxLogDebug("[%s]=%s", it.first, it.second);
 	//}
 
 	bool ruleValid = true;
@@ -1702,15 +1752,15 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 	for (auto& rulesOr : rule.orRules)
 	{
 		ruleValid = true;
-		//wxLogDebug("[RULES_OR]");
+		//if(_DEBUG) wxLogDebug("[RULES_OR]");
 
 		// iterate through the chain of "AND" rules
 		for (auto& rulesAnd : rulesOr)
 		{
-			//wxLogDebug("[RULES_AND]");
+			//if(_DEBUG) wxLogDebug("[RULES_AND]");
 			std::vector<std::string> ruleNeighborhood = rulesAnd.first;
-			//wxLogDebug("[RULE_NEIGHBORHOOD]");
-			//for (auto& it : ruleNeighborhood)wxLogDebug("<%s>", it);
+			//if(_DEBUG) wxLogDebug("[RULE_NEIGHBORHOOD]");
+			//for (auto& it : ruleNeighborhood)if(_DEBUG) wxLogDebug("<%s>", it);
 
 			bool conditionValid = true;
 			// iterate through the chain of "OR" conditions
@@ -1722,7 +1772,7 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 				for (auto& conditionsAnd : conditionsOr)
 				{
 					std::string conditionState = (conditionsAnd.second == "FREE") ? "" : conditionsAnd.second;
-					//wxLogDebug("CONDITION_STATE=%s", conditionState);
+					//if(_DEBUG) wxLogDebug("CONDITION_STATE=%s", conditionState);
 
 					int occurences = 0;
 					if (ruleNeighborhood[0] == "ALL")
@@ -1739,12 +1789,12 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 						// otherwise, maybe throw error; to do: decide (line 1434)
 					}
 
-					//wxLogDebug("OCCURENCES=%i", occurences);
+					//if(_DEBUG) wxLogDebug("OCCURENCES=%i", occurences);
 
 					int conditionNumber = conditionsAnd.first.first;
 					int conditionType = conditionsAnd.first.second;
 
-					//wxLogDebug("CONDITION_NUMBER=%i, CONDITION_TYPE=%i", conditionNumber, conditionType);
+					//if(_DEBUG) wxLogDebug("CONDITION_NUMBER=%i, CONDITION_TYPE=%i", conditionNumber, conditionType);
 
 					switch (conditionType)
 					{
@@ -1816,7 +1866,7 @@ void Grid::UpdateGeneration()
 
 		if (state.back() == '*')
 		{
-			//wxLogDebug("STATE=%s", state);
+			//if(_DEBUG) wxLogDebug("STATE=%s", state);
 
 			state.pop_back();
 
@@ -1836,7 +1886,7 @@ void Grid::UpdateGeneration()
 				else currState.push_back(state[i]);
 			}
 
-			//wxLogDebug("PREV=<%s> CURR=<%s>", prevState, currState);
+			//if(_DEBUG) wxLogDebug("PREV=<%s> CURR=<%s>", prevState, currState);
 
 			// insert positions into the current state map and remove them from the previous one
 			for (auto& position : it->second)
@@ -1845,8 +1895,8 @@ void Grid::UpdateGeneration()
 
 				InsertCell(position.first, position.second, currState, colors[currState], true);
 
-				//wxLogDebug("(%i,%i), prev=%s, curr=%s",position.first-200,position.second-200,prevState,currState);
-				//for (auto& ngb : m_Neighbors[position]) wxLogDebug("[%s]=%s", ngb.first, ngb.second);
+				//if(_DEBUG) wxLogDebug("(%i,%i), prev=%s, curr=%s",position.first-200,position.second-200,prevState,currState);
+				//for (auto& ngb : m_Neighbors[position]) if(_DEBUG) wxLogDebug("[%s]=%s", ngb.first, ngb.second);
 
 				//m_StatePositions[prevState].erase(position);
 				//if (m_StatePositions[prevState].size() == 0) m_StatePositions.erase(state);
