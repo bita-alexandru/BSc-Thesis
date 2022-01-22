@@ -1,8 +1,5 @@
 #include "Grid.h"
 
-#include <chrono>
-#define _DEBUG 1
-
 wxBEGIN_EVENT_TABLE(Grid, wxHVScrolledWindow)
 EVT_PAINT(Grid::OnPaint)
 EVT_MOUSE_EVENTS(Grid::OnMouse)
@@ -14,6 +11,7 @@ EVT_SCROLLWIN(Grid::OnScroll)
 EVT_SIZE(Grid::OnSize)
 wxEND_EVENT_TABLE()
 
+WX_DEFINE_ARRAY_PTR(wxThread*, wxArrayThreads);
 
 Grid::Grid(wxWindow* parent) : wxHVScrolledWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS)
 {
@@ -44,11 +42,9 @@ void Grid::SetSize(int size, bool center)
 
 		if (m_Cells != m_PrevCells)
 		{
-			m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions, m_Neighbors, m_PrevNeighbors);
-
+			m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
 			m_PrevCells = m_Cells;
 			m_PrevStatePositions = m_StatePositions;
-			//m_PrevNeighbors = m_Neighbors;
 		}
 	}
 
@@ -104,11 +100,7 @@ void Grid::ScrollToCenter(int x, int y)
 	Update();
 }
 
-void Grid::SetCells(
-	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells, 
-	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions,
-	std::unordered_map<std::pair<int, int>, std::unordered_map<std::string, std::string>, Hashes::PairInt> neighbors
-	)
+void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells, std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions)
 {
 	for (auto& it : m_PrevCells)
 	{
@@ -125,8 +117,6 @@ void Grid::SetCells(
 	m_StatePositions = statePositions;
 	m_PrevCells = m_Cells;
 	m_PrevStatePositions = m_StatePositions;
-	//m_Neighbors = neighbors;
-	//m_PrevNeighbors = m_Neighbors;
 
 	for (auto& it : m_Cells)
 	{
@@ -185,38 +175,17 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 	{
 		// current cell is of state "FREE" but there's already a cell of another state
 		// on this exact position -> remove it
-		if (color == wxColour("white")) RemoveCell(x, y, multiple);
+		if (color == wxColour("white")) RemoveCell(x, y, state, color, multiple);
 		// position is occupied
 		else
 		{
 			// same state -> don't do anything
 			if (m_Cells[{x, y}].first == state) return;
 
-			m_StatePositions[state].erase({ x,y });
-			// there are no more cells of this state anymore -> remove it from our map
-			if (m_StatePositions[state].size() == 0)
-			{
-				m_StatePositions.erase(state);
-			}
+			EraseCell(x, y);
 
 			m_Cells[{x, y}] = { state, color };
 			m_StatePositions[state].insert({ x,y });
-
-			//int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
-			//int dy[8] = { -1,-1,0,1,1,1,0,-1 };
-			//std::vector<string> directions = { "S","SW","W","NW","N","NE","E","SE" };
-			//// remove it from other cells' neighborhoods
-			//for (int d = 0; d < 8; d++)
-			//{
-			//	int nx = x + dx[d];
-			//	int ny = y + dy[d];
-
-			//	if (InBounds(nx, ny)) m_Neighbors[{nx, ny}][directions[d]] = state;
-			//}
-			//m_Neighbors[{x, y}]["C"] = state;
-
-			//if(_DEBUG) wxLogDebug("(%i,%i) inserted=%s", x - 200, y - 200, state);
-			//for (auto& nb : m_Neighbors[{x, y}]) if(_DEBUG) wxLogDebug("[%s]=%s", nb.first, nb.second);
 
 			if (multiple)
 			{
@@ -245,22 +214,6 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 		m_Cells[{x, y}] = { state, color };
 		m_StatePositions[state].insert({ x,y });
 
-		//// assign this cell as neighbor to all adjacent cells
-		//int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
-		//int dy[8] = { -1,-1,0,1,1,1,0,-1 };
-		//std::vector<string> directions = {"S","SW","W","NW","N","NE","E","SE"};
-		//for (int d = 0; d < 8; d++)
-		//{
-		//	int nx = x + dx[d];
-		//	int ny = y + dy[d];
-		//	
-		//	if (InBounds(nx, ny)) m_Neighbors[{nx, ny}][directions[d]] = state;
-		//}
-		//m_Neighbors[{x, y}]["C"] = state;
-
-		//if(_DEBUG) wxLogDebug("(%i,%i) inserted=%s", x - 200, y - 200, state);
-		//for (auto& nb : m_Neighbors[{x, y}]) if(_DEBUG) wxLogDebug("[%s]=%s", nb.first, nb.second);
-
 		if (multiple)
 		{
 			m_RedrawAll = false;
@@ -284,29 +237,32 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 	}
 }
 
+void Grid::RemoveCell(int x, int y, std::string state, wxColour color, bool multiple)
+{
+	if (GetState(x, y) != "FREE")
+	{
+		EraseCell(x, y, multiple);
+
+		if (!multiple)
+		{
+			m_StatusCells->UpdateCountPopulation(-1);
+
+			Refresh(false);
+			Update();
+		}
+	}
+}
+
 void Grid::RemoveState(std::string state, bool update)
 {
 	// cells of this state have been placed on the grid
 	if (m_StatePositions.find(state) != m_StatePositions.end())
 	{
-		int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
-		int dy[8] = { -1,-1,0,1,1,1,0,-1 };
-		std::vector<string> directions = { "S","SW","W","NW","N","NE","E","SE" };
 		// remove every cell of this state from our map
 		for (auto& it : m_StatePositions[state])
 		{
 			// remove from m_Cells, one by one
 			m_Cells.erase(it);
-
-			// remove it from other cells' neighborhoods
-			/*for (int d = 0; d < 8; d++)
-			{
-				int nx = it.first + dx[d];
-				int ny = it.second + dy[d];
-
-				if (InBounds(nx, ny)) m_Neighbors[{nx, ny}][directions[d]] = "";
-			}
-			m_Neighbors[it]["C"] = "";*/
 
 			m_RedrawAll = false;
 			if (InVisibleBounds(it.first, it.second))
@@ -332,7 +288,6 @@ void Grid::RemoveState(std::string state, bool update)
 
 		m_PrevCells = m_Cells;
 		m_PrevStatePositions = m_StatePositions;
-		//m_PrevNeighbors = m_Neighbors;
 	}
 }
 
@@ -362,24 +317,10 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 		// same color but a new state
 		else if (oldColor == newColor)
 		{
-			/*int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
-			int dy[8] = { -1,-1,0,1,1,1,0,-1 };
-			std::vector<string> directions = { "S","SW","W","NW","N","NE","E","SE" };*/
-
 			for (auto& it : m_StatePositions[oldState])
 			{
 				m_Cells[it].first = newState;
 				m_StatePositions[newState].insert(it);
-
-				//// update every other cells' neighborhoods
-				//for (int d = 0; d < 8; d++)
-				//{
-				//	int nx = it.first + dx[d];
-				//	int ny = it.second + dy[d];
-
-				//	if (InBounds(nx, ny)) m_Neighbors[{nx, ny}][directions[d]] = newState;
-				//}
-				//m_Neighbors[it]["C"] = newState;
 			}
 
 			m_StatePositions.erase(oldState);
@@ -396,27 +337,12 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 	}
 }
 
-void Grid::RemoveCell(int x, int y, bool multiple)
+void Grid::EraseCell(int x, int y, bool multiple)
 {
-	std::string state = GetState(x, y);
-
-	if (state == "FREE") return;
+	std::string state = m_Cells[{x, y}].first;
 
 	m_Cells.erase({ x,y });
 	m_StatePositions[state].erase({ x,y });
-
-	//int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
-	//int dy[8] = { -1,-1,0,1,1,1,0,-1 };
-	//std::vector<string> directions = { "S","SW","W","NW","N","NE","E","SE" };
-	//// update every other cells' neighborhoods
-	//for (int d = 0; d < 8; d++)
-	//{
-	//	int nx = x + dx[d];
-	//	int ny = y + dy[d];
-
-	//	if (InBounds(nx, ny)) m_Neighbors[{nx, ny}][directions[d]] = "";
-	//}
-	//m_Neighbors[{ x, y }]["C"] = "";
 
 	// there are no more cells of this state anymore -> remove it from our map
 	if (m_StatePositions[state].size() == 0)
@@ -438,11 +364,6 @@ void Grid::RemoveCell(int x, int y, bool multiple)
 	{
 		m_RedrawXY = { x,y };
 		m_RedrawColor = wxColour("white");
-
-		m_StatusCells->UpdateCountPopulation(-1);
-
-		Refresh(false);
-		Update();
 	}
 }
 
@@ -457,10 +378,8 @@ void Grid::Reset()
 {
 	m_Cells = std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt>();
 	m_StatePositions = std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>>();
-	//m_Neighbors = std::unordered_map<std::pair<int, int>, std::unordered_map<std::string, std::string>, Hashes::PairInt>();
 	m_PrevCells = m_Cells;
 	m_PrevStatePositions = m_StatePositions;
-	//m_PrevNeighbors = m_Neighbors;
 
 	m_RedrawAll = true;
 	m_JustResized = false;
@@ -477,7 +396,7 @@ void Grid::Reset()
 
 	m_Paused = false;
 	m_Finished = false;
-	m_StartedParsing = false;
+	m_Playing = false;
 
 	Refresh(false);
 	Update();
@@ -504,17 +423,12 @@ bool Grid::NextGeneration()
 
 	int n = ParseAllRules();
 
-	//if(_DEBUG) wxLogDebug("PARSE_ALL_RULES=%i", n);
+	//wxLogDebug("PARSE_ALL_RULES=%i", n);
 
 	if (n == -1) return false;
 
-	if(_DEBUG) wxLogDebug("UPDATE_GENERATION");
-	auto start = std::chrono::high_resolution_clock::now();
 	UpdateGeneration();
-	auto finish = std::chrono::high_resolution_clock::now();
-	int time = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
-	if(_DEBUG) wxLogDebug("time=%i", time);
-	
+
 	m_StatusCells->UpdateCountGeneration(+1);
 	m_StatusCells->SetCountPopulation(m_Cells.size());
 
@@ -544,11 +458,6 @@ std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes
 std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> Grid::GetStatePositions()
 {
 	return m_StatePositions;
-}
-
-std::unordered_map<std::pair<int, int>, std::unordered_map<std::string, std::string>, Hashes::PairInt> Grid::GetNeighbors()
-{
-	return m_Neighbors;
 }
 
 std::unordered_map<std::string, wxColour>& Grid::GetColors()
@@ -731,7 +640,7 @@ bool Grid::ModeDraw(int x, int y, char mode)
 				m_IsDrawing = false;
 				m_LastDrawn = { x,y };
 
-				if(!structure) RemoveCell(x, y);
+				if (!structure) RemoveCell(x, y, state.first, state.second);
 			}
 			// holding click
 			else
@@ -745,11 +654,9 @@ bool Grid::ModeDraw(int x, int y, char mode)
 		{
 			if (m_Cells != m_PrevCells)
 			{
-				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions, m_Neighbors, m_PrevNeighbors);
-
+				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
 				m_PrevCells = m_Cells;
 				m_PrevStatePositions = m_StatePositions;
-				//m_PrevNeighbors = m_Neighbors;
 			}
 
 			m_IsDrawing = false;
@@ -775,11 +682,9 @@ bool Grid::ModePick(int x, int y, char mode, std::string state)
 
 			if (m_Cells != m_PrevCells)
 			{
-				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions, m_Neighbors, m_PrevNeighbors);
-
+				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
 				m_PrevCells = m_Cells;
 				m_PrevStatePositions = m_StatePositions;
-				//m_PrevNeighbors = m_Neighbors;
 			}
 		}
 		if (m_IsMoving) m_IsMoving = false;
@@ -816,11 +721,9 @@ bool Grid::ModeMove(int x, int y, char mode)
 
 			if (m_Cells != m_PrevCells)
 			{
-				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions, m_Neighbors, m_PrevNeighbors);
-
+				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
 				m_PrevCells = m_Cells;
 				m_PrevStatePositions = m_StatePositions;
-				//m_PrevNeighbors = m_Neighbors;
 			}
 		}
 
@@ -926,7 +829,7 @@ void Grid::OnDraw(wxDC& dc)
 	{
 		std::unordered_set<std::pair<int, int>, Hashes::PairInt> alreadyDrawn;
 		std::vector<std::pair<int, int>> beforeScrolling;
-		
+
 		// iterate through the cells in order of their states
 		for (auto& sp : m_StatePositions)
 		{
@@ -988,7 +891,7 @@ void Grid::OnDraw(wxDC& dc)
 						beforeScrolling.push_back({ x,y });
 					}
 				}
-				
+
 				m_RedrawXYs.clear();
 				m_RedrawColors.clear();
 			}
@@ -1099,7 +1002,7 @@ void Grid::OnDraw(wxDC& dc)
 		{
 			int i = GetVisibleColumnsEnd();
 			for (int j = visibleBegin.GetRow(); j < visibleEnd.GetRow(); j++)
-					dc.DrawRectangle(i * m_Size, j * m_Size, m_Size, m_Size);
+				dc.DrawRectangle(i * m_Size, j * m_Size, m_Size, m_Size);
 		}
 		if (m_JustScrolled.second > 0 && GetVisibleRowsEnd() == Sizes::N_ROWS)
 		{
@@ -1198,11 +1101,9 @@ void Grid::OnMouse(wxMouseEvent& evt)
 
 			if (m_Cells != m_PrevCells)
 			{
-				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions, m_Neighbors, m_PrevNeighbors);
-
+				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
 				m_PrevCells = m_Cells;
 				m_PrevStatePositions = m_StatePositions;
-				//m_PrevNeighbors = m_Neighbors;
 			}
 		}
 		//m_JustScrolled = { 0,0 };
@@ -1383,9 +1284,9 @@ void Grid::DeleteStructure(int X, int Y, std::string state)
 		std::string neighborState = GetState(neighbor.first, neighbor.second);
 
 		// doesn't matter if the structure is composed of cells of the same stats
-		if (state == "") RemoveCell(neighbor.first, neighbor.second, true);
+		if (state == "") EraseCell(neighbor.first, neighbor.second, true);
 		// otherwise erase only if they share the same state
-		else if (state == neighborState) RemoveCell(neighbor.first, neighbor.second, true);
+		else if (state == neighborState) EraseCell(neighbor.first, neighbor.second, true);
 
 		for (int d = 0; d < 8; d++)
 		{
@@ -1408,7 +1309,7 @@ void Grid::DeleteStructure(int X, int Y, std::string state)
 
 void Grid::DrawStructure(int X, int Y, std::string state, wxColour color)
 {
-	int dx[4] = { 0, 1, 0, -1};
+	int dx[4] = { 0, 1, 0, -1 };
 	int dy[4] = { -1, 0, 1, 0 };
 
 	std::unordered_set<std::pair<int, int>, Hashes::PairInt> visited;
@@ -1429,7 +1330,7 @@ void Grid::DrawStructure(int X, int Y, std::string state, wxColour color)
 
 		std::string neighborState = GetState(neighbor.first, neighbor.second);
 
-		//if(_DEBUG) wxLogDebug("x,y=%i,%i state=%s", neighbor.first, neighbor.second,neighborState);
+		//wxLogDebug("x,y=%i,%i state=%s", neighbor.first, neighbor.second,neighborState);
 
 		// only fill the different cells
 		if (neighborState == state) continue;
@@ -1491,7 +1392,7 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 					}
 					else
 					{
-						RemoveCell(ii, jj, true);
+						EraseCell(ii, jj, true);
 						m_StatusCells->UpdateCountPopulation(-1);
 					}
 					changed++;
@@ -1520,7 +1421,7 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 					}
 					else
 					{
-						RemoveCell(ii, jj, true);
+						EraseCell(ii, jj, true);
 						m_StatusCells->UpdateCountPopulation(-1);
 					}
 					changed++;
@@ -1547,7 +1448,7 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 			}
 			else
 			{
-				RemoveCell(ii, jj, true);
+				EraseCell(ii, jj, true);
 				m_StatusCells->UpdateCountPopulation(-1);
 			}
 			changed++;
@@ -1563,7 +1464,7 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 
 bool Grid::InBounds(int x, int y)
 {
-	return (x >= 0 && x < Sizes::N_COLS && y >= 0 && y < Sizes::N_ROWS);
+	return (x >= 0 && x < Sizes::N_COLS&& y >= 0 && y < Sizes::N_ROWS);
 }
 
 bool Grid::InVisibleBounds(int x, int y)
@@ -1580,6 +1481,10 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 	std::unordered_set<std::string> neighbors = m_InputRules->GetInputNeighbors()->GetNeighbors();
 	std::vector<std::pair<int, int>> applied;
 
+	wxCriticalSection appliedCS;
+	wxCriticalSection statePositionsCS;
+	wxCriticalSection visitedCS;
+
 	// check if rule might contain invalid states
 	if (states.find(rule.first) == states.end()) return -1;
 	if (states.find(rule.second.state) == states.end()) return -1;
@@ -1592,91 +1497,160 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 	{
 		if (neighbors.find(direction) == neighbors.end()) return -1;
 	}
-	
+
+	int cores = wxThread::GetCPUCount();
+
 	// if state is "FREE", apply rule to all "FREE" cells
 	if (rule.first == "FREE")
 	{
 		if (rule.second.condition.empty())
 		{
-			auto start = std::chrono::high_resolution_clock::now();
-			for (int i = 0; i < Sizes::N_ROWS; i++)
+			int applies = 0;
+
+			//std::vector<ThreadRuleApplier> threads;
+			wxArrayThreads threads;
+			
+			int rowStart = 0;
+			int rowSize = Sizes::N_ROWS / cores;
+
+			for (int i = 0; i < cores; i++)
+			{
+				ThreadRuleApplier thread("FREE_ONLY");
+				thread.SetRange(rowStart, rowSize, 0, Sizes::N_COLS);
+				thread.SetRule(&rule);
+				thread.SetCells(&m_Cells);
+				thread.SetStatePositions(&m_StatePositions);
+				thread.SetCriticalStatePosition(&statePositionsCS);
+				thread.Run();
+				threads.Add(&thread);
+				//threads.back().Run();
+
+				rowStart += rowSize;
+			}
+
+			for (auto& it : threads)
+			{
+				applies += (int)it->Wait();
+			}
+
+			return applies;
+
+			/*for (int i = 0; i < Sizes::N_ROWS; i++)
 				for (int j = 0; j < Sizes::N_COLS; j++)
 					if (m_Cells.find({ j,i }) == m_Cells.end())
 					{
 						std::string newstate = rule.first + "*" + rule.second.state + "*";
 						m_StatePositions[newstate].insert({ j,i });
+
+						applies++;
 					}
-			auto finish = std::chrono::high_resolution_clock::now();
-			int time = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
-			if (_DEBUG) wxLogDebug("FREE-ALL-time=%i", time);
+
+			return applies;*/
 		}
 		else
 		{
 			std::unordered_set<std::pair<int, int>, Hashes::PairInt> visited;
 
-			int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
-			int dy[8] = { -1,-1,0,1,1,1,0,-1 };
-
 			for (auto& state : rule.second.states)
 			{
-				if (state == "FREE")
-				{
-					auto start = std::chrono::high_resolution_clock::now();
-					for (int i = 0; i < Sizes::N_ROWS; i++)
+				//if (state == "FREE")
+				//{
+					std::vector<ThreadRuleApplier> threads;
+					int rowStart = 0;
+					int rowSize = Sizes::N_ROWS / cores;
+
+					for (int i = 0; i < cores; i++)
+					{
+						ThreadRuleApplier thread("FREE_FREE");
+						thread.SetRange(rowStart, rowSize, 0, Sizes::N_COLS);
+						thread.SetRule(&rule);
+						thread.SetCells(&m_Cells);
+						thread.SetNeighbors(&neighbors);
+						thread.SetApplied(&applied);
+						thread.SetVisited(&visited);
+						thread.SetStatePositions(&m_StatePositions);
+						thread.SetCriticalApplied(&appliedCS);
+						thread.SetCriticalVisited(&visitedCS);
+						thread.SetCriticalStatePosition(&statePositionsCS);
+
+						threads.push_back(thread);
+						threads.back().Run();
+
+						rowStart += rowSize;
+					}
+
+					for (auto& it : threads)
+					{
+						int code = (int)it.Wait();
+					}
+
+					/*for (int i = 0; i < Sizes::N_ROWS; i++)
 						for (int j = 0; j < Sizes::N_COLS; j++)
-							if (GetState(j, i) == "FREE" && visited.find({ j,i }) == visited.end())
+							if (m_Cells.find({ j,i }) == m_Cells.end() && visited.find({ j,i }) == visited.end())
 							{
 								visited.insert({ j,i });
-
-								/*auto start = std::chrono::high_resolution_clock::now();
-								if (ApplyOnCell(j, i, rule.second, neighbors))
-								{
-									applied.push_back({ j,i });
-									auto finish = std::chrono::high_resolution_clock::now();
-									int time = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
-									if(_DEBUG) wxLogDebug("FREE-ALL-time=%i", time);
-								}*/
-							}
-					auto finish = std::chrono::high_resolution_clock::now();
-					int time = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
-					if (_DEBUG) wxLogDebug("FREE-ALL-time=%i", time);
-				}
+								
+								if (ApplyOnCell(j, i, rule.second, neighbors)) applied.push_back({ j,i });
+							}*/
+				//}
 				// cells of this type are placed on grid
-				else if (m_StatePositions.find(state) != m_StatePositions.end())
-				{
-					auto start = std::chrono::high_resolution_clock::now();
-					// get adjacent cells of type "FREE"
-					for (auto& cell : m_StatePositions[state])
-					{
-						int x = cell.first;
-						int y = cell.second;
+				//else if (m_StatePositions.find(state) != m_StatePositions.end())
+				//{
+				//	std::vector<ThreadRuleApplier> threads;
+				//	int itStart = 0;
+				//	int itSize = m_StatePositions[state].size() / cores;
 
-						for (int d = 0; d < 8; d++)
-						{
-							int nx = x + dx[d];
-							int ny = y + dy[d];
 
-							// valid position and unvisited yet
-							if (GetState(nx, ny) == "FREE" && visited.find({ nx,ny }) == visited.end())
-							{
-								visited.insert({ nx,ny });
+				//	for (int i = 0; i < cores; i++)
+				//	{
+				//		ThreadRuleApplier thread("FREE_ADJACENT");
+				//		thread.SetRange(itStart, itSize);
+				//		thread.SetRule(&rule);
+				//		thread.SetState(state);
+				//		thread.SetCells(&m_Cells);
+				//		thread.SetNeighbors(&neighbors);
+				//		thread.SetApplied(&applied);
+				//		thread.SetVisited(&visited);
+				//		thread.SetStatePositions(&m_StatePositions);
+				//		thread.SetCriticalApplied(&appliedCS);
+				//		thread.SetCriticalVisited(&visitedCS);
+				//		thread.SetCriticalStatePosition(&statePositionsCS);
 
-								/*auto start = std::chrono::high_resolution_clock::now();
-								if (ApplyOnCell(nx, ny, rule.second, neighbors))
-								{
-									applied.push_back({ nx,ny });
-									auto finish = std::chrono::high_resolution_clock::now();
-									int time = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
-									if(_DEBUG) wxLogDebug("FREE-NEIGH-time=%i", time);
-								}*/
-							}
-						}
-					}
-					
-					auto finish = std::chrono::high_resolution_clock::now();
-					int time = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
-					if (_DEBUG) wxLogDebug("SEARCH-FREE-NGB-time=%i", time);
-				}
+				//		threads.push_back(thread);
+				//		threads.back().Run();
+
+				//		itStart += itSize;
+				//	}
+
+				//	for (auto& it : threads)
+				//	{
+				//		int code = (int)it.Wait();
+				//	}
+
+				//	int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
+				//	int dy[8] = { -1,-1,0,1,1,1,0,-1 };
+
+				//	// get adjacent cells of type "FREE"
+				//	for (auto& cell : m_StatePositions[state])
+				//	{
+				//		int x = cell.first;
+				//		int y = cell.second;
+
+				//		for (int d = 0; d < 8; d++)
+				//		{
+				//			int nx = x + dx[d];
+				//			int ny = y + dy[d];
+
+				//			// valid position and unvisited yet
+				//			if (InBounds(nx, ny) && GetState(nx, ny) == "FREE" && visited.find({ nx,ny }) == visited.end())
+				//			{
+				//				visited.insert({ nx,ny });
+
+				//				if (ApplyOnCell(nx, ny, rule.second, neighbors)) applied.push_back({ nx,ny });
+				//			}
+				//		}
+				//	}
+				//}
 			}
 		}
 	}
@@ -1685,22 +1659,40 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 	{
 		if (m_StatePositions.find(rule.first) == m_StatePositions.end()) return 0;
 
-		auto start = std::chrono::high_resolution_clock::now();
-		for (auto& cell : m_StatePositions[rule.first])
+		std::vector<ThreadRuleApplier> threads;
+		int rowStart = 0;
+		int rowSize = m_StatePositions[rule.first].size() / cores;
+
+		for (int i = 0; i < cores; i++)
 		{
-			//if(_DEBUG) wxLogDebug("CELL=%i,%i", cell.first-m_OffsetX, cell.second-m_OffsetY);
-			/*auto start = std::chrono::high_resolution_clock::now();
-			if (ApplyOnCell(cell.first, cell.second, rule.second, neighbors))
-			{
-				applied.push_back({ cell.first,cell.second });
-				auto finish = std::chrono::high_resolution_clock::now();
-				int time = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
-				if(_DEBUG) wxLogDebug("CELL-time=%i", time);
-			}*/
+			ThreadRuleApplier thread("NON_FREE");
+			thread.SetRange(rowStart, rowSize);
+			thread.SetRule(&rule);
+			thread.SetState(rule.first);
+			thread.SetCells(&m_Cells);
+			thread.SetNeighbors(&neighbors);
+			thread.SetApplied(&applied);
+			thread.SetStatePositions(&m_StatePositions);
+			thread.SetCriticalApplied(&appliedCS);
+			thread.SetCriticalVisited(&visitedCS);
+			thread.SetCriticalStatePosition(&statePositionsCS);
+
+			threads.push_back(thread);
+			threads.back().Run();
+
+			rowStart += rowSize;
 		}
-		auto finish = std::chrono::high_resolution_clock::now();
-		int time = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
-		if (_DEBUG) wxLogDebug("SEARCH-CELL-time=%i", time);
+
+		for (auto& it : threads)
+		{
+			int code = (int)it.Wait();
+		}
+
+		//for (auto& cell : m_StatePositions[rule.first])
+		//{
+		//	//wxLogDebug("CELL=%i,%i", cell.first-m_OffsetX, cell.second-m_OffsetY);
+		//	if (ApplyOnCell(cell.first, cell.second, rule.second, neighbors)) applied.push_back({ cell.first,cell.second });
+		//}
 	}
 
 	std::string newstate = rule.first + "*" + rule.second.state + "*";
@@ -1716,12 +1708,9 @@ int Grid::ParseAllRules()
 
 	for (auto& rule : rules)
 	{
-		if(_DEBUG) wxLogDebug("RULE=%s/%s:%s", rule.first, rule.second.state, rule.second.condition);
-		auto start = std::chrono::high_resolution_clock::now();
 		int n = ParseRule(rule);
-		auto finish = std::chrono::high_resolution_clock::now();
-		int time = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
-		if(_DEBUG) wxLogDebug("time=%i", time);
+
+		//wxLogDebug("RULE=%s/%s:%s", rule.first, rule.second.state, rule.second.condition);
 
 		if (n == -1) return -1;
 		else changes += n;
@@ -1738,29 +1727,24 @@ int Grid::ParseNextRule()
 bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::string>& neighbors)
 {
 	std::unordered_map<std::string, std::string> neighborhood = GetNeighborhood({ x,y }, neighbors);
-	//std::unordered_map<std::string, std::string> neighborhood = m_Neighbors[{x, y}];
 
-	//if (rule.condition == "(@ALL=-2#LIVE|+3#LIVE)")
-	//if (rule.condition == "(@ALL = 3#LIVE)")
-	//{
-		//if(_DEBUG) wxLogDebug("(%i,%i) curr=%s", x - m_OffsetX, y - m_OffsetY,GetState(x,y));
-		//for (auto& it : neighborhood) if(_DEBUG) wxLogDebug("[%s]=%s", it.first, it.second);
-	//}
+	//wxLogDebug("[CELL_NEIGHBORHOOD]");
+	//for (auto& it : neighborhood) wxLogDebug("<%s>=%s", it.first, it.second);
 
 	bool ruleValid = true;
 	// iterate through the chain of "OR" rules
 	for (auto& rulesOr : rule.orRules)
 	{
 		ruleValid = true;
-		//if(_DEBUG) wxLogDebug("[RULES_OR]");
+		//wxLogDebug("[RULES_OR]");
 
 		// iterate through the chain of "AND" rules
 		for (auto& rulesAnd : rulesOr)
 		{
-			//if(_DEBUG) wxLogDebug("[RULES_AND]");
+			//wxLogDebug("[RULES_AND]");
 			std::vector<std::string> ruleNeighborhood = rulesAnd.first;
-			//if(_DEBUG) wxLogDebug("[RULE_NEIGHBORHOOD]");
-			//for (auto& it : ruleNeighborhood)if(_DEBUG) wxLogDebug("<%s>", it);
+			//wxLogDebug("[RULE_NEIGHBORHOOD]");
+			//for (auto& it : ruleNeighborhood)wxLogDebug("<%s>", it);
 
 			bool conditionValid = true;
 			// iterate through the chain of "OR" conditions
@@ -1771,14 +1755,14 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 				// iterate through the chain of "AND" conditions
 				for (auto& conditionsAnd : conditionsOr)
 				{
-					std::string conditionState = (conditionsAnd.second == "FREE") ? "" : conditionsAnd.second;
-					//if(_DEBUG) wxLogDebug("CONDITION_STATE=%s", conditionState);
+					std::string conditionState = conditionsAnd.second;
+					//wxLogDebug("CONDITION_STATE=%s", conditionState);
 
 					int occurences = 0;
 					if (ruleNeighborhood[0] == "ALL")
 					{
-						for (auto& neighbor : neighbors)
-							if (neighborhood[neighbor] == conditionState) occurences++;
+						for (auto& neighbor : neighborhood)
+							if (neighbor.second == conditionState) occurences++;
 					}
 					else for (auto& neighbor : ruleNeighborhood)
 					{
@@ -1789,12 +1773,12 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 						// otherwise, maybe throw error; to do: decide (line 1434)
 					}
 
-					//if(_DEBUG) wxLogDebug("OCCURENCES=%i", occurences);
+					//wxLogDebug("OCCURENCES=%i", occurences);
 
 					int conditionNumber = conditionsAnd.first.first;
 					int conditionType = conditionsAnd.first.second;
 
-					//if(_DEBUG) wxLogDebug("CONDITION_NUMBER=%i, CONDITION_TYPE=%i", conditionNumber, conditionType);
+					//wxLogDebug("CONDITION_NUMBER=%i, CONDITION_TYPE=%i", conditionNumber, conditionType);
 
 					switch (conditionType)
 					{
@@ -1824,7 +1808,7 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 
 		if (ruleValid) break;
 	}
-	
+
 	return ruleValid;
 }
 
@@ -1846,7 +1830,7 @@ std::unordered_map<std::string, std::string> Grid::GetNeighborhood(std::pair<int
 		int y = xy.second;
 
 		std::pair<int, int> d = dxy[neighbor];
-		
+
 		int nx = x + d.first;
 		int ny = y + d.second;
 
@@ -1866,7 +1850,7 @@ void Grid::UpdateGeneration()
 
 		if (state.back() == '*')
 		{
-			//if(_DEBUG) wxLogDebug("STATE=%s", state);
+			//wxLogDebug("STATE=%s", state);
 
 			state.pop_back();
 
@@ -1886,7 +1870,7 @@ void Grid::UpdateGeneration()
 				else currState.push_back(state[i]);
 			}
 
-			//if(_DEBUG) wxLogDebug("PREV=<%s> CURR=<%s>", prevState, currState);
+			//wxLogDebug("PREV=<%s> CURR=<%s>", prevState, currState);
 
 			// insert positions into the current state map and remove them from the previous one
 			for (auto& position : it->second)
@@ -1895,14 +1879,11 @@ void Grid::UpdateGeneration()
 
 				InsertCell(position.first, position.second, currState, colors[currState], true);
 
-				//if(_DEBUG) wxLogDebug("(%i,%i), prev=%s, curr=%s",position.first-200,position.second-200,prevState,currState);
-				//for (auto& ngb : m_Neighbors[position]) if(_DEBUG) wxLogDebug("[%s]=%s", ngb.first, ngb.second);
-
 				//m_StatePositions[prevState].erase(position);
 				//if (m_StatePositions[prevState].size() == 0) m_StatePositions.erase(state);
 				// update the color
 				//m_Cells[position] = { currState, colors[currState] };
-				
+
 				/*m_RedrawAll = false;
 				m_RedrawXYs.push_back(position);
 				m_RedrawColors.push_back(colors[currState]);*/
@@ -1912,12 +1893,6 @@ void Grid::UpdateGeneration()
 		}
 		else it++;
 	}
-
-	m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions, m_Neighbors, m_PrevNeighbors);
-
-	m_PrevCells = m_Cells;
-	m_PrevStatePositions = m_StatePositions;
-	//m_PrevNeighbors = m_Neighbors;
 
 	Refresh(false);
 	Update();

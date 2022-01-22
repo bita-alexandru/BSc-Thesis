@@ -144,6 +144,9 @@
     <ClInclude Include="Transition.h">
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
+    <ClInclude Include="ThreadRuleApplier.h">
+      <Filter>Header Files\Misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -216,6 +219,9 @@
       <Filter>Source Files\Tools</Filter>
     </ClCompile>
     <ClCompile Include="Interpreter.cpp">
+      <Filter>Source Files\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="ThreadRuleApplier.cpp">
       <Filter>Source Files\Misc</Filter>
     </ClCompile>
   </ItemGroup>

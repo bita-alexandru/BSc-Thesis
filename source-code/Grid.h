@@ -18,12 +18,14 @@
 #include "StatusCells.h"
 #include "InputRules.h"
 #include "Transition.h"
+#include "ThreadRuleApplier.h"
 
 class ToolZoom;
 class ToolUndo;
 class ToolStates;
 class ToolModes;
 class InputRules;
+//class ThreadRuleApplier;
 
 class Grid : public wxHVScrolledWindow
 {
@@ -37,8 +39,7 @@ public:
 
 	void SetCells(
 		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells,
-		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions,
-		std::unordered_map<std::pair<int, int>, std::unordered_map<std::string, std::string>, Hashes::PairInt> neighbors
+		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions
 	);
 
 	void SetInputRules(InputRules* inputRules);
@@ -50,15 +51,15 @@ public:
 	void SetStatusCells(StatusCells* statusCells);
 
 	void InsertCell(int x, int y, std::string state, wxColour color, bool multiple = false);
-	void RemoveCell(int x, int y, bool multiple = false);
+	void RemoveCell(int x, int y, std::string state, wxColour color, bool multiple = false);
 	void RemoveState(std::string state, bool update = true);
 	void UpdateState(std::string oldState, wxColour oldColor, std::string newState, wxColour newColor);
+	void EraseCell(int x, int y, bool multiple = false);
 	std::string GetState(int x, int y);
 
 	void RefreshUpdate();
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> GetCells();
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> GetStatePositions();
-	std::unordered_map<std::pair<int, int>, std::unordered_map<std::string, std::string>, Hashes::PairInt> GetNeighbors();
 	std::unordered_map<std::string, wxColour>& GetColors();
 
 	void Reset();
@@ -79,17 +80,15 @@ private:
 	const int m_OffsetX = Sizes::N_COLS / 2;
 	const int m_OffsetY = Sizes::N_ROWS / 2;
 	bool m_Centered = false;
+
 	bool m_Paused = false;
 	bool m_Finished = false;
-	bool m_StartedParsing = false;
-	std::unordered_multimap<std::string, Transition>::iterator m_LastParsedRule;
+	bool m_Playing = false;
 
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> m_Cells;
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> m_StatePositions;
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> m_PrevCells;
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> m_PrevStatePositions;
-	std::unordered_map<std::pair<int, int>, std::unordered_map<std::string, std::string>, Hashes::PairInt> m_Neighbors;
-	std::unordered_map<std::pair<int, int>, std::unordered_map<std::string, std::string>, Hashes::PairInt> m_PrevNeighbors;
 
 	wxTimer* m_TimerSelection = nullptr;
 

@@ -23,9 +23,7 @@ public:
 		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt>& cells,
 		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>>& statePositions,
 		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt>& prevCells,
-		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>>& prevStatePositions,
-		std::unordered_map<std::pair<int, int>, std::unordered_map<std::string, std::string>, Hashes::PairInt>& neighbors,
-		std::unordered_map<std::pair<int, int>, std::unordered_map<std::string, std::string>, Hashes::PairInt>& prevNeighbors
+		std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>>& prevStatePositions
 	);
 
 	void Reset();
@@ -36,8 +34,6 @@ private:
 	std::stack<std::vector<std::pair<std::pair<int, int>, std::pair<std::string, wxColour>>>> m_RedoCells;
 	std::stack<std::vector<std::pair<std::string, std::pair<int, int>>>> m_UndoStatePositions;
 	std::stack<std::vector<std::pair<std::string, std::pair<int, int>>>> m_RedoStatePositions;
-	std::stack<std::vector<std::pair<std::pair<int, int>, std::pair<std::string, std::string>>>> m_UndoNeighbors;
-	std::stack<std::vector<std::pair<std::pair<int, int>, std::pair<std::string, std::string>>>> m_RedoNeighbors;
 
 	wxBitmapButton* m_Undo = nullptr;
 	wxBitmapButton* m_Redo = nullptr;
@@ -47,4 +43,3 @@ private:
 
 	void BuildInterface();
 };
-
