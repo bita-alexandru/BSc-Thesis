@@ -88,11 +88,11 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 		{
 			// count linefeed whitespace
 			wxString line = m_TextCtrl->GetLine(i);
-			int lf = (line.size() > 0 && line[line.size() - 1] == '\n') ? 1 : 0;
+			/*int lf = (line.size() > 0 && line[line.size() - 1] == '\n') ? 1 : 0;
 			int cr = (line.size() > 1 && line[line.size() - 2] == '\r') ? 1 : 0;
-			int ws = lf + cr;
+			int ws = lf + cr;*/
 
-			ws = 0; // nvm, i dont need it
+			int ws = 0; // nvm, i dont need it
 
 			cnt += (line.size() - ws);
 
@@ -101,7 +101,6 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 			{
 				nline = i;
 				ncol = (line.size() - ws) - (cnt - ncol);
-				it.first = nline;
 				break;
 			}
 		}
@@ -109,8 +108,8 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 		//wxLogDebug("cnt=%i, ncol=%i", cnt,ncol);
 
 		std::string line = std::to_string(nline + 1);
-
 		std::string col = std::to_string(ncol);
+
 		extendedMessage += it.second + " at line " + line + ", after column " + col + "\n";
 		//extendedMessage += it.second + " Line=" + line + ", Column=" + col + "\n";
 

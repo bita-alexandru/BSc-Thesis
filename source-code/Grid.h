@@ -18,14 +18,12 @@
 #include "StatusCells.h"
 #include "InputRules.h"
 #include "Transition.h"
-#include "ThreadRuleApplier.h"
 
 class ToolZoom;
 class ToolUndo;
 class ToolStates;
 class ToolModes;
 class InputRules;
-//class ThreadRuleApplier;
 
 class Grid : public wxHVScrolledWindow
 {
@@ -80,10 +78,10 @@ private:
 	const int m_OffsetX = Sizes::N_COLS / 2;
 	const int m_OffsetY = Sizes::N_ROWS / 2;
 	bool m_Centered = false;
-
 	bool m_Paused = false;
 	bool m_Finished = false;
-	bool m_Playing = false;
+	bool m_StartedParsing = false;
+	std::unordered_multimap<std::string, Transition>::iterator m_LastParsedRule;
 
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> m_Cells;
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> m_StatePositions;

@@ -71,6 +71,6 @@ private:
 	void UpdateLineColMouse(wxMouseEvent& evt);
 	void UpdateLineColKey(wxKeyEvent& evt);
 
-	int FindState(std::string state);
+	std::pair<int, int> FindState(std::string state);
 };
 

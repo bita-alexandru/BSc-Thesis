@@ -47,14 +47,27 @@ std::vector<std::string> EditorStates::GetData()
 	std::vector<std::string> states({ "FREE" });
 
 	int cntLine = -1;
-	while (std::getline(ssText, line, '\n'))
+	while (std::getline(ssText, line, ';'))
 	{
 		cntLine++;
 
 		if (line.empty()) continue;
 
 		// inline comment, ignore it but continue with the state before it
-		if (line.find("!") != line.npos) line = line.substr(0, line.find("!"));
+		if (line.find("!") != line.npos)
+		{
+			int curr = (ssText.tellg() == -1) ? text.size() : (int)ssText.tellg();
+			//wxLogDebug("curr=%i prev=%i", curr, curr - line.size());
+			int lf = text.find('\n', curr - line.size());
+
+			if (lf != text.npos)
+			{
+				ssText.clear();
+				ssText.seekg(lf + 1);
+			}
+
+			line = line.substr(0, line.find("!"));
+		}
 
 		if (line.empty()) continue;
 
@@ -67,30 +80,38 @@ std::vector<std::string> EditorStates::GetData()
 
 		if (state.empty()) continue;
 
+		if (ssText.tellg() == -1)
+		{
+			indexInvalid.push_back({ text.size(), "<EXPECTED ';' AFTER STATE DECLARATION>" });
+			continue;
+		}
+
+		int pos = (int)ssText.tellg() - state.size();
+
 		if (!s.empty())
 		{
-			indexInvalid.push_back({ cntLine, "<ILLEGAL SPACE CHARACTER, USE '_' INSTEAD>" });
+			indexInvalid.push_back({ pos, "<ILLEGAL SPACE CHARACTER, USE '_' INSTEAD>" });
 			continue;
 		}
 
 		// state's name does not respect the character limits
 		if (state.size() < Sizes::CHARS_STATE_MIN || state.size() > Sizes::CHARS_STATE_MAX)
 		{
-			indexInvalid.push_back({ cntLine, "<INVALID STATE SIZE>"});
+			indexInvalid.push_back({ pos, "<INVALID STATE SIZE>"});
 			continue;
 		}
 
 		// state's name contains illegal characters
 		if (std::find_if(state.begin(), state.end(), [](char c) { return !(isalnum(c) || (c == '_')); }) != state.end())
 		{
-			indexInvalid.push_back({ cntLine, "<ILLEGAL CHARACTERS>"});
+			indexInvalid.push_back({ pos, "<ILLEGAL CHARACTERS>"});
 			continue;
 		}
 
 		// duplicate found
 		if (setStates.find(state) != setStates.end())
 		{
-			indexInvalid.push_back({ cntLine,"<DUPLICATE STATE>" });
+			indexInvalid.push_back({ pos,"<DUPLICATE STATE>" });
 			continue;
 		}
 		else
@@ -129,11 +150,31 @@ std::vector<std::string> EditorStates::GetData()
 		std::string extendedMessage = "";
 		for (auto& it : indexInvalid)
 		{
-			int nline = it.first;
-			std::string line = std::to_string(nline + 1);
+			int ncol = it.first;
+			int nline = 0;
+			int cnt = 0;
 
-			extendedMessage += it.second + " at line " + line + "\n";
-			//extendedMessage += it.second + ", Line=" + line + "\n";
+			for (int i = 0; i < m_TextCtrl->GetLineCount(); i++)
+			{
+				wxString line = m_TextCtrl->GetLine(i);
+
+				cnt += line.size();
+
+				if (cnt >= ncol)
+				{
+					nline = i;
+					ncol = line.size() - (cnt - ncol);
+					break;
+				}
+			}
+			
+			std::string line = std::to_string(nline + 1);
+			std::string col = std::to_string(ncol);
+
+			extendedMessage += it.second + " at line " + line + ", after column " + col + "\n";
+			//extendedMessage += it.second + " Line=" + line + ", Column=" + col + "\n";
+
+			it.first = nline;
 		}
 		dialog.SetExtendedMessage(extendedMessage);
 
@@ -172,10 +213,10 @@ std::vector<std::string> EditorStates::GetData()
 
 void EditorStates::GoTo(std::string state)
 {
-	int line = FindState(state);
+	std::pair<int, int> position = FindState(state);
 
 	// not found
-	if (line == -1)
+	if (position.first == -1)
 	{
 		wxMessageDialog dialog(
 			this, "No occurence found.", "Go To",
@@ -188,10 +229,10 @@ void EditorStates::GoTo(std::string state)
 	}
 	else
 	{
-		int position = m_TextCtrl->PositionFromLine(line);
-		m_TextCtrl->ShowPosition(position);
+		//int position = m_TextCtrl->PositionFromLine(line);
+		m_TextCtrl->ShowPosition(position.first);
 
-		m_TextCtrl->SetSelection(position, position + state.size());
+		m_TextCtrl->SetSelection(position.first, position.second);
 
 		Show();
 		SetFocus();
@@ -200,13 +241,13 @@ void EditorStates::GoTo(std::string state)
 
 void EditorStates::DeleteState(std::string state)
 {
-	int line = FindState(state);
+	std::pair<int, int> position = FindState(state);
 
-	if (line != -1)
+	if (position.first != -1)
 	{
-		int position = m_TextCtrl->PositionFromLine(line);
+		m_TextCtrl->PositionFromLine(position.first);
 
-		m_TextCtrl->SetSelection(position, position + state.size());
+		m_TextCtrl->SetSelection(position.first, position.second);
 
 		m_TextCtrl->DeleteBack();
 		m_PrevText = m_TextCtrl->GetText();
@@ -613,31 +654,64 @@ void EditorStates::UpdateLineColKey(wxKeyEvent& evt)
 	evt.Skip();
 }
 
-int EditorStates::FindState(std::string state)
+std::pair<int, int> EditorStates::FindState(std::string state)
 {
+	int pos = 0;
+
+	std::string s = "";
+	bool firstchar = true;
+	int posBegin = 0;
 	for (int i = 0; i < m_TextCtrl->GetLineCount(); i++)
 	{
 		wxString line = m_TextCtrl->GetLine(i);
+		wxString states = line;
+
+		firstchar = true;
 
 		// inline comment, ignore it but continue with the state before it
-		if (line.find("!") != line.npos) line = line.substr(0, line.find("!"));
+		if (line.find("!") != line.npos) states = line.substr(0, line.find("!"));
 
-		if (line.empty()) continue;
-		line.MakeUpper();
+		if (states.empty())
+		{
+			pos += line.size();
+			continue;
+		}
+		states.MakeUpper();
 
-		std::stringstream ss(line.ToStdString());
-		std::string token = "";
-		std::string s = "";
+		for (int j = 0; j < states.size(); j++)
+		{
+			char c = states[j];
 
-		ss >> token;
-		ss >> s;
+			if (iswspace(c)) continue;
 
-		if (token.empty() || !s.empty()) continue;
+			if (c == ';')
+			{
+				firstchar = true;
+				if (s == state)
+				{
+					int posEnd = posBegin + state.size();
 
-		if (token == state) return i;
+					return { posBegin, posEnd };
+				}
+
+				s = "";
+			}
+			else if (isalnum(c))
+			{
+				s.push_back(c);
+
+				if (firstchar)
+				{
+					firstchar = false;
+					posBegin = pos + j;
+				}
+			}
+		}
+
+		pos += line.size();
 	}
 
-	return -1;
+	return { -1,-1 };
 }
 
 void EditorStates::CloseEditor(bool save)

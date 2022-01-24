@@ -11,7 +11,6 @@ EVT_SCROLLWIN(Grid::OnScroll)
 EVT_SIZE(Grid::OnSize)
 wxEND_EVENT_TABLE()
 
-WX_DEFINE_ARRAY_PTR(wxThread*, wxArrayThreads);
 
 Grid::Grid(wxWindow* parent) : wxHVScrolledWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS)
 {
@@ -396,7 +395,7 @@ void Grid::Reset()
 
 	m_Paused = false;
 	m_Finished = false;
-	m_Playing = false;
+	m_StartedParsing = false;
 
 	Refresh(false);
 	Update();
@@ -1481,10 +1480,6 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 	std::unordered_set<std::string> neighbors = m_InputRules->GetInputNeighbors()->GetNeighbors();
 	std::vector<std::pair<int, int>> applied;
 
-	wxCriticalSection appliedCS;
-	wxCriticalSection statePositionsCS;
-	wxCriticalSection visitedCS;
-
 	// check if rule might contain invalid states
 	if (states.find(rule.first) == states.end()) return -1;
 	if (states.find(rule.second.state) == states.end()) return -1;
@@ -1498,160 +1493,73 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 		if (neighbors.find(direction) == neighbors.end()) return -1;
 	}
 
-	int cores = wxThread::GetCPUCount();
-
 	// if state is "FREE", apply rule to all "FREE" cells
 	if (rule.first == "FREE")
 	{
 		if (rule.second.condition.empty())
 		{
-			int applies = 0;
-
-			//std::vector<ThreadRuleApplier> threads;
-			wxArrayThreads threads;
-			
-			int rowStart = 0;
-			int rowSize = Sizes::N_ROWS / cores;
-
-			for (int i = 0; i < cores; i++)
-			{
-				ThreadRuleApplier thread("FREE_ONLY");
-				thread.SetRange(rowStart, rowSize, 0, Sizes::N_COLS);
-				thread.SetRule(&rule);
-				thread.SetCells(&m_Cells);
-				thread.SetStatePositions(&m_StatePositions);
-				thread.SetCriticalStatePosition(&statePositionsCS);
-				thread.Run();
-				threads.Add(&thread);
-				//threads.back().Run();
-
-				rowStart += rowSize;
-			}
-
-			for (auto& it : threads)
-			{
-				applies += (int)it->Wait();
-			}
-
-			return applies;
-
-			/*for (int i = 0; i < Sizes::N_ROWS; i++)
+			for (int i = 0; i < Sizes::N_ROWS; i++)
 				for (int j = 0; j < Sizes::N_COLS; j++)
-					if (m_Cells.find({ j,i }) == m_Cells.end())
+					if (GetState(j, i) == "FREE")
 					{
 						std::string newstate = rule.first + "*" + rule.second.state + "*";
 						m_StatePositions[newstate].insert({ j,i });
-
-						applies++;
 					}
-
-			return applies;*/
 		}
 		else
 		{
-			std::unordered_set<std::pair<int, int>, Hashes::PairInt> visited;
-
-			for (auto& state : rule.second.states)
-			{
-				//if (state == "FREE")
-				//{
-					std::vector<ThreadRuleApplier> threads;
-					int rowStart = 0;
-					int rowSize = Sizes::N_ROWS / cores;
-
-					for (int i = 0; i < cores; i++)
+			for (int i = 0; i < Sizes::N_ROWS; i++)
+				for (int j = 0; j < Sizes::N_COLS; j++)
+					if (GetState(j, i) == "FREE")
 					{
-						ThreadRuleApplier thread("FREE_FREE");
-						thread.SetRange(rowStart, rowSize, 0, Sizes::N_COLS);
-						thread.SetRule(&rule);
-						thread.SetCells(&m_Cells);
-						thread.SetNeighbors(&neighbors);
-						thread.SetApplied(&applied);
-						thread.SetVisited(&visited);
-						thread.SetStatePositions(&m_StatePositions);
-						thread.SetCriticalApplied(&appliedCS);
-						thread.SetCriticalVisited(&visitedCS);
-						thread.SetCriticalStatePosition(&statePositionsCS);
-
-						threads.push_back(thread);
-						threads.back().Run();
-
-						rowStart += rowSize;
+						if (ApplyOnCell(j, i, rule.second, neighbors)) applied.push_back({ j,i });
 					}
 
-					for (auto& it : threads)
-					{
-						int code = (int)it.Wait();
-					}
+			/* {
+				std::unordered_set<std::pair<int, int>, Hashes::PairInt> visited;
 
-					/*for (int i = 0; i < Sizes::N_ROWS; i++)
-						for (int j = 0; j < Sizes::N_COLS; j++)
-							if (m_Cells.find({ j,i }) == m_Cells.end() && visited.find({ j,i }) == visited.end())
+				int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
+				int dy[8] = { -1,-1,0,1,1,1,0,-1 };
+
+				for (auto& state : rule.second.states)
+				{
+					if (state == "FREE")
+					{
+						for (int i = 0; i < Sizes::N_ROWS; i++)
+							for (int j = 0; j < Sizes::N_COLS; j++)
+								if (GetState(j, i) == "FREE" && visited.find({ j,i }) == visited.end())
+								{
+									visited.insert({ j,i });
+
+									if (ApplyOnCell(j, i, rule.second, neighbors)) applied.push_back({ j,i });
+								}
+					}
+					// cells of this type are placed on grid
+					else if (m_StatePositions.find(state) != m_StatePositions.end())
+					{
+						// get adjacent cells of type "FREE"
+						for (auto& cell : m_StatePositions[state])
+						{
+							int x = cell.first;
+							int y = cell.second;
+
+							for (int d = 0; d < 8; d++)
 							{
-								visited.insert({ j,i });
-								
-								if (ApplyOnCell(j, i, rule.second, neighbors)) applied.push_back({ j,i });
-							}*/
-				//}
-				// cells of this type are placed on grid
-				//else if (m_StatePositions.find(state) != m_StatePositions.end())
-				//{
-				//	std::vector<ThreadRuleApplier> threads;
-				//	int itStart = 0;
-				//	int itSize = m_StatePositions[state].size() / cores;
+								int nx = x + dx[d];
+								int ny = y + dy[d];
 
+								// valid position and unvisited yet
+								if (InBounds(nx, ny) && GetState(nx, ny) == "FREE" && visited.find({ nx,ny }) == visited.end())
+								{
+									visited.insert({ nx,ny });
 
-				//	for (int i = 0; i < cores; i++)
-				//	{
-				//		ThreadRuleApplier thread("FREE_ADJACENT");
-				//		thread.SetRange(itStart, itSize);
-				//		thread.SetRule(&rule);
-				//		thread.SetState(state);
-				//		thread.SetCells(&m_Cells);
-				//		thread.SetNeighbors(&neighbors);
-				//		thread.SetApplied(&applied);
-				//		thread.SetVisited(&visited);
-				//		thread.SetStatePositions(&m_StatePositions);
-				//		thread.SetCriticalApplied(&appliedCS);
-				//		thread.SetCriticalVisited(&visitedCS);
-				//		thread.SetCriticalStatePosition(&statePositionsCS);
-
-				//		threads.push_back(thread);
-				//		threads.back().Run();
-
-				//		itStart += itSize;
-				//	}
-
-				//	for (auto& it : threads)
-				//	{
-				//		int code = (int)it.Wait();
-				//	}
-
-				//	int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
-				//	int dy[8] = { -1,-1,0,1,1,1,0,-1 };
-
-				//	// get adjacent cells of type "FREE"
-				//	for (auto& cell : m_StatePositions[state])
-				//	{
-				//		int x = cell.first;
-				//		int y = cell.second;
-
-				//		for (int d = 0; d < 8; d++)
-				//		{
-				//			int nx = x + dx[d];
-				//			int ny = y + dy[d];
-
-				//			// valid position and unvisited yet
-				//			if (InBounds(nx, ny) && GetState(nx, ny) == "FREE" && visited.find({ nx,ny }) == visited.end())
-				//			{
-				//				visited.insert({ nx,ny });
-
-				//				if (ApplyOnCell(nx, ny, rule.second, neighbors)) applied.push_back({ nx,ny });
-				//			}
-				//		}
-				//	}
-				//}
-			}
+									if (ApplyOnCell(nx, ny, rule.second, neighbors)) applied.push_back({ nx,ny });
+								}
+							}
+						}
+					}
+				}
+			} */
 		}
 	}
 	// else, get all cells of that type
@@ -1659,40 +1567,11 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 	{
 		if (m_StatePositions.find(rule.first) == m_StatePositions.end()) return 0;
 
-		std::vector<ThreadRuleApplier> threads;
-		int rowStart = 0;
-		int rowSize = m_StatePositions[rule.first].size() / cores;
-
-		for (int i = 0; i < cores; i++)
+		for (auto& cell : m_StatePositions[rule.first])
 		{
-			ThreadRuleApplier thread("NON_FREE");
-			thread.SetRange(rowStart, rowSize);
-			thread.SetRule(&rule);
-			thread.SetState(rule.first);
-			thread.SetCells(&m_Cells);
-			thread.SetNeighbors(&neighbors);
-			thread.SetApplied(&applied);
-			thread.SetStatePositions(&m_StatePositions);
-			thread.SetCriticalApplied(&appliedCS);
-			thread.SetCriticalVisited(&visitedCS);
-			thread.SetCriticalStatePosition(&statePositionsCS);
-
-			threads.push_back(thread);
-			threads.back().Run();
-
-			rowStart += rowSize;
+			//wxLogDebug("CELL=%i,%i", cell.first-m_OffsetX, cell.second-m_OffsetY);
+			if (ApplyOnCell(cell.first, cell.second, rule.second, neighbors)) applied.push_back({ cell.first,cell.second });
 		}
-
-		for (auto& it : threads)
-		{
-			int code = (int)it.Wait();
-		}
-
-		//for (auto& cell : m_StatePositions[rule.first])
-		//{
-		//	//wxLogDebug("CELL=%i,%i", cell.first-m_OffsetX, cell.second-m_OffsetY);
-		//	if (ApplyOnCell(cell.first, cell.second, rule.second, neighbors)) applied.push_back({ cell.first,cell.second });
-		//}
 	}
 
 	std::string newstate = rule.first + "*" + rule.second.state + "*";
