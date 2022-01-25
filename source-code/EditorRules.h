@@ -18,11 +18,15 @@ public:
 	~EditorRules();
 
 	void SetInputRules(InputRules* inputRules);
+
+	std::pair<std::vector<std::pair<std::string, Transition>>, std::vector<std::pair<int, std::string>>> Process(wxString states);
 	vector<pair<string, Transition>> GetData();
 
 	void GoTo(std::string rule);
 	void DeleteRule(std::string rule);
 	void ForceClose();
+
+	void SetText(std::string text);
 private:
 	InputRules* m_InputRules = nullptr;
 

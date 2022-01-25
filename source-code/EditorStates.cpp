@@ -34,15 +34,15 @@ void EditorStates::SetInputStates(InputStates* inputStates)
 	m_InputStates = inputStates;
 }
 
-std::vector<std::string> EditorStates::GetData()
+std::pair<std::vector<std::string>, std::vector<std::pair<int, std::string>>> EditorStates::Process(wxString text)
 {
-	std::string text = (std::string)m_TextCtrl->GetText().Upper();
+	text.MakeUpper();
 
 	// count lines (states) and mark duplicates/invalid states
 	std::unordered_set<std::string> setStates({ "FREE" });
 	std::vector<std::pair<int, std::string>> indexInvalid;
 
-	std::stringstream ssText(text);
+	std::stringstream ssText(text.ToStdString());
 	std::string line;
 	std::vector<std::string> states({ "FREE" });
 
@@ -74,7 +74,7 @@ std::vector<std::string> EditorStates::GetData()
 		std::stringstream ss(line);
 		std::string state = "";
 		std::string s = "";
-		
+
 		ss >> state;
 		ss >> s;
 
@@ -97,14 +97,14 @@ std::vector<std::string> EditorStates::GetData()
 		// state's name does not respect the character limits
 		if (state.size() < Sizes::CHARS_STATE_MIN || state.size() > Sizes::CHARS_STATE_MAX)
 		{
-			indexInvalid.push_back({ pos, "<INVALID STATE SIZE>"});
+			indexInvalid.push_back({ pos, "<INVALID STATE SIZE>" });
 			continue;
 		}
 
 		// state's name contains illegal characters
 		if (std::find_if(state.begin(), state.end(), [](char c) { return !(isalnum(c) || (c == '_')); }) != state.end())
 		{
-			indexInvalid.push_back({ pos, "<ILLEGAL CHARACTERS>"});
+			indexInvalid.push_back({ pos, "<ILLEGAL CHARACTERS>" });
 			continue;
 		}
 
@@ -121,6 +121,15 @@ std::vector<std::string> EditorStates::GetData()
 
 		states.push_back(state);
 	}
+
+	return { states,indexInvalid };
+}
+
+std::vector<std::string> EditorStates::GetData()
+{
+	std::pair<std::vector<std::string>, std::vector<std::pair<int, std::string>>> data = Process(m_TextCtrl->GetText());
+	std::vector<std::string> states = data.first;
+	std::vector<std::pair<int, std::string>> indexInvalid = data.second;
 
 	if (states.size() > Sizes::STATES_MAX)
 	{
@@ -261,25 +270,30 @@ void EditorStates::ForceClose()
 	Close();
 }
 
+void EditorStates::SetText(std::string text)
+{
+	m_TextCtrl->SetText(text);
+}
+
 void EditorStates::BuildMenuBar()
 {
 	wxMenu* menuFile = new wxMenu();
 	wxMenu* menuEdit = new wxMenu();
 
-	menuFile->Append(Ids::ID_IMPORT_STATES, "&Import\tCtrl-I");
-	menuFile->Append(Ids::ID_EXPORT_STATES, "Ex&port\tCtrl-P");
+	menuFile->Append(Ids::ID_IMPORT_STATES, "&Import\tCtrl+I");
+	menuFile->Append(Ids::ID_EXPORT_STATES, "Ex&port\Ctrl+Shift+S");
 	menuFile->AppendSeparator();
-	menuFile->Append(Ids::ID_SAVE_STATES, "&Save\tCtrl-S");
-	menuFile->Append(Ids::ID_SAVE_CLOSE_STATES, "Sa&ve && Close\tCtrl-Shift-S");
+	menuFile->Append(Ids::ID_SAVE_STATES, "&Save\tCtrl+S");
+	menuFile->Append(Ids::ID_SAVE_CLOSE_STATES, "Sa&ve && Close\tAlt+S");
 	menuFile->AppendSeparator();
-	menuFile->Append(Ids::ID_CLOSE_STATES, "&Close\tAlt-F4");
-	menuEdit->Append(Ids::ID_FIND_STATES, "&Find\tCtrl-F");
-	menuEdit->Append(Ids::ID_REPLACE_STATES, "&Replace\tCtrl-H");
+	menuFile->Append(Ids::ID_CLOSE_STATES, "&Close\tAlt+F4");
+	menuEdit->Append(Ids::ID_FIND_STATES, "&Find\tCtrl+F");
+	menuEdit->Append(Ids::ID_REPLACE_STATES, "&Replace\tCtrl+H");
 	menuEdit->AppendSeparator();
-	menuEdit->Append(Ids::ID_MARK_NEXT_STATES, "&Next Mark\tCtrl-E");
-	menuEdit->Append(Ids::ID_MARK_PREV_STATES, "&Previous Mark\tCtrl-Q");
+	menuEdit->Append(Ids::ID_MARK_NEXT_STATES, "&Next Mark\tCtrl+E");
+	menuEdit->Append(Ids::ID_MARK_PREV_STATES, "&Previous Mark\tCtrl+Q");
 	menuEdit->AppendSeparator();
-	menuEdit->Append(Ids::ID_FORMAT_STATES, "Forma&t\tCtrl-T");
+	menuEdit->Append(Ids::ID_FORMAT_STATES, "Forma&t\tCtrl+T");
 
 	m_MenuBar = new wxMenuBar();
 	m_MenuBar->Append(menuFile, "&File");
@@ -686,17 +700,17 @@ std::pair<int, int> EditorStates::FindState(std::string state)
 
 			if (c == ';')
 			{
-				firstchar = true;
 				if (s == state)
 				{
-					int posEnd = posBegin + state.size();
+					int posEnd = pos + j + 1;
 
 					return { posBegin, posEnd };
 				}
 
+				firstchar = true;
 				s = "";
 			}
-			else if (isalnum(c))
+			else
 			{
 				s.push_back(c);
 

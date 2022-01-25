@@ -59,36 +59,22 @@ void Main::BuildInterface()
 void Main::BuildMenubar()
 {
 	wxMenu* menuFile = new wxMenu();
-	wxMenu* menuOpen = new wxMenu();
-	wxMenu* menuSave = new wxMenu();
-	wxMenu* menuClear = new wxMenu();
 	wxMenu* menuView = new wxMenu();
 	wxMenu* menuHelp = new wxMenu();
 
-	menuOpen->Append(Ids::ID_OPEN_C, "&Cellular Automaton Configuration\tCtrl-O");
-	menuOpen->Append(Ids::ID_OPEN_G, "&Genetic Algorithm Configuration\tCtrl-Shift-O");
-
-	menuSave->Append(Ids::ID_SAVE_C, "&Cellular Automaton Configuration\tCtrl-S");
-	menuSave->Append(Ids::ID_SAVE_G, "&Genetic Algorithm Configuration\tCtrl-Shift-S");
-
-	menuFile->AppendSubMenu(menuOpen, "&Open");
-	menuFile->AppendSubMenu(menuSave, "&Save");
+	menuFile->Append(Ids::ID_IMPORT, "&Import\tCtrl+O");
+	menuFile->Append(Ids::ID_EXPORT, "&Export\tCtrl+S");
 	menuFile->AppendSeparator();
-	menuFile->AppendSubMenu(menuClear, "&Clear");
-	menuFile->AppendSeparator();
-	menuFile->Append(Ids::ID_EXIT, "E&xit\tAlt-F4");
-
-	menuClear->Append(Ids::ID_CLEAR_C, "&Cellular Automaton Input\tCtrl-L");
-	menuClear->Append(Ids::ID_CLEAR_G, "&Genetic Algorithm Input\tCtrl-Shift-L");
+	menuFile->Append(Ids::ID_EXIT, "E&xit\tAlt+F4");
 
 	menuView->Append(Ids::ID_VIEW_DEFAULT, "&Default Perspective\tF1");
-	//menuView->AppendSeparator();
-	//menuView->Append(Ids::ID_VIEW_INPUT, "&Input Perspective\tF2");
 	menuView->Append(Ids::ID_VIEW_GRID, "&Grid Perspective\tF2");
-	//menuView->Append(Ids::ID_VIEW_ALGORITHM, "&Algorithm Perspective\tF4");
+	menuView->AppendSeparator();
+	menuView->Append(Ids::ID_VIEW_STATES, "&States Editor\tCtrl+1");
+	menuView->Append(Ids::ID_VIEW_RULES, "&Rules Editor\tCtrl+2");
 
-	menuHelp->Append(Ids::ID_USERMANUAL, "&User Manual\tCtrl-U");
-	menuHelp->Append(Ids::ID_SHORTCUTS, "&Shortcuts\tCtrl-J");
+	menuHelp->Append(Ids::ID_USERMANUAL, "&User Manual\tCtrl+U");
+	menuHelp->Append(Ids::ID_SHORTCUTS, "&Shortcuts\tCtrl+J");
 
 	wxMenuBar* menuBar = new wxMenuBar();
 	menuBar->Append(menuFile, "&File");
@@ -99,9 +85,9 @@ void Main::BuildMenubar()
 
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuExit, this, Ids::ID_EXIT);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuPerspectiveDefault, this, Ids::ID_VIEW_DEFAULT);
-	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuPerspectiveInput, this, Ids::ID_VIEW_INPUT);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuPerspectiveGrid, this, Ids::ID_VIEW_GRID);
-	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuPerspectiveAlgorithm, this, Ids::ID_VIEW_ALGORITHM);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuEditorStates, this, Ids::ID_VIEW_STATES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuEditorRules, this, Ids::ID_VIEW_RULES);
 }
 
 void Main::SetShortcuts()
@@ -121,14 +107,14 @@ void Main::SetShortcuts()
 	entries[7].Set(wxACCEL_CTRL, WXK_LEFT, Ids::ID_BUTTON_PREV);
 	entries[8].Set(wxACCEL_CTRL, WXK_RIGHT, Ids::ID_BUTTON_NEXT);
 	// Editors and their Searchbars
-	entries[9].Set(wxACCEL_CTRL, (int)'1', Ids::ID_EDIT_STATES);
-	entries[10].Set(wxACCEL_CTRL, (int)'2', Ids::ID_EDIT_RULES);
-	entries[11].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'1', Ids::ID_SEARCH_STATES);
-	entries[12].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'2', Ids::ID_SEARCH_RULES);
+	//entries[9].Set(wxACCEL_CTRL, (int)'1', Ids::ID_EDIT_STATES);
+	//entries[10].Set(wxACCEL_CTRL, (int)'2', Ids::ID_EDIT_RULES);
+	entries[9].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'1', Ids::ID_SEARCH_STATES);
+	entries[10].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'2', Ids::ID_SEARCH_RULES);
 	// GridStatus
-	entries[13].Set(wxACCEL_CTRL, (int)'M', Ids::ID_BUTTON_CENTER);
-	entries[14].Set(wxACCEL_CTRL, (int)'R', Ids::ID_BUTTON_RESET);
-	entries[15].Set(wxACCEL_CTRL, (int)'G', Ids::ID_BUTTON_GENERATION);
+	entries[11].Set(wxACCEL_CTRL, (int)'M', Ids::ID_BUTTON_CENTER);
+	entries[12].Set(wxACCEL_CTRL, (int)'R', Ids::ID_BUTTON_RESET);
+	entries[13].Set(wxACCEL_CTRL, (int)'G', Ids::ID_BUTTON_GENERATION);
 
 	wxAcceleratorTable accel(16, entries);
 	this->SetAcceleratorTable(accel);
@@ -215,6 +201,18 @@ void Main::MenuPerspectiveAlgorithm(wxCommandEvent& evt)
 {
 	m_SplitterGridAlgorithm->SetSashPosition(-9999);
 	m_SplitterInputGrid->SetSashPosition(-9999);
+}
+
+void Main::MenuEditorStates(wxCommandEvent& evt)
+{
+	m_EditorStates->Show();
+	m_EditorStates->SetFocus();
+}
+
+void Main::MenuEditorRules(wxCommandEvent& evt)
+{
+	m_EditorRules->Show();
+	m_EditorRules->SetFocus();
 }
 
 void Main::OnClose(wxCloseEvent& evt)

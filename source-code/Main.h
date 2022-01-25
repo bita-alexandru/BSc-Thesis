@@ -41,6 +41,8 @@ private:
 	void MenuPerspectiveInput(wxCommandEvent& evt);
 	void MenuPerspectiveGrid(wxCommandEvent& evt);
 	void MenuPerspectiveAlgorithm(wxCommandEvent& evt);
+	void MenuEditorStates(wxCommandEvent& evt);
+	void MenuEditorRules(wxCommandEvent& evt);
 
 	void OnClose(wxCloseEvent& evt);
 

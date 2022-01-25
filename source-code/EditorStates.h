@@ -18,11 +18,14 @@ public:
 
 	void SetInputStates(InputStates* inputStates);
 
+	std::pair<std::vector<std::string>, std::vector<std::pair<int, std::string>>> Process(wxString text);
 	std::vector<std::string> GetData();
 
 	void GoTo(std::string state);
 	void DeleteState(std::string state);
 	void ForceClose();
+
+	void SetText(std::string text);
 private:
 	InputStates* m_InputStates = nullptr;
 

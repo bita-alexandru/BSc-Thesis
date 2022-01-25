@@ -34,14 +34,24 @@ void EditorRules::SetInputRules(InputRules* inputRules)
 	m_InputRules = inputRules;
 }
 
-std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
+std::pair<std::vector<std::pair<std::string, Transition>>, std::vector<std::pair<int, std::string>>> EditorRules::Process(wxString text)
 {
-	std::string text = (std::string)m_TextCtrl->GetText().Upper();
+	text.MakeUpper();
+	std::string rules = text.ToStdString();
 
 	Interpreter interpreter;
 
-	std::vector<std::pair<int, std::string>> invalidPositions = interpreter.Process(text);
-	vector<pair<string, Transition>> transitions = interpreter.GetTransitions();
+	std::vector<std::pair<int, std::string>> invalidPositions = interpreter.Process(rules);
+	std::vector<std::pair<std::string, Transition>> transitions = interpreter.GetTransitions();
+
+	return { transitions,invalidPositions };
+}
+
+std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
+{
+	std::pair<std::vector<std::pair<std::string, Transition>>, std::vector<std::pair<int, std::string>>> data = Process(m_TextCtrl->GetText());
+	std::vector<std::pair<std::string, Transition>> transitions = data.first;
+	std::vector<std::pair<int, std::string>> invalidPositions = data.second;
 
 	if (invalidPositions.empty())
 	{
@@ -151,12 +161,10 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 
 void EditorRules::GoTo(std::string rule)
 {
-	std::pair<int, int> lines = FindRule(rule);
-	int lineBegin = lines.first;
-	int lineEnd = lines.second;
+	std::pair<int, int> position = FindRule(rule);
 
 	// not found
-	if (lineBegin == -1)
+	if (position.first == -1)
 	{
 		if (m_DialogShown) return;
 		wxMessageDialog dialog (
@@ -171,11 +179,8 @@ void EditorRules::GoTo(std::string rule)
 		return;
 	}
 
-	int positionBegin = m_TextCtrl->PositionFromLine(lineBegin);
-	int positionEnd = m_TextCtrl->GetLineEndPosition(lineEnd);
-	m_TextCtrl->ShowPosition(positionBegin);
-
-	m_TextCtrl->SetSelection(positionBegin, positionEnd);
+	m_TextCtrl->ShowPosition(position.first);
+	m_TextCtrl->SetSelection(position.first, position.second);
 
 	Show();
 	SetFocus();
@@ -183,17 +188,12 @@ void EditorRules::GoTo(std::string rule)
 
 void EditorRules::DeleteRule(std::string rule)
 {	
-	std::pair<int, int> lines = FindRule(rule);
-	int lineBegin = lines.first;
-	int lineEnd = lines.second;
+	std::pair<int, int> position = FindRule(rule);
 
-	if (lineBegin != -1)
+	if (position.first != -1)
 	{
-		int positionBegin = m_TextCtrl->PositionFromLine(lineBegin);
-		int positionEnd = m_TextCtrl->GetLineEndPosition(lineEnd);
-		m_TextCtrl->ShowPosition(positionBegin);
-
-		m_TextCtrl->SetSelection(positionBegin, positionEnd);
+		m_TextCtrl->ShowPosition(position.first);
+		m_TextCtrl->SetSelection(position.first, position.second);
 
 		m_TextCtrl->DeleteBack();
 		m_PrevText = m_TextCtrl->GetText();
@@ -207,25 +207,30 @@ void EditorRules::ForceClose()
 	//Close();
 }
 
+void EditorRules::SetText(std::string text)
+{
+	m_TextCtrl->SetText(text);
+}
+
 void EditorRules::BuildMenuBar()
 {
 	wxMenu* menuFile = new wxMenu();
 	wxMenu* menuEdit = new wxMenu();
 
-	menuFile->Append(Ids::ID_IMPORT_RULES, "&Import\tCtrl-I");
-	menuFile->Append(Ids::ID_EXPORT_RULES, "Ex&port\tCtrl-P");
+	menuFile->Append(Ids::ID_IMPORT_RULES, "&Import\tCtrl+O");
+	menuFile->Append(Ids::ID_EXPORT_RULES, "Ex&port\tCtrl+Shift+S");
 	menuFile->AppendSeparator();
-	menuFile->Append(Ids::ID_SAVE_RULES, "&Save\tCtrl-S");
-	menuFile->Append(Ids::ID_SAVE_CLOSE_RULES, "Sa&ve && Close\tCtrl-Shift-S");
+	menuFile->Append(Ids::ID_SAVE_RULES, "&Save\tCtrl+S");
+	menuFile->Append(Ids::ID_SAVE_CLOSE_RULES, "Sa&ve && Close\tAlt+S");
 	menuFile->AppendSeparator();
-	menuFile->Append(Ids::ID_CLOSE_RULES, "&Close\tAlt-F4");
-	menuEdit->Append(Ids::ID_FIND_RULES, "&Find\tCtrl-F");
-	menuEdit->Append(Ids::ID_REPLACE_RULES, "&Replace\tCtrl-H");
+	menuFile->Append(Ids::ID_CLOSE_RULES, "&Close\tAlt+F4");
+	menuEdit->Append(Ids::ID_FIND_RULES, "&Find\tCtrl+F");
+	menuEdit->Append(Ids::ID_REPLACE_RULES, "&Replace\tCtrl+H");
 	menuEdit->AppendSeparator();
-	menuEdit->Append(Ids::ID_MARK_NEXT_RULES, "&Next Mark\tCtrl-E");
-	menuEdit->Append(Ids::ID_MARK_PREV_RULES, "&Previous Mark\tCtrl-Q");
+	menuEdit->Append(Ids::ID_MARK_NEXT_RULES, "&Next Mark\tCtrl+E");
+	menuEdit->Append(Ids::ID_MARK_PREV_RULES, "&Previous Mark\tCtrl+Q");
 	menuEdit->AppendSeparator();
-	menuEdit->Append(Ids::ID_FORMAT_RULES, "Forma&t\tCtrl-T");
+	menuEdit->Append(Ids::ID_FORMAT_RULES, "Forma&t\tCtrl+T");
 
 	m_MenuBar = new wxMenuBar();
 	m_MenuBar->Append(menuFile, "&File");
@@ -619,59 +624,58 @@ void EditorRules::UpdateLineColKey(wxKeyEvent& evt)
 
 std::pair<int, int> EditorRules::FindRule(std::string rule)
 {
-	int lineBegin = 0;
-	int n = rule.size();
-	int cnt = 0;
-	std::string s = "";
+	int pos = 0;
 
+	std::string s = "";
+	bool firstchar = true;
+	int posBegin = 0;
 	for (int i = 0; i < m_TextCtrl->GetLineCount(); i++)
 	{
-		if (cnt == 0) lineBegin = i;
-
 		wxString line = m_TextCtrl->GetLine(i);
+		wxString rules = line;
 
 		// inline comment, ignore it but continue with the state before it
-		if (line.find("!") != line.npos) line = line.substr(0, line.find("!"));
+		if (line.find("!") != line.npos) rules = line.substr(0, line.find("!"));
 
-		if (line.empty()) continue;
-		line.MakeUpper();
-
-		//wxLogDebug("line=<%s>", line);
-		
-		bool substr = true;
-		// see if the line is a substring of the given rule
-		for (int j = 0; j < line.size(); j++)
+		if (rules.empty())
 		{
-			if (std::isspace(line[j])) continue;
+			pos += line.size();
+			continue;
+		}
+		rules.MakeUpper();
 
-			if (cnt == n)
-			{
-				substr = false;
-				break;
-			}
+		for (int j = 0; j < rules.size(); j++)
+		{
+			char c = rules[j];
 
-			if (line[j] == rule[cnt])
+			if (iswspace(c)) continue;
+
+			if (c == ';')
 			{
-				cnt++;
-				s.push_back(line[j]);
+				s.push_back(';');
+
+				if (s == rule)
+				{
+					int posEnd = pos + j + 1;
+					return { posBegin, posEnd };
+				}
+
+				firstchar = true;
+				s = "";
 			}
 			else
 			{
-				substr = false;
-				break;
+				s.push_back(c);
+
+				if (firstchar)
+				{
+					firstchar = false;
+					posBegin = pos + j;
+				}
 			}
 		}
 
-		//wxLogDebug("s=<%s> substr=%i pos=%i,%i", s, substr, lineBegin, i);
-
-		if (!substr)
-		{
-			s = "";
-			cnt = 0;
-			lineBegin = i + 1;
-		}
-		// we found stacking lines that produce the given rule
-		else if (cnt == n) return { lineBegin, i };
+		pos += line.size();
 	}
 
 	return { -1,-1 };

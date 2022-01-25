@@ -153,9 +153,11 @@ void InputStates::SetInputRules(InputRules* inputRules)
 void InputStates::BuildInterface()
 {
     wxButton* edit = new wxButton(this, Ids::ID_EDIT_STATES, wxString("Edit States"));
+    edit->SetToolTip("Launch the States Editor\tCtrl+1");
     edit->Bind(wxEVT_BUTTON, &InputStates::OnEdit, this);
     
     m_Search = new wxSearchCtrl(this, wxID_ANY);
+    m_Search->SetToolTip("Search for a state...\tCtrl+Shift+1");
     m_Search->Bind(wxEVT_TEXT, &InputStates::Search, this);
     m_Search->Bind(wxEVT_SEARCHCTRL_SEARCH_BTN, &InputStates::SearchEnter, this);
 
