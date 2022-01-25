@@ -2,7 +2,7 @@
 
 StatusCells::StatusCells(wxWindow* parent) : wxPanel(parent)
 {
-    SetBackgroundColour(wxColour(242, 204, 143));
+    //SetBackgroundColour(wxColour(242, 204, 143));
 
 	BuildInterface();
 }

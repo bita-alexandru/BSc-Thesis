@@ -2,7 +2,7 @@
 
 StatusSpeed::StatusSpeed(wxWindow* parent) : wxPanel(parent)
 {
-    SetBackgroundColour(wxColour(242, 204, 143));
+    //SetBackgroundColour(wxColour(242, 204, 143));
 
     BuildInterface();
 }
@@ -24,8 +24,8 @@ void StatusSpeed::BuildInterface()
 {
     wxBitmapButton* slower = new wxBitmapButton(this, Ids::ID_BUTTON_SLOWER, wxBitmap("BTN_SLOWER", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
     wxBitmapButton* faster = new wxBitmapButton(this, Ids::ID_BUTTON_FASTER, wxBitmap("BTN_FASTER", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
-    slower->SetToolTip("Slower");
-    faster->SetToolTip("Faster");
+    slower->SetToolTip("Lower\t(Ctrl+,)");
+    faster->SetToolTip("Higher\t(Ctrl+.)");
 
     std::string delay = std::to_string(m_Delay);
     delay.erase(delay.find_last_not_of('0') + 1, std::string::npos);

@@ -12,7 +12,7 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(
 
 	Center();
 
-    SetBackgroundColour(wxColour(255, 255, 255));
+    //SetBackgroundColour(wxColour(255, 255, 255));
 
 	BuildMenubar();
 

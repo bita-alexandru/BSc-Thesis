@@ -4,7 +4,7 @@
 
 ToolModes::ToolModes(wxWindow* parent) : wxPanel(parent)
 {
-    SetBackgroundColour(wxColour(242, 204, 143));
+    //SetBackgroundColour(wxColour(242, 204, 143));
 
 	BuildInterface();
 }
@@ -56,9 +56,9 @@ void ToolModes::BuildInterface()
 	m_Pick = new wxBitmapButton(this, Ids::ID_MODE_PICK, wxBitmap("BTN_PICK", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
 	m_Move = new wxBitmapButton(this, Ids::ID_MODE_MOVE, wxBitmap("BTN_MOVE", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
 	m_Draw->Disable();
-	m_Draw->SetToolTip("Draw");
-	m_Pick->SetToolTip("Pick");
-	m_Move->SetToolTip("Move");
+	m_Draw->SetToolTip("Draw\t(Ctrl+Q)");
+	m_Pick->SetToolTip("Pick\t(Ctrl+W)");
+	m_Move->SetToolTip("Move\t(Ctrl+E)");
 
 	m_TextMode = new wxStaticText(this, wxID_ANY, "Mode=Draw");
 

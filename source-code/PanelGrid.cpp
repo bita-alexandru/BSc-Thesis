@@ -2,7 +2,7 @@
 
 PanelGrid::PanelGrid(wxWindow* parent) : wxPanel(parent)
 {
-    SetBackgroundColour(wxColor(190, 225, 230));
+    //SetBackgroundColour(wxColor(190, 225, 230));
 
 	m_GridTools = new GridTools(this);
 	m_Grid = new Grid(this);

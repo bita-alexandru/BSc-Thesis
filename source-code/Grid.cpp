@@ -483,7 +483,7 @@ void Grid::OnPaint(wxPaintEvent& evt)
 
 void Grid::BuildInterface()
 {
-	SetBackgroundColour(wxColor(255, 214, 165));
+	SetBackgroundColour(wxColor("white"));
 
 	SetRowColumnCount(Sizes::N_ROWS, Sizes::N_COLS);
 
@@ -823,6 +823,7 @@ void Grid::OnDraw(wxDC& dc)
 	if (m_JustResized)
 	{
 		m_JustResized = false;
+		m_RedrawAll = true;
 	}
 	else if (m_JustScrolled != std::make_pair(0, 0))
 	{
@@ -1053,7 +1054,7 @@ void Grid::OnDraw(wxDC& dc)
 		dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
 		return;
 	}
-
+	
 	dc.Clear();
 
 	brush.SetColour(wxColour("white"));

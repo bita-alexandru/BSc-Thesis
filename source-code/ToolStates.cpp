@@ -3,7 +3,7 @@
 
 ToolStates::ToolStates(wxWindow* parent) : wxPanel(parent)
 {
-    SetBackgroundColour(wxColour(242, 204, 143));
+    //SetBackgroundColour(wxColour(242, 204, 143));
 
     BuildInterface();
 }
@@ -135,8 +135,8 @@ void ToolStates::BuildInterface()
 
 	wxBitmapButton* previous = new wxBitmapButton(this, Ids::ID_BUTTON_PREV, wxBitmap("BTN_PREVIOUS", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
 	wxBitmapButton* next = new wxBitmapButton(this, Ids::ID_BUTTON_NEXT, wxBitmap("BTN_NEXT", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
-	previous->SetToolTip("Previous");
-	next->SetToolTip("Next");
+	previous->SetToolTip("Previous\t(Ctrl+Left)");
+	next->SetToolTip("Next\t(Ctrl+Right)");
 
 	previous->Bind(wxEVT_BUTTON, &ToolStates::OnPrev, this);
 	next->Bind(wxEVT_BUTTON, &ToolStates::OnNext, this);

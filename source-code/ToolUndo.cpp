@@ -2,7 +2,7 @@
 
 ToolUndo::ToolUndo(wxWindow* parent) : wxPanel(parent)
 {
-	SetBackgroundColour(wxColour(242, 204, 143));
+	//SetBackgroundColour(wxColour(242, 204, 143));
 
 	BuildInterface();
 }
@@ -199,10 +199,10 @@ void ToolUndo::BuildInterface()
 	m_Undo = new wxBitmapButton(this, Ids::ID_BUTTON_UNDO, wxBitmap("BTN_UNDO", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
 	m_Redo = new wxBitmapButton(this, Ids::ID_BUTTON_REDO, wxBitmap("BTN_REDO", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
 
-	m_Undo->SetToolTip("Undo");
+	m_Undo->SetToolTip("Undo\t(Ctrl+Z)");
 	m_Undo->Disable();
 	m_Undo->Bind(wxEVT_BUTTON, &ToolUndo::Undo, this);
-	m_Redo->SetToolTip("Redo");
+	m_Redo->SetToolTip("Redo\t(Ctrl+Shift+Z)");
 	m_Redo->Disable();
 	m_Redo->Bind(wxEVT_BUTTON, &ToolUndo::Redo, this);
 

@@ -16,7 +16,7 @@ EditorStates::EditorStates(wxFrame* parent) : wxFrame(parent, wxID_ANY, "CellyGe
 
 	Center();
 
-    SetBackgroundColour(wxColour(255, 232, 214));
+    //SetBackgroundColour(wxColour(255, 232, 214));
 
 	BuildMenuBar();
 

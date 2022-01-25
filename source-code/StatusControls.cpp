@@ -2,7 +2,7 @@
 
 StatusControls::StatusControls(wxWindow* parent) : wxPanel(parent)
 {
-    SetBackgroundColour(wxColour(242, 204, 143));
+    //SetBackgroundColour(wxColour(242, 204, 143));
 
     BuildInterface();
 }
@@ -48,27 +48,23 @@ void StatusControls::BuildInterface()
     wxBitmapButton* start = new wxBitmapButton(this, Ids::ID_BUTTON_START, wxBitmap("BTN_START", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
     wxBitmapButton* reset = new wxBitmapButton(this, Ids::ID_BUTTON_RESET, wxBitmap("BTN_RESET", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
     wxBitmapButton* center = new wxBitmapButton(this, Ids::ID_BUTTON_CENTER, wxBitmap("BTN_CENTER", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
-    wxBitmapButton* step = new wxBitmapButton(this, Ids::ID_BUTTON_STEP, wxBitmap("BTN_STEP", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
     wxBitmapButton* generation = new wxBitmapButton(this, Ids::ID_BUTTON_GENERATION, wxBitmap("BTN_GENERATION", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
 
-    center->SetToolTip("Go To Center");
+    center->SetToolTip("Go To Center\t(Ctrl+M)");
     center->Bind(wxEVT_BUTTON, &StatusControls::GoToCenter, this);
 
-    start->SetToolTip("Start");
+    start->SetToolTip("Start\t(Ctrl+Space)");
 
-    reset->SetToolTip("Reset");
+    reset->SetToolTip("Reset\t(Ctrl+R)");
     reset->Bind(wxEVT_BUTTON, &StatusControls::Reset, this);
 
-    step->SetToolTip("Next Step");
-
-    generation->SetToolTip("Next Generation");
+    generation->SetToolTip("Next Generation\t(Ctrl+G)");
     generation->Bind(wxEVT_BUTTON, &StatusControls::NextGeneration, this);
 
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
     sizer->Add(start, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(reset, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(center, 0, wxALIGN_CENTER_VERTICAL | wxLEFT | wxRIGHT, 24);
-    sizer->Add(step, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(generation, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 48);
 
     this->SetSizer(sizer);

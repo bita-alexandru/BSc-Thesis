@@ -2,7 +2,7 @@
 
 PanelInput::PanelInput(wxWindow* parent) : wxScrolledWindow(parent)
 {
-    SetBackgroundColour(wxColor(250, 210, 225));
+    //SetBackgroundColour(wxColor(250, 210, 225));
 
 	m_InputStates = new InputStates(this);
 	m_InputNeighbors = new InputNeighbors(this);

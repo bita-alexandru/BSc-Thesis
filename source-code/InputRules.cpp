@@ -191,11 +191,11 @@ void InputRules::UpdateColor(std::string state, wxColour color)
 void InputRules::BuildInterface()
 {
 	wxButton* edit = new wxButton(this, Ids::ID_EDIT_RULES, wxString("Edit Rules"));
-    edit->SetToolTip("Launch the Rules Editor\tCtrl+1");
+    edit->SetToolTip("Launch the Rules Editor\t(Ctrl+1)");
     edit->Bind(wxEVT_BUTTON, &InputRules::OnEdit, this);
 
     m_Search = new wxSearchCtrl(this, wxID_ANY);
-    m_Search->SetToolTip("Search for a rule...\tCtrl+Shift+2");
+    m_Search->SetToolTip("Search for a rule...\t(Ctrl+Shift+2)");
     m_Search->Bind(wxEVT_TEXT, &InputRules::Search, this);
     m_Search->Bind(wxEVT_SEARCHCTRL_SEARCH_BTN, &InputRules::SearchEnter, this);
 

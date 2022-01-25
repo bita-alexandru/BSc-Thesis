@@ -2,7 +2,7 @@
 
 ToolZoom::ToolZoom(wxWindow* parent) : wxPanel(parent)
 {
-    SetBackgroundColour(wxColour(242, 204, 143));
+    //SetBackgroundColour(wxColour(242, 204, 143));
 
 	BuildInterface();
 }
@@ -56,8 +56,8 @@ void ToolZoom::BuildInterface()
 	wxBitmapButton* zoomIn = new wxBitmapButton(this, Ids::ID_ZOOM_IN, wxBitmap("BTN_ZOOM-IN", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
 	wxBitmapButton* zoomOut = new wxBitmapButton(this, Ids::ID_ZOOM_OUT, wxBitmap("BTN_ZOOM-OUT", wxBITMAP_TYPE_PNG_RESOURCE), wxDefaultPosition, wxSize(32, 32));
 
-	zoomIn->SetToolTip("Zoom in");
-	zoomOut->SetToolTip("Zoom out");
+	zoomIn->SetToolTip("Zoom In\t(Ctrl-+)");
+	zoomOut->SetToolTip("Zoom out\t(Ctrl+-)");
 	
 	zoomIn->Bind(wxEVT_BUTTON, &ToolZoom::OnZoomIn, this);
 	zoomOut->Bind(wxEVT_BUTTON, &ToolZoom::OnZoomOut, this);

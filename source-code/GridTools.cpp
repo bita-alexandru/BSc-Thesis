@@ -2,7 +2,7 @@
 
 GridTools::GridTools(wxWindow* parent): wxPanel(parent)
 {
-    SetBackgroundColour(wxColor(253, 255, 182));
+    //SetBackgroundColour(wxColor(253, 255, 182));
 
     m_ToolZoom = new ToolZoom(this);
     m_ToolUndo = new ToolUndo(this);

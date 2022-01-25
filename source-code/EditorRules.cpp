@@ -16,7 +16,7 @@ EditorRules::EditorRules(wxFrame* parent) : wxFrame(parent, wxID_ANY, "CellyGen:
 
 	Center();
 
-    SetBackgroundColour(wxColour(255, 232, 214));
+    //SetBackgroundColour(wxColour(255, 232, 214));
 
 	BuildMenuBar();
 
