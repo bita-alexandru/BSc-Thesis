@@ -9,9 +9,9 @@ PanelGrid::PanelGrid(wxWindow* parent) : wxPanel(parent)
 	m_GridStatus = new GridStatus(this);
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-	sizer->Add(m_GridTools, 0);
+	sizer->Add(m_GridTools, 0, wxEXPAND);
 	sizer->Add(m_Grid, 1, wxEXPAND);
-	sizer->Add(m_GridStatus, 0);
+	sizer->Add(m_GridStatus, 0, wxEXPAND);
 
 	this->SetSizer(sizer);
 }

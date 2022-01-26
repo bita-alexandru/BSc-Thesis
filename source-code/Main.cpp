@@ -29,6 +29,8 @@ Main::~Main()
 
 void Main::BuildInterface()
 {
+	Sizes::N_COLS = 101; Sizes::N_ROWS = 101;
+
 	m_SplitterInputGrid = new wxSplitterWindow(this, wxID_ANY);
 	m_PanelInput = new PanelInput(m_SplitterInputGrid);
 
@@ -67,6 +69,8 @@ void Main::BuildMenubar()
 	menuFile->AppendSeparator();
 	menuFile->Append(Ids::ID_EXIT, "E&xit\tAlt+F4");
 
+	menuView->Append(Ids::ID_VIEW_DIMENSIONS, "&Change Dimensions\tCtrl+Enter");
+	menuView->AppendSeparator();
 	menuView->Append(Ids::ID_VIEW_DEFAULT, "&Default Perspective\tF1");
 	menuView->Append(Ids::ID_VIEW_GRID, "&Grid Perspective\tF2");
 	menuView->AppendSeparator();
@@ -88,6 +92,7 @@ void Main::BuildMenubar()
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuPerspectiveGrid, this, Ids::ID_VIEW_GRID);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuEditorStates, this, Ids::ID_VIEW_STATES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuEditorRules, this, Ids::ID_VIEW_RULES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuChangeDimensions, this, Ids::ID_VIEW_DIMENSIONS);
 }
 
 void Main::SetShortcuts()
@@ -213,6 +218,12 @@ void Main::MenuEditorRules(wxCommandEvent& evt)
 {
 	m_EditorRules->Show();
 	m_EditorRules->SetFocus();
+}
+
+void Main::MenuChangeDimensions(wxCommandEvent& evt)
+{
+	wxTextEntryDialog dialog(this, "buna ziua", "Ce faceti astazi");
+	dialog.ShowModal();
 }
 
 void Main::OnClose(wxCloseEvent& evt)

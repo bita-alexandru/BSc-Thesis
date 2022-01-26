@@ -5,8 +5,8 @@ private:
 	Sizes() {};
 	~Sizes() {};
 public:
-	static const int N_COLS = 401;
-	static const int N_ROWS = 401;
+	inline static int N_ROWS;
+	inline static int N_COLS;
 
 	static const int CELL_SIZE_DEFAULT = 16;
 	static const int CELL_SIZE_MIN = 4;

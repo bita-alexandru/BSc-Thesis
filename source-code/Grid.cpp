@@ -12,7 +12,7 @@ EVT_SIZE(Grid::OnSize)
 wxEND_EVENT_TABLE()
 
 
-Grid::Grid(wxWindow* parent) : wxHVScrolledWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS)
+Grid::Grid(wxWindow* parent) : wxHVScrolledWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS | wxBORDER_SIMPLE)
 {
 	BuildInterface();
 
@@ -483,7 +483,7 @@ void Grid::OnPaint(wxPaintEvent& evt)
 
 void Grid::BuildInterface()
 {
-	SetBackgroundColour(wxColor("white"));
+	//SetBackgroundColour(wxColor("white"));
 
 	SetRowColumnCount(Sizes::N_ROWS, Sizes::N_COLS);
 
@@ -1294,10 +1294,8 @@ void Grid::DeleteStructure(int X, int Y, std::string state)
 			int y = neighbor.second + dy[d];
 
 			// valid neighbor -> push onto stack
-			if (GetState(x, y) != "FREE" && visited.find({ x, y }) == visited.end())
-			{
-				neighbors.push({ x,y });
-			}
+			if (state == "" && GetState(x, y) != "FREE" && visited.find({x, y}) == visited.end()) neighbors.push({ x,y });
+			else if (state == neighborState && GetState(x, y) == state && visited.find({ x, y }) == visited.end()) neighbors.push({ x,y });
 		}
 	}
 

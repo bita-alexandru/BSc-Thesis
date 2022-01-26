@@ -62,10 +62,12 @@ void StatusControls::BuildInterface()
     generation->Bind(wxEVT_BUTTON, &StatusControls::NextGeneration, this);
 
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+    sizer->Add(center, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(start, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(reset, 0, wxALIGN_CENTER_VERTICAL);
-    sizer->Add(center, 0, wxALIGN_CENTER_VERTICAL | wxLEFT | wxRIGHT, 24);
-    sizer->Add(generation, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 48);
+    //sizer->Add(center, 0, wxALIGN_CENTER_VERTICAL | wxLEFT | wxRIGHT, 24);
+    sizer->Add(generation, 0, wxALIGN_CENTER_VERTICAL);
+    //sizer->Add(generation, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 48);
 
     this->SetSizer(sizer);
 }

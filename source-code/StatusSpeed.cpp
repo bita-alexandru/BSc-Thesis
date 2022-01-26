@@ -37,7 +37,8 @@ void StatusSpeed::BuildInterface()
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
     sizer->Add(slower, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(faster, 0, wxALIGN_CENTER_VERTICAL);
-    sizer->Add(m_TextDelay, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 48);
+    sizer->Add(m_TextDelay, 0, wxALIGN_CENTER_VERTICAL);
+    //sizer->Add(m_TextDelay, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 48);
 
     this->SetSizerAndFit(sizer);
 }

@@ -142,11 +142,13 @@ void ToolStates::BuildInterface()
 	next->Bind(wxEVT_BUTTON, &ToolStates::OnNext, this);
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+	//wxGridSizer* sizer = new wxGridSizer(4);
 	sizer->Add(previous, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->Add(next, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->Add(m_State, 0, wxALIGN_CENTER_VERTICAL);
+	//sizer->Add(m_TextIndex, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->Add(m_TextIndex, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 8);
-	sizer->AddSpacer(48);
+	//sizer->AddSpacer(48);
 
 	this->SetSizerAndFit(sizer);
 }

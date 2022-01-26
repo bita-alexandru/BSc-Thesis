@@ -68,7 +68,8 @@ void ToolZoom::BuildInterface()
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 	sizer->Add(zoomOut, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->Add(zoomIn, 0, wxALIGN_CENTER_VERTICAL);
-	sizer->Add(m_TextScale, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 48);
+	//sizer->Add(m_TextScale, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 48);
+	sizer->Add(m_TextScale, 0, wxALIGN_CENTER_VERTICAL);
 
 	this->SetSizerAndFit(sizer);
 }

@@ -117,7 +117,7 @@ wxThread::ExitCode ThreadRuleApplier::Entry()
             {
                 if (TestDestroy()) return 0;
 
-                if (GetState(j, i) == "FREE");
+                if (GetState(j, i) == "FREE")
                 {
                     wxCriticalSectionLocker lock(*m_VisitedCS);
                     if (m_Visited->find({ j,i }) == m_Visited->end())
