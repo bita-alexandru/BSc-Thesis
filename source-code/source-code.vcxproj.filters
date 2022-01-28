@@ -58,6 +58,12 @@
     <Filter Include="Header Files\Constants">
       <UniqueIdentifier>{4db53e3d-5602-42a5-8ac5-997d74dac257}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Lists">
+      <UniqueIdentifier>{1d4ec4b4-1323-4c85-843f-3ab51d007074}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Lists">
+      <UniqueIdentifier>{f845e92f-61a9-4d1c-a54a-910506d0c551}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Main.h">
@@ -126,17 +132,8 @@
     <ClInclude Include="ToolStates.h">
       <Filter>Header Files\Tools</Filter>
     </ClInclude>
-    <ClInclude Include="ListStates.h">
-      <Filter>Header Files\Misc</Filter>
-    </ClInclude>
-    <ClInclude Include="ListRules.h">
-      <Filter>Header Files\Misc</Filter>
-    </ClInclude>
     <ClInclude Include="ToolUndo.h">
       <Filter>Header Files\Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="Hashes.h">
-      <Filter>Header Files\Misc</Filter>
     </ClInclude>
     <ClInclude Include="Interpreter.h">
       <Filter>Header Files\Misc</Filter>
@@ -145,6 +142,18 @@
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
     <ClInclude Include="ThreadRuleApplier.h">
+      <Filter>Header Files\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="ListRules.h">
+      <Filter>Header Files\Lists</Filter>
+    </ClInclude>
+    <ClInclude Include="ListStates.h">
+      <Filter>Header Files\Lists</Filter>
+    </ClInclude>
+    <ClInclude Include="Hashes.h">
+      <Filter>Header Files\Constants</Filter>
+    </ClInclude>
+    <ClInclude Include="DialogDimensions.h">
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
   </ItemGroup>
@@ -209,12 +218,6 @@
     <ClCompile Include="ToolStates.cpp">
       <Filter>Source Files\Tools</Filter>
     </ClCompile>
-    <ClCompile Include="ListStates.cpp">
-      <Filter>Source Files\Misc</Filter>
-    </ClCompile>
-    <ClCompile Include="ListRules.cpp">
-      <Filter>Source Files\Misc</Filter>
-    </ClCompile>
     <ClCompile Include="ToolUndo.cpp">
       <Filter>Source Files\Tools</Filter>
     </ClCompile>
@@ -222,6 +225,15 @@
       <Filter>Source Files\Misc</Filter>
     </ClCompile>
     <ClCompile Include="ThreadRuleApplier.cpp">
+      <Filter>Source Files\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="ListRules.cpp">
+      <Filter>Source Files\Lists</Filter>
+    </ClCompile>
+    <ClCompile Include="ListStates.cpp">
+      <Filter>Source Files\Lists</Filter>
+    </ClCompile>
+    <ClCompile Include="DialogDimensions.cpp">
       <Filter>Source Files\Misc</Filter>
     </ClCompile>
   </ItemGroup>

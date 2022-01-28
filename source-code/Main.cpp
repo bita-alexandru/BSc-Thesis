@@ -1,4 +1,5 @@
 #include "Main.h"
+#include "DialogDimensions.h"
 
 wxBEGIN_EVENT_TABLE(Main, wxFrame)
 	EVT_CLOSE(Main::OnClose)
@@ -29,7 +30,7 @@ Main::~Main()
 
 void Main::BuildInterface()
 {
-	Sizes::N_COLS = 101; Sizes::N_ROWS = 101;
+	Sizes::N_COLS = 51; Sizes::N_ROWS = 51;
 
 	m_SplitterInputGrid = new wxSplitterWindow(this, wxID_ANY);
 	m_PanelInput = new PanelInput(m_SplitterInputGrid);
@@ -222,8 +223,14 @@ void Main::MenuEditorRules(wxCommandEvent& evt)
 
 void Main::MenuChangeDimensions(wxCommandEvent& evt)
 {
-	wxTextEntryDialog dialog(this, "buna ziua", "Ce faceti astazi");
-	dialog.ShowModal();
+	DialogDimensions dialog(this);
+	if (dialog.ShowModal() == wxID_OK)
+	{
+		int rows = dialog.GetRows();
+		int cols = dialog.GetCols();
+
+		m_PanelGrid->GetGrid()->SetDimensions(rows, cols);
+	}
 }
 
 void Main::OnClose(wxCloseEvent& evt)

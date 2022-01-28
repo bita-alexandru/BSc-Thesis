@@ -69,7 +69,7 @@ void StatusControls::BuildInterface()
     sizer->Add(generation, 0, wxALIGN_CENTER_VERTICAL);
     //sizer->Add(generation, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 48);
 
-    this->SetSizer(sizer);
+    this->SetSizerAndFit(sizer);
 }
 
 void StatusControls::GoToCenter(wxCommandEvent& evt)

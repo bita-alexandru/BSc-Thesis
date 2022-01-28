@@ -99,6 +99,19 @@ void Grid::ScrollToCenter(int x, int y)
 	Update();
 }
 
+void Grid::SetDimensions(int rows, int cols)
+{
+	Sizes::N_ROWS = rows;
+	Sizes::N_COLS = cols;
+
+	int m_OffsetX = Sizes::N_COLS / 2;
+	int m_OffsetY = Sizes::N_ROWS / 2;
+
+	SetRowColumnCount(Sizes::N_ROWS, Sizes::N_COLS);
+
+	Reset();
+}
+
 void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells, std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions)
 {
 	for (auto& it : m_PrevCells)

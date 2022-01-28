@@ -33,7 +33,6 @@ private:
 	wxFindReplaceData* m_FindData = nullptr;
 	wxStyledTextCtrl* m_TextCtrl = nullptr;
 	wxFindReplaceDialog* m_FindDialog = nullptr;
-	wxMessageDialog* dlg = nullptr;
 
 	bool m_DialogShown = false;
 	bool m_ForceClose = false;

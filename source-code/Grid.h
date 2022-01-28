@@ -34,6 +34,7 @@ public:
 	int GetSize();
 	void SetSize(int size, bool center = true);
 	void ScrollToCenter(int x = Sizes::N_COLS / 2, int y = Sizes::N_ROWS / 2);
+	void SetDimensions(int rows, int cols);
 
 	void SetCells(
 		std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells,
@@ -75,8 +76,8 @@ private:
 	StatusCells* m_StatusCells = nullptr;
 
 	int m_Size = Sizes::CELL_SIZE_DEFAULT;
-	const int m_OffsetX = Sizes::N_COLS / 2;
-	const int m_OffsetY = Sizes::N_ROWS / 2;
+	int m_OffsetX = Sizes::N_COLS / 2;
+	int m_OffsetY = Sizes::N_ROWS / 2;
 	bool m_Centered = false;
 	bool m_Paused = false;
 	bool m_Finished = false;

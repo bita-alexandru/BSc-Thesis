@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <sstream>
 #include <unordered_set>
-#include "wx/app.h"
 
 wxBEGIN_EVENT_TABLE(EditorStates, wxFrame)
 	EVT_CLOSE(EditorStates::OnCloseEvent)
@@ -386,9 +385,7 @@ void EditorStates::OnCloseEvent(wxCloseEvent& evt)
 			this, "Do you want to save the changes?", "Save",
 			wxYES_NO | wxCANCEL | wxICON_INFORMATION
 		);
-
-		//dialog.ShowWindowModal();
-
+		
 		int answer = dialog.ShowModal();
 
 	/*	dlg = new wxMessageDialog(this, "save boss?", "save", wxYES_NO | wxCANCEL | wxICON_INFORMATION);

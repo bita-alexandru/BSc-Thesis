@@ -74,13 +74,16 @@ void StatusCells::BuildInterface()
 	m_TextCountGeneration = new wxStaticText(this, wxID_ANY, "Generation: 0");
 	m_TextCountPopulation = new wxStaticText(this, wxID_ANY, "Population: 0");
 
-	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+	//wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+	wxGridSizer* sizer = new wxGridSizer(4);
 	sizer->Add(m_TextCountGeneration, 0, wxALIGN_CENTER_VERTICAL);
+	sizer->AddStretchSpacer();
 	sizer->Add(m_TextCountPopulation, 0, wxALIGN_CENTER_VERTICAL);
+	sizer->AddStretchSpacer();
 	//sizer->Add(m_TextCountPopulation, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 16);
-	sizer->AddSpacer(48);
+	//sizer->AddSpacer(48);
 
-	this->SetSizer(sizer);
+	this->SetSizerAndFit(sizer);
 }
 
 void StatusCells::UpdateTextCountGeneration()

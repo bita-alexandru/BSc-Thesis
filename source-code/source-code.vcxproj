@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="DialogDimensions.h" />
     <ClInclude Include="EditorRules.h" />
     <ClInclude Include="EditorStates.h" />
     <ClInclude Include="Grid.h" />
@@ -51,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="DialogDimensions.cpp" />
     <ClCompile Include="EditorRules.cpp" />
     <ClCompile Include="EditorStates.cpp" />
     <ClCompile Include="Grid.cpp" />
