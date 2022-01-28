@@ -1508,7 +1508,8 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 	// if state is "FREE", apply rule to all "FREE" cells
 	if (rule.first == "FREE")
 	{
-		if (rule.second.condition.empty())
+		//if (rule.second.condition.empty())
+		if (rule.second.allFree == true)
 		{
 			for (int i = 0; i < Sizes::N_ROWS; i++)
 				for (int j = 0; j < Sizes::N_COLS; j++)
@@ -1520,14 +1521,14 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 		}
 		else
 		{
-			for (int i = 0; i < Sizes::N_ROWS; i++)
+			/*for (int i = 0; i < Sizes::N_ROWS; i++)
 				for (int j = 0; j < Sizes::N_COLS; j++)
 					if (GetState(j, i) == "FREE")
 					{
 						if (ApplyOnCell(j, i, rule.second, neighbors)) applied.push_back({ j,i });
-					}
+					}*/
 
-			/* {
+			 {
 				std::unordered_set<std::pair<int, int>, Hashes::PairInt> visited;
 
 				int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
@@ -1571,7 +1572,7 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 						}
 					}
 				}
-			} */
+			} 
 		}
 	}
 	// else, get all cells of that type

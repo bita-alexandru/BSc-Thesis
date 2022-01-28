@@ -22,6 +22,7 @@ struct Transition
 {
 	string state;
 	string condition;
+	bool allFree = true;
 
 	STATES states;
 	DIRECTIONS directions;

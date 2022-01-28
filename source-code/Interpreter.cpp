@@ -372,6 +372,13 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 												count -= n;
 											}
 
+											// optimization for "FREE" cells
+											if (state1 == "FREE" &&
+												(comparisonType == TYPE_MORE ||
+													(comparisonType == TYPE_EQUAL && n > 0)
+													)
+												) transition.allFree = false;
+
 											// number of cells
 											transition.andConditions.back().first.first = n;
 											// comparison type
