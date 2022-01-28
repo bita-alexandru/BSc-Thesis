@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <sstream>
 #include <unordered_set>
+#include <fstream>
 
 wxBEGIN_EVENT_TABLE(EditorRules, wxFrame)
 	EVT_CLOSE(EditorRules::OnCloseEvent)
@@ -210,6 +211,7 @@ void EditorRules::ForceClose()
 void EditorRules::SetText(std::string text)
 {
 	m_TextCtrl->SetText(text);
+	m_PrevText = text;
 }
 
 void EditorRules::BuildMenuBar()
@@ -546,10 +548,74 @@ void EditorRules::OnNextMark(wxCommandEvent& evt)
 
 void EditorRules::OnImport(wxCommandEvent& evt)
 {
+	wxFileDialog dialogFile(this, "Import Rules", "", "", "TXT files (*.txt)|*.txt", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+
+	if (dialogFile.ShowModal() == wxID_CANCEL) return;
+
+	std::ifstream in(dialogFile.GetPath().ToStdString());
+	std::stringstream ss; ss << in.rdbuf();
+
+	// read everything and ignore until "[STATES]"
+	std::string text;
+	bool valid = false;
+	while (true)
+	{
+		std::string s;
+
+		if (!std::getline(ss, s, '\n')) break;
+
+		wxString symbol = wxString(s).Upper();
+		if (symbol == "[RULES]")
+		{
+			// read everything and store into "states"
+			while (true)
+			{
+				s = "";
+
+				if (!std::getline(ss, s, '\n')) break;
+
+				text += s + "\n";
+			}
+
+			valid = true;
+			break;
+		}
+	}
+
+	if (!valid)
+	{
+		wxMessageBox("Invalid import file. Line marker \"[RULES]\" not found.", "Error", wxICON_ERROR | wxOK);
+		return;
+	}
+
+	if (text.size())
+	{
+		std::pair<std::vector<std::pair<std::string, Transition>>, std::vector<std::pair<int, std::string>>> data = Process(text);
+		std::vector<std::pair<std::string, Transition>> rules = data.first;
+		std::vector<std::pair<int, std::string>> errors = data.second;
+
+		m_InvalidInput = false;
+		SetText(text);
+
+		if (rules.size()) m_InputRules->SetRules(rules);
+		else m_InputRules->SetRules(std::vector<std::pair<std::string, Transition>>());
+
+		if (errors.size())
+		{
+			wxMessageBox("Some of the imported rules appear to be invalid, as a result they have been ignored.", "Warning", wxICON_WARNING | wxOK);
+		}
+	}
 }
 
 void EditorRules::OnExport(wxCommandEvent& evt)
 {
+	wxFileDialog dialogFile(this, "Export Rules", "", "", "TXT files (*.txt)|*.txt", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+
+	if (dialogFile.ShowModal() == wxID_CANCEL) return;
+
+	std::ofstream out(dialogFile.GetPath().ToStdString());
+	out << "[RULES]\n";
+	out << m_TextCtrl->GetText().ToStdString();
 }
 
 void EditorRules::CloseEditor(bool save)

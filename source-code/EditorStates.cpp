@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <sstream>
 #include <unordered_set>
+#include <fstream>
 
 wxBEGIN_EVENT_TABLE(EditorStates, wxFrame)
 	EVT_CLOSE(EditorStates::OnCloseEvent)
@@ -272,6 +273,7 @@ void EditorStates::ForceClose()
 void EditorStates::SetText(std::string text)
 {
 	m_TextCtrl->SetText(text);
+	m_PrevText = text;
 }
 
 void EditorStates::BuildMenuBar()
@@ -279,8 +281,8 @@ void EditorStates::BuildMenuBar()
 	wxMenu* menuFile = new wxMenu();
 	wxMenu* menuEdit = new wxMenu();
 
-	menuFile->Append(Ids::ID_IMPORT_STATES, "&Import\tCtrl+I");
-	menuFile->Append(Ids::ID_EXPORT_STATES, "Ex&port\Ctrl+Shift+S");
+	menuFile->Append(Ids::ID_IMPORT_STATES, "&Import\tCtrl+O");
+	menuFile->Append(Ids::ID_EXPORT_STATES, "Ex&port\tCtrl+Shift+S");
 	menuFile->AppendSeparator();
 	menuFile->Append(Ids::ID_SAVE_STATES, "&Save\tCtrl+S");
 	menuFile->Append(Ids::ID_SAVE_CLOSE_STATES, "Sa&ve && Close\tAlt+S");
@@ -617,10 +619,74 @@ void EditorStates::OnNextMark(wxCommandEvent& evt)
 
 void EditorStates::OnImport(wxCommandEvent& evt)
 {
+	wxFileDialog dialogFile(this, "Import States", "", "", "TXT files (*.txt)|*.txt", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+
+	if (dialogFile.ShowModal() == wxID_CANCEL) return;
+
+	std::ifstream in(dialogFile.GetPath().ToStdString());
+	std::stringstream ss; ss << in.rdbuf();
+	
+	// read everything and ignore until "[STATES]"
+	std::string text;
+	bool valid = false;
+	while (true)
+	{
+		std::string s;
+
+		if (!std::getline(ss, s, '\n')) break;
+
+		wxString symbol = wxString(s).Upper();
+		if (symbol == "[STATES]")
+		{
+			// read everything and store into "states"
+			while (true)
+			{
+				s = "";
+
+				if (!std::getline(ss, s, '\n')) break;
+
+				text += s + "\n";
+			}
+
+			valid = true;
+			break;
+		}
+	}
+
+	if (!valid)
+	{
+		wxMessageBox("Invalid import file. Line marker \"[STATES]\" not found.", "Error", wxICON_ERROR| wxOK);
+		return;
+	}
+
+	if (text.size())
+	{
+		std::pair<std::vector<std::string>, std::vector<std::pair<int, std::string>>> data = Process(text);
+		std::vector<std::string> states = data.first;
+		std::vector<std::pair<int, std::string>> errors = data.second;
+
+		m_InvalidInput = false;
+		SetText(text);
+
+		if (states.size()) m_InputStates->SetStates(states);
+		else m_InputStates->SetStates({ "FREE" });
+
+		if (errors.size())
+		{
+			wxMessageBox("Some of the imported states appear to be invalid, as a result they have been ignored.", "Warning", wxICON_WARNING | wxOK);
+		}
+	}
 }
 
 void EditorStates::OnExport(wxCommandEvent& evt)
 {
+	wxFileDialog dialogFile(this, "Export States", "", "", "TXT files (*.txt)|*.txt", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+
+	if (dialogFile.ShowModal() == wxID_CANCEL) return;
+
+	std::ofstream out(dialogFile.GetPath().ToStdString());
+	out << "[STATES]\n";
+	out << m_TextCtrl->GetText().ToStdString();
 }
 
 void EditorStates::UpdateLineColMouse(wxMouseEvent& evt)
