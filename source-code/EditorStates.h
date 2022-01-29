@@ -26,6 +26,7 @@ public:
 	void ForceClose();
 
 	void SetText(std::string text);
+	wxString GetText();
 private:
 	InputStates* m_InputStates = nullptr;
 

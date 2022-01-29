@@ -104,8 +104,8 @@ void Grid::SetDimensions(int rows, int cols)
 	Sizes::N_ROWS = rows;
 	Sizes::N_COLS = cols;
 
-	int m_OffsetX = Sizes::N_COLS / 2;
-	int m_OffsetY = Sizes::N_ROWS / 2;
+	m_OffsetX = Sizes::N_COLS / 2;
+	m_OffsetY = Sizes::N_ROWS / 2;
 
 	SetRowColumnCount(Sizes::N_ROWS, Sizes::N_COLS);
 

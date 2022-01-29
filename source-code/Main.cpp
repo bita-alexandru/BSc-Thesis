@@ -1,6 +1,9 @@
 #include "Main.h"
 #include "DialogDimensions.h"
 
+#include <fstream>
+#include <sstream>
+
 wxBEGIN_EVENT_TABLE(Main, wxFrame)
 	EVT_CLOSE(Main::OnClose)
 wxEND_EVENT_TABLE()
@@ -72,11 +75,11 @@ void Main::BuildMenubar()
 
 	menuView->Append(Ids::ID_VIEW_DIMENSIONS, "&Change Dimensions\tCtrl+Enter");
 	menuView->AppendSeparator();
-	menuView->Append(Ids::ID_VIEW_DEFAULT, "&Default Perspective\tF1");
-	menuView->Append(Ids::ID_VIEW_GRID, "&Grid Perspective\tF2");
-	menuView->AppendSeparator();
 	menuView->Append(Ids::ID_VIEW_STATES, "&States Editor\tCtrl+1");
 	menuView->Append(Ids::ID_VIEW_RULES, "&Rules Editor\tCtrl+2");
+	menuView->AppendSeparator();
+	menuView->Append(Ids::ID_VIEW_DEFAULT, "&Default Perspective\tF1");
+	menuView->Append(Ids::ID_VIEW_GRID, "&Grid Perspective\tF2");
 
 	menuHelp->Append(Ids::ID_USERMANUAL, "&User Manual\tCtrl+U");
 	menuHelp->Append(Ids::ID_SHORTCUTS, "&Shortcuts\tCtrl+J");
@@ -88,12 +91,14 @@ void Main::BuildMenubar()
 
 	SetMenuBar(menuBar);
 
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuImport, this, Ids::ID_IMPORT);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuExport, this, Ids::ID_EXPORT);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuExit, this, Ids::ID_EXIT);
-	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuPerspectiveDefault, this, Ids::ID_VIEW_DEFAULT);
-	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuPerspectiveGrid, this, Ids::ID_VIEW_GRID);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuChangeDimensions, this, Ids::ID_VIEW_DIMENSIONS);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuEditorStates, this, Ids::ID_VIEW_STATES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuEditorRules, this, Ids::ID_VIEW_RULES);
-	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuChangeDimensions, this, Ids::ID_VIEW_DIMENSIONS);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuPerspectiveDefault, this, Ids::ID_VIEW_DEFAULT);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuPerspectiveGrid, this, Ids::ID_VIEW_GRID);
 }
 
 void Main::SetShortcuts()
@@ -177,8 +182,8 @@ void Main::PrepareInput()
 
 	statusControls->SetGrid(grid);
 
-	inputNeighbors->SetNeighbors({ "NW","N","NE","W","C","E","SW","S","SE"});
-	inputStates->SetStates({ "FREE","LIVE" });
+	//inputNeighbors->SetNeighbors({ "NW","N","NE","W","C","E","SW","S","SE"});
+	//inputStates->SetStates({ "FREE","LIVE" });
 }
 
 void Main::MenuExit(wxCommandEvent& evt)
@@ -224,6 +229,7 @@ void Main::MenuEditorRules(wxCommandEvent& evt)
 void Main::MenuChangeDimensions(wxCommandEvent& evt)
 {
 	DialogDimensions dialog(this);
+
 	if (dialog.ShowModal() == wxID_OK)
 	{
 		int rows = dialog.GetRows();
@@ -231,6 +237,272 @@ void Main::MenuChangeDimensions(wxCommandEvent& evt)
 
 		m_PanelGrid->GetGrid()->SetDimensions(rows, cols);
 	}
+}
+
+void Main::MenuImport(wxCommandEvent& evt)
+{
+	wxFileDialog dialogFile(this, "Import States", "", "", "TXT files (*.txt)|*.txt", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+
+	if (dialogFile.ShowModal() == wxID_CANCEL) return;
+
+	std::ifstream in(dialogFile.GetPath().ToStdString());
+	std::stringstream ss; ss << in.rdbuf();
+
+	// read everything and ignore until line mark "[STATES/RULES/SIZE/CELLS]"
+	std::unordered_set<wxString> marks = {"[STATES]","[RULES]","[NEIGHBORS]","[SIZE]","[CELLS]"};
+	std::unordered_map<wxString, std::string> mark;
+	while (true)
+	{
+		std::string s;
+
+		if (!std::getline(ss, s, '\n')) break;
+
+		wxString symbol = wxString(s).Upper();
+
+		// invalid mark
+		if (marks.find(symbol) == marks.end()) continue;
+		// duplicate found -> ignore
+		if (mark.find(symbol) != mark.end()) continue;
+
+		mark.insert({ symbol, "" });
+
+		while (true)
+		{
+			s = "";
+
+			std::streampos pos = ss.tellg();
+			if (!std::getline(ss, s, '\n')) break;
+
+			// detected line mark -> reset stream cursor position
+			if (marks.find(s) != marks.end())
+			{
+				ss.seekg(pos);
+				break;
+			}
+
+			mark[symbol] += s + "\n";
+		}
+	}
+
+	if (mark.empty())
+	{
+		wxMessageBox("Invalid import file. No line markers found.", "Error", wxICON_ERROR | wxOK);
+		return;
+	}
+
+	bool hasErrors = false;
+	
+	auto it = mark.find("[STATES]");
+	if (it != mark.end())
+	{
+		std::pair<std::vector<std::string>, std::vector<std::pair<int, std::string>>> data = m_EditorStates->Process(it->second);
+		std::vector<std::string> states = data.first;
+		std::vector<std::pair<int, std::string>> errors = data.second;
+
+		if (states.size())
+		{
+			m_EditorStates->SetText(it->second);
+			m_PanelInput->GetInputStates()->SetStates(states);
+		}
+
+		if (errors.size()) hasErrors = true;
+	}
+
+	it = mark.find("[RULES]");
+	if (it != mark.end())
+	{
+		std::pair<std::vector<std::pair<std::string, Transition>>, std::vector<std::pair<int, std::string>>> data = m_EditorRules->Process(it->second);
+		std::vector<std::pair<std::string, Transition>> rules = data.first;
+		std::vector<std::pair<int, std::string>> errors = data.second;
+
+		if (rules.size())
+		{
+			m_EditorRules->SetText(it->second);
+			m_PanelInput->GetInputRules()->SetRules(rules);
+		}
+
+		if (errors.size()) hasErrors = true;
+	}
+
+	it = mark.find("[NEIGHBORS]");
+	if (it != mark.end())
+	{
+		ss.clear();
+		ss << it->second;
+
+		std::string direction;
+		std::vector<std::string> directions;
+		std::unordered_set<std::string> neighborhood = { "NW","N","NE","W","C","E","SW","S","SE" };
+
+		while (ss >> direction)
+		{
+			direction = wxString(direction).Upper().ToStdString();
+
+			if (neighborhood.find(direction) == neighborhood.end())
+			{
+				hasErrors = true;
+			}
+			else
+			{
+				if (std::find(directions.begin(), directions.end(), direction) == directions.end()) directions.push_back(direction);
+			}
+		}
+
+		if (directions.size()) m_PanelInput->GetInputNeighbors()->SetNeighbors(directions);
+	}
+
+	it = mark.find("[SIZE]");
+	if (it != mark.end())
+	{
+		ss.clear();
+		ss << it->second;
+
+		std::string rows;
+		std::string cols;
+		std::string s;
+		ss >> rows >> cols >> s;
+
+		if (rows.empty() || cols.empty() || s.size())
+		{
+			hasErrors = true;
+		}
+		else
+		{
+			// check if number is valid
+			if (rows.find_first_not_of("0123456789") != string::npos || cols.find_first_not_of("0123456789") != string::npos)
+			{
+				hasErrors = true;
+			}
+			else
+			{
+				int nrows = std::stoi(rows);
+				int ncols = std::stoi(rows);
+
+				if (nrows < 1 || nrows > Sizes::MAX_ROWS || ncols < 1 || ncols > Sizes::MAX_COLS)
+				{
+					hasErrors = true;
+				}
+				else
+				{
+					m_PanelGrid->GetGrid()->SetDimensions(nrows, ncols);
+				}
+			}
+		}
+	}
+
+	it = mark.find("[CELLS]");
+	std::vector < std::pair<std::pair<int, int>, std::pair<std::string, wxColour>>> cells;
+	if (it != mark.end())
+	{
+		ss.clear();
+		ss << it->second;
+
+		std::string s;
+		std::unordered_map<std::string, std::string> states = m_PanelInput->GetInputStates()->GetStates();
+
+		while (std::getline(ss, s, ';'))
+		{
+			std::string x;
+			std::string y;
+			std::string state;
+			std::string tmp;
+
+			std::stringstream line(s);
+			line >> x >> y >> state >> tmp;
+
+			if (x.empty()) continue;
+			if (y.empty() || state.empty() || tmp.size())
+			{
+				hasErrors = true;
+			}
+			else
+			{
+				std::string signx = "+";
+				std::string signy = "+";
+
+				if (x[0] == '-' || x[0] == '+')
+				{
+					signx = x[0];
+					x = x.substr(1);
+				}
+				if (y[0] == '-' || y[0] == '+')
+				{
+					signy = y[0];
+					y = y.substr(1);
+				}
+
+				if (x.find_first_not_of("0123456789") != string::npos || y.find_first_not_of("0123456789") != string::npos)
+				{
+					hasErrors = true;
+				}
+				else
+				{
+					x = signx + x;
+					y = signy + y;
+
+					int nx = std::stoi(x);
+					int ny = std::stoi(y);
+
+					int xmin = -Sizes::N_COLS / 2;
+					int xmax = Sizes::N_COLS / 2;
+					int ymin = -Sizes::N_ROWS / 2;
+					int ymax = Sizes::N_ROWS / 2;
+
+					if (Sizes::N_COLS % 2 == 0) xmax--;
+					if (Sizes::N_ROWS % 2 == 0) ymax--;
+
+					if (nx < xmin || nx > xmax || ny < ymin || ny > ymax || states.find(state) == states.end())
+					{
+						hasErrors = true;
+						wxLogDebug("xmin=%i xmax=%i nx=%i - ymin=%i ymax=%i ny=%i state=%s",xmin,xmax,nx,ymin,ymax,ny,state);
+					}
+					else
+					{
+						cells.push_back({ {nx-xmin, ny-ymin}, {state, wxColour(states[state])} });
+					}
+				}
+			}
+		}
+	}
+
+	if (cells.size())
+	{
+		m_PanelGrid->GetGrid()->Reset();
+		for (auto& cell : cells) m_PanelGrid->GetGrid()->InsertCell(cell.first.first, cell.first.second, cell.second.first, cell.second.second, true);
+		m_PanelGrid->GetGrid()->RefreshUpdate();
+	}
+
+	if (hasErrors) wxMessageBox("Some of the input appears to be invalid, as a result it has been ignored.", "Warning", wxICON_WARNING | wxOK);
+}
+
+void Main::MenuExport(wxCommandEvent& evt)
+{
+	wxFileDialog dialogFile(this, "Export Pattern", "", "", "TXT files (*.txt)|*.txt", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+
+	if (dialogFile.ShowModal() == wxID_CANCEL) return;
+
+	std::ofstream out(dialogFile.GetPath().ToStdString());
+
+	out << "[STATES]\n";
+	out << m_EditorStates->GetText().ToStdString() << '\n';
+
+	out << "[RULES]\n";
+	out << m_EditorRules->GetText().ToStdString() << '\n';
+
+	out << "[NEIGHBORS]\n";
+	for (auto& neighbor : m_PanelInput->GetInputNeighbors()->GetNeighbors())
+		out << neighbor << ' ';
+	out << '\n';
+
+	out << "[SIZE]\n";
+	out << Sizes::N_ROWS << ' ' << Sizes::N_COLS << '\n';
+
+	out << "[CELLS]\n";
+	for (auto& cell : m_PanelGrid->GetGrid()->GetCells())
+	{
+		out << cell.first.first - Sizes::N_COLS / 2 << ' ' << cell.first.second - Sizes::N_ROWS / 2 << ' ' << cell.second.first << ';' << '\n';
+	}
+	out << '\n';
 }
 
 void Main::OnClose(wxCloseEvent& evt)

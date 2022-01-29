@@ -44,6 +44,8 @@ private:
 	void MenuEditorStates(wxCommandEvent& evt);
 	void MenuEditorRules(wxCommandEvent& evt);
 	void MenuChangeDimensions(wxCommandEvent& evt);
+	void MenuImport(wxCommandEvent& evt);
+	void MenuExport(wxCommandEvent& evt);
 
 	void OnClose(wxCloseEvent& evt);
 

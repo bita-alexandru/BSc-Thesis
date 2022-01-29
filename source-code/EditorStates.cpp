@@ -273,7 +273,14 @@ void EditorStates::ForceClose()
 void EditorStates::SetText(std::string text)
 {
 	m_TextCtrl->SetText(text);
+
 	m_PrevText = text;
+	m_InvalidInput = false;
+}
+
+wxString EditorStates::GetText()
+{
+	return m_TextCtrl->GetText();
 }
 
 void EditorStates::BuildMenuBar()
@@ -665,11 +672,13 @@ void EditorStates::OnImport(wxCommandEvent& evt)
 		std::vector<std::string> states = data.first;
 		std::vector<std::pair<int, std::string>> errors = data.second;
 
-		m_InvalidInput = false;
-		SetText(text);
 
-		if (states.size()) m_InputStates->SetStates(states);
-		else m_InputStates->SetStates({ "FREE" });
+		if (states.size())
+		{
+			SetText(text);
+			m_InputStates->SetStates(states);
+		}
+		//else m_InputStates->SetStates({ "FREE" });
 
 		if (errors.size())
 		{

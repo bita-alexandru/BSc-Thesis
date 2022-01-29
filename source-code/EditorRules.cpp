@@ -211,7 +211,14 @@ void EditorRules::ForceClose()
 void EditorRules::SetText(std::string text)
 {
 	m_TextCtrl->SetText(text);
+
 	m_PrevText = text;
+	m_InvalidInput = false;
+}
+
+wxString EditorRules::GetText()
+{
+	return m_TextCtrl->GetText();
 }
 
 void EditorRules::BuildMenuBar()
@@ -594,11 +601,13 @@ void EditorRules::OnImport(wxCommandEvent& evt)
 		std::vector<std::pair<std::string, Transition>> rules = data.first;
 		std::vector<std::pair<int, std::string>> errors = data.second;
 
-		m_InvalidInput = false;
-		SetText(text);
 
-		if (rules.size()) m_InputRules->SetRules(rules);
-		else m_InputRules->SetRules(std::vector<std::pair<std::string, Transition>>());
+		if (rules.size())
+		{
+			SetText(text);
+			m_InputRules->SetRules(rules);
+		}
+		//else m_InputRules->SetRules(std::vector<std::pair<std::string, Transition>>());
 
 		if (errors.size())
 		{

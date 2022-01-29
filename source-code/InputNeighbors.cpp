@@ -18,7 +18,11 @@ void InputNeighbors::SetNeighbors(std::vector<std::string> neighbors)
 {
 	for (auto& it : m_Buttons)
 	{
-		it.second->SetValue(0);
+		if (m_Neighbors.find(it.first) != m_Neighbors.end())
+		{
+			it.second->SetValue(0);
+			m_Neighbors.erase(it.first);
+		}
 	}
 
 	for (int i = 0; i < neighbors.size(); i++)

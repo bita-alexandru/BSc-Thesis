@@ -8,9 +8,12 @@ public:
 	inline static int N_ROWS;
 	inline static int N_COLS;
 
+	static const int MAX_ROWS = 501;
+	static const int MAX_COLS = 501;
+
 	static const int CELL_SIZE_DEFAULT = 32;
 	static const int CELL_SIZE_MIN = 4;
-	static const int CELL_SIZE_MAX = 64;
+	static const int CELL_SIZE_MAX = 512;
 
 	static const int MAIN_WIDTH = 1600;
 	static const int MAIN_HEIGHT = 900;
