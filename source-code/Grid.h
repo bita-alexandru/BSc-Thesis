@@ -151,4 +151,6 @@ private:
 	bool ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::string>& neighbors);
 	std::unordered_map<std::string, std::string> GetNeighborhood(std::pair<int, int> xy, std::unordered_set<std::string>& neighbors);
 	void UpdateGeneration();
+
+	void UpdateCoordsHovered();
 };

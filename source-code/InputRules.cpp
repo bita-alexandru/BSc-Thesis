@@ -58,7 +58,7 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
         bool present = false;
         for (int i = 0; i < rules.size(); i++)
         {
-            if (it->first == rules[i].first && it->second.condition == rules[i].second.condition)
+            if (it->first == rules[i].first && it->second.state == rules[i].second.state && it->second.condition == rules[i].second.condition)
             {
                 present = true;
                 break;

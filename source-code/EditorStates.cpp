@@ -5,6 +5,8 @@
 #include <unordered_set>
 #include <fstream>
 
+#include "wx/richmsgdlg.h"
+
 wxBEGIN_EVENT_TABLE(EditorStates, wxFrame)
 	EVT_CLOSE(EditorStates::OnCloseEvent)
 	EVT_SET_FOCUS(EditorStates::OnFocusEvent)
@@ -148,7 +150,7 @@ std::vector<std::string> EditorStates::GetData()
 	}
 	else if (indexInvalid.size())
 	{
-		wxMessageDialog dialog(
+		 wxRichMessageDialog dialog(
 			this, "Some of the states appear to be invalid.", "Warning",
 			wxYES_NO | wxCANCEL | wxICON_EXCLAMATION
 		);
@@ -185,7 +187,7 @@ std::vector<std::string> EditorStates::GetData()
 
 			it.first = nline;
 		}
-		dialog.SetExtendedMessage(extendedMessage);
+		dialog.ShowDetailedText(extendedMessage);
 
 		int answer = dialog.ShowModal();
 
@@ -294,7 +296,7 @@ void EditorStates::BuildMenuBar()
 	menuFile->Append(Ids::ID_SAVE_STATES, "&Save\tCtrl+S");
 	menuFile->Append(Ids::ID_SAVE_CLOSE_STATES, "Sa&ve && Close\tAlt+S");
 	menuFile->AppendSeparator();
-	menuFile->Append(Ids::ID_CLOSE_STATES, "&Close\tAlt+F4");
+	menuFile->Append(Ids::ID_CLOSE_STATES, "&Close\tEsc");
 	menuEdit->Append(Ids::ID_FIND_STATES, "&Find\tCtrl+F");
 	menuEdit->Append(Ids::ID_REPLACE_STATES, "&Replace\tCtrl+H");
 	menuEdit->AppendSeparator();
@@ -326,9 +328,6 @@ void EditorStates::BuildMenuBar()
 
 void EditorStates::BuildInputPanel()
 {
-	std::string labelHelp = "so basically yeah, plz no more than 256 states lol ok ? thx.";
-	wxStaticText* help = new wxStaticText(this, wxID_ANY, labelHelp);
-
 	m_TextCtrl = new wxStyledTextCtrl(this);
 	m_TextCtrl->SetMarginWidth(wxSTC_MARGIN_NUMBER, 80);
 	m_TextCtrl->SetMarginType(wxSTC_MARGINOPTION_SUBLINESELECT, wxSTC_MARGIN_NUMBER);
@@ -341,24 +340,19 @@ void EditorStates::BuildInputPanel()
 	wxFont font = wxFont(16, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false);
 	m_TextCtrl->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
 
-	wxPanel* panelButtons = new wxPanel(this);
-	wxButton* save = new wxButton(panelButtons, Ids::ID_SAVE_STATES, wxString("Save"));
-	wxButton* saveClose = new wxButton(panelButtons, Ids::ID_SAVE_CLOSE_STATES, wxString("Save && Close"));
+	/*wxButton* save = new wxButton(this, Ids::ID_SAVE_STATES, wxString("Save"));
+	wxButton* saveClose = new wxButton(this, Ids::ID_SAVE_CLOSE_STATES, wxString("Save && Close"));
 
 	save->Bind(wxEVT_BUTTON, &EditorStates::OnSave, this);
 	saveClose->Bind(wxEVT_BUTTON, &EditorStates::OnSaveClose, this);
 
-	wxBoxSizer* sizerButtons = new wxBoxSizer(wxHORIZONTAL);
-	panelButtons->SetSizerAndFit(new wxBoxSizer(wxHORIZONTAL));
+	wxGridSizer* sizerButtons = new wxGridSizer(2);
 	sizerButtons->Add(save, 0);
-	sizerButtons->Add(saveClose, 0);
-
-	panelButtons->SetSizerAndFit(sizerButtons);
+	sizerButtons->Add(saveClose, 0);*/
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-	sizer->Add(help, 0, wxALL, 6);
 	sizer->Add(m_TextCtrl, 1, wxEXPAND);
-	sizer->Add(panelButtons, 0, wxALIGN_RIGHT | wxALL, 6);
+	//sizer->Add(sizerButtons, 0, wxALIGN_RIGHT | wxALL, 6);
 
 	CreateStatusBar(); GetStatusBar()->SetStatusText("Line=1\tColumn=1");
 

@@ -440,6 +440,7 @@ bool Grid::NextGeneration()
 	if (n == -1) return false;
 
 	UpdateGeneration();
+	UpdateCoordsHovered();
 
 	m_StatusCells->UpdateCountGeneration(+1);
 	m_StatusCells->SetCountPopulation(m_Cells.size());
@@ -475,6 +476,17 @@ std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::
 std::unordered_map<std::string, wxColour>& Grid::GetColors()
 {
 	return m_ToolStates->GetColors();
+}
+
+void Grid::UpdateCoordsHovered()
+{
+	if (!wxWindow::GetScreenRect().Contains(wxGetMousePosition())) return;
+
+	wxPoint xy = ScreenToClient(wxGetMouseState().GetPosition());
+	wxLogDebug("%i,%i", xy.x, xy.y);
+	std::string name = GetState(xy.x, xy.y);
+
+	m_ToolCoords->Set(xy.x - m_OffsetX, xy.y - m_OffsetY, name);
 }
 
 wxCoord Grid::OnGetRowHeight(size_t row) const

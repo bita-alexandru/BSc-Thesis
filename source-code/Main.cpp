@@ -454,7 +454,6 @@ void Main::MenuImport(wxCommandEvent& evt)
 					if (nx < xmin || nx > xmax || ny < ymin || ny > ymax || states.find(state) == states.end())
 					{
 						hasErrors = true;
-						wxLogDebug("xmin=%i xmax=%i nx=%i - ymin=%i ymax=%i ny=%i state=%s",xmin,xmax,nx,ymin,ymax,ny,state);
 					}
 					else
 					{
@@ -484,10 +483,14 @@ void Main::MenuExport(wxCommandEvent& evt)
 	std::ofstream out(dialogFile.GetPath().ToStdString());
 
 	out << "[STATES]\n";
-	out << m_EditorStates->GetText().ToStdString() << '\n';
+	std::string states = m_EditorStates->GetText().ToStdString();
+	states.erase(std::remove(states.begin(), states.end(), '\r'), states.end());
+	out << states << '\n';
 
 	out << "[RULES]\n";
-	out << m_EditorRules->GetText().ToStdString() << '\n';
+	std::string rules = m_EditorRules->GetText().ToStdString();
+	rules.erase(std::remove(rules.begin(), rules.end(), '\r'), rules.end());
+	out << states << '\n';
 
 	out << "[NEIGHBORS]\n";
 	for (auto& neighbor : m_PanelInput->GetInputNeighbors()->GetNeighbors())
