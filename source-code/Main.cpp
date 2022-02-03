@@ -490,7 +490,7 @@ void Main::MenuExport(wxCommandEvent& evt)
 	out << "[RULES]\n";
 	std::string rules = m_EditorRules->GetText().ToStdString();
 	rules.erase(std::remove(rules.begin(), rules.end(), '\r'), rules.end());
-	out << states << '\n';
+	out << rules << '\n';
 
 	out << "[NEIGHBORS]\n";
 	for (auto& neighbor : m_PanelInput->GetInputNeighbors()->GetNeighbors())

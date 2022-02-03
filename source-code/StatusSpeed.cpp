@@ -38,7 +38,7 @@ void StatusSpeed::BuildInterface()
     sizer->Add(slower, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(faster, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(m_TextDelay, 0, wxALIGN_CENTER_VERTICAL);
-    //sizer->Add(m_TextDelay, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 48);
+    sizer->AddSpacer(8);
 
     this->SetSizerAndFit(sizer);
 }

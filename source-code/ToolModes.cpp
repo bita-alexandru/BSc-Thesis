@@ -67,7 +67,6 @@ void ToolModes::BuildInterface()
 	sizer->Add(m_Pick, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->Add(m_Move, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->Add(m_TextMode, 0, wxALIGN_CENTER_VERTICAL);
-	//sizer->Add(m_TextMode, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 48);
 
 	this->SetSizerAndFit(sizer);
 

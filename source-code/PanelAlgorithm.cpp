@@ -2,12 +2,12 @@
 
 PanelAlgorithm::PanelAlgorithm(wxWindow* parent) : wxScrolledWindow(parent)
 {
-    //SetBackgroundColour(wxColor(204, 213, 174));
+    SetBackgroundColour(wxColor(220, 220, 220));
 
 	wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, wxString("Algorithm parameters"));
 
-	this->SetScrollRate(4, 4);
-	this->SetSizer(sizer);
+	SetScrollRate(1, 1);
+	SetSizerAndFit(sizer);
 }
 
 PanelAlgorithm::~PanelAlgorithm()

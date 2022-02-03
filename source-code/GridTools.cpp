@@ -2,7 +2,7 @@
 
 GridTools::GridTools(wxWindow* parent): wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE)
 {
-    //SetBackgroundColour(wxColor(253, 255, 182));
+    SetBackgroundColour(wxColor(211, 211, 211));
 
     m_ToolZoom = new ToolZoom(this);
     m_ToolUndo = new ToolUndo(this);
@@ -10,20 +10,18 @@ GridTools::GridTools(wxWindow* parent): wxPanel(parent, wxID_ANY, wxDefaultPosit
     m_ToolStates = new ToolStates(this);
     m_ToolCoords = new ToolCoords(this);
 
-    //wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
-    wxGridSizer* sizer = new wxGridSizer(5);
-    /*sizer->Add(m_ToolZoom, 0, wxEXPAND);
-    sizer->Add(m_ToolUndo, 0, wxEXPAND | wxLEFT, 48);
-    sizer->Add(m_ToolModes, 0, wxEXPAND | wxLEFT, 48);
-    sizer->Add(m_ToolStates, 0, wxEXPAND | wxLEFT, 48);
-    sizer->Add(m_ToolCoords, 0, wxEXPAND | wxLEFT, 48);*/
-    sizer->Add(m_ToolZoom, 1, wxEXPAND | wxALIGN_LEFT);
-    sizer->Add(m_ToolModes, 1, wxEXPAND | wxALIGN_LEFT);
-    sizer->Add(m_ToolStates, 1, wxEXPAND | wxALIGN_LEFT);
-    sizer->Add(m_ToolCoords, 1, wxEXPAND);
-    sizer->Add(m_ToolUndo, 1, wxEXPAND | wxALIGN_RIGHT);
+    wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+    sizer->Add(m_ToolZoom, 0, wxEXPAND);
+    sizer->AddSpacer(32);
+    sizer->Add(m_ToolUndo, 0, wxEXPAND);
+    sizer->AddSpacer(32);
+    sizer->Add(m_ToolModes, 0, wxEXPAND);
+    sizer->AddSpacer(8);
+    sizer->Add(m_ToolStates, 0, wxEXPAND);
+    sizer->AddSpacer(8);
+    sizer->Add(m_ToolCoords, 0, wxEXPAND);
 
-    this->SetSizerAndFit(sizer);
+    SetSizerAndFit(sizer);
 }
 
 GridTools::~GridTools()

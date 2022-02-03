@@ -482,11 +482,11 @@ void Grid::UpdateCoordsHovered()
 {
 	if (!wxWindow::GetScreenRect().Contains(wxGetMousePosition())) return;
 
-	wxPoint xy = ScreenToClient(wxGetMouseState().GetPosition());
-	wxLogDebug("%i,%i", xy.x, xy.y);
-	std::string name = GetState(xy.x, xy.y);
+	wxPoint xy = ScreenToClient(wxGetMouseState().GetPosition()) / m_Size;
 
-	m_ToolCoords->Set(xy.x - m_OffsetX, xy.y - m_OffsetY, name);
+	if (xy.x >= Sizes::N_COLS || xy.y >= Sizes::N_ROWS) return;
+	
+	ControlUpdateCoords(xy.x, xy.y);
 }
 
 wxCoord Grid::OnGetRowHeight(size_t row) const

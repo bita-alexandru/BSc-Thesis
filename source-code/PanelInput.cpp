@@ -2,7 +2,7 @@
 
 PanelInput::PanelInput(wxWindow* parent) : wxScrolledWindow(parent)
 {
-    //SetBackgroundColour(wxColor(250, 210, 225));
+    SetBackgroundColour(wxColor(220, 220, 220));
 
 	m_InputStates = new InputStates(this);
 	m_InputNeighbors = new InputNeighbors(this);
@@ -13,8 +13,8 @@ PanelInput::PanelInput(wxWindow* parent) : wxScrolledWindow(parent)
 	sizer->Add(m_InputNeighbors, 1, wxEXPAND | wxLEFT | wxRIGHT, 6);
 	sizer->Add(m_InputRules, 1, wxEXPAND | wxALL, 6);
 
-	this->SetSizer(sizer);
-	this->SetScrollRate(1, 1);
+	SetSizerAndFit(sizer);
+	SetScrollRate(1, 1);
 }
 
 PanelInput::~PanelInput()

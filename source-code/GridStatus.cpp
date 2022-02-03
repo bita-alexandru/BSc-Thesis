@@ -2,22 +2,20 @@
 
 GridStatus::GridStatus(wxWindow* parent) : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE)
 {
-    //SetBackgroundColour(wxColor(199, 190, 162));
+    SetBackgroundColour(wxColor(211, 211, 211));
 
 	m_StatusSpeed = new StatusSpeed(this);
 	m_StatusControls = new StatusControls(this);
 	m_StatusCells = new StatusCells(this);
 
-	//wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
-	wxGridSizer* sizer = new wxGridSizer(3);
-	/*sizer->Add(m_StatusSpeed, 0, wxEXPAND);
-	sizer->Add(m_StatusControls, 0, wxEXPAND | wxLEFT, 48);
-	sizer->Add(m_StatusCells, 0, wxEXPAND | wxLEFT, 48);*/
-	sizer->Add(m_StatusSpeed, 1, wxEXPAND | wxALIGN_LEFT);
-	sizer->Add(m_StatusControls, 1, wxEXPAND | wxALIGN_CENTER_HORIZONTAL);
-	sizer->Add(m_StatusCells, 1, wxEXPAND | wxALIGN_RIGHT);
+	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+	sizer->Add(m_StatusSpeed, 0, wxEXPAND);
+	sizer->AddSpacer(32);
+	sizer->Add(m_StatusControls, 0, wxEXPAND);
+	sizer->AddSpacer(32);
+	sizer->Add(m_StatusCells, 0, wxEXPAND | wxTOP | wxBOTTOM, 4);
 
-	this->SetSizerAndFit(sizer);
+	SetSizerAndFit(sizer);
 }
 
 GridStatus::~GridStatus()

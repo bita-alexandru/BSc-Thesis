@@ -639,12 +639,15 @@ void EditorStates::OnImport(wxCommandEvent& evt)
 		wxString symbol = wxString(s).Upper();
 		if (symbol == "[STATES]")
 		{
-			// read everything and store into "states"
+			std::unordered_set<wxString> marks = { "[STATES]","[RULES]","[NEIGHBORS]","[SIZE]","[CELLS]" };
+			// read everything and store into "states" until another mark is detected
 			while (true)
 			{
 				s = "";
 
 				if (!std::getline(ss, s, '\n')) break;
+
+				if (marks.find(s) != marks.end()) break;
 
 				text += s + "\n";
 			}
