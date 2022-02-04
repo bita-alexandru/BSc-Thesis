@@ -19,7 +19,7 @@ GridTools::GridTools(wxWindow* parent): wxPanel(parent, wxID_ANY, wxDefaultPosit
     sizer->AddSpacer(8);
     sizer->Add(m_ToolStates, 0, wxEXPAND);
     sizer->AddSpacer(8);
-    sizer->Add(m_ToolCoords, 0, wxEXPAND);
+    sizer->Add(m_ToolCoords, 0, wxEXPAND | wxTOP | wxBOTTOM, 4);
 
     SetSizerAndFit(sizer);
 }

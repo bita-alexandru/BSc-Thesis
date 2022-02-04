@@ -37,11 +37,9 @@ void ToolCoords::BuildInterface()
 	m_Coords = new wxStaticText(this, wxID_ANY, "(X,Y)=");
 	m_State = new wxStaticText(this, wxID_ANY, "State=");
 
-	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
-	sizer->Add(m_Coords, 0, wxALIGN_CENTER_VERTICAL);
-	sizer->AddSpacer(80);
-	sizer->Add(m_State, 0, wxALIGN_CENTER_VERTICAL);
-	sizer->AddSpacer(256);
+	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+	sizer->Add(m_Coords, 0, wxRIGHT, 256);
+	sizer->Add(m_State, 0, wxRIGHT, 256);
 
 	this->SetSizerAndFit(sizer);
 }

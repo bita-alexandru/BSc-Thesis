@@ -1,4 +1,5 @@
 #include "Grid.h"
+#include "wx/richmsgdlg.h"
 
 wxBEGIN_EVENT_TABLE(Grid, wxHVScrolledWindow)
 EVT_PAINT(Grid::OnPaint)
@@ -424,20 +425,29 @@ bool Grid::PauseUniverse()
 	return false;
 }
 
-bool Grid::NextStep()
-{
-	return false;
-}
-
 bool Grid::NextGeneration()
 {
 	if (m_Finished) return false;
 
-	int n = ParseAllRules();
-
+	std::pair<int, std::string> result = ParseAllRules();
+	int n = result.first;
+	
 	//wxLogDebug("PARSE_ALL_RULES=%i", n);
 
-	if (n == -1) return false;
+	if (n == -1)
+	{
+		std::string message = result.second;
+
+		wxRichMessageDialog dialog(
+			this, "Some of the rules appear to be invalid.", "Error",
+			wxOK | wxICON_ERROR
+		);
+		dialog.ShowDetailedText(message);
+
+		dialog.ShowModal();
+		
+		return false;
+	}
 
 	UpdateGeneration();
 	UpdateCoordsHovered();
@@ -1498,23 +1508,23 @@ bool Grid::InVisibleBounds(int x, int y)
 		);
 }
 
-int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
+std::pair<int, std::string> Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 {
 	std::unordered_map<std::string, std::string> states = m_InputRules->GetInputStates()->GetStates();
 	std::unordered_set<std::string> neighbors = m_InputRules->GetInputNeighbors()->GetNeighbors();
 	std::vector<std::pair<int, int>> applied;
 
 	// check if rule might contain invalid states
-	if (states.find(rule.first) == states.end()) return -1;
-	if (states.find(rule.second.state) == states.end()) return -1;
+	if (states.find(rule.first) == states.end()) return { -1, "<INVALID FIRST STATE>"};
+	if (states.find(rule.second.state) == states.end()) return { -1, "<INVALID SECOND STATE>" };
 	for (auto& state : rule.second.states)
 	{
-		if (states.find(state) == states.end()) return -1;
+		if (states.find(state) == states.end()) return { -1, "<INVALID CONDITION STATE>"};
 	}
 	// check for neighborhood as well
 	for (auto& direction : rule.second.directions)
 	{
-		if (neighbors.find(direction) == neighbors.end()) return -1;
+		if (neighbors.find(direction) == neighbors.end()) return { -1, "<INVALID NEIGHBORHOOD>"};
 	}
 
 	// if state is "FREE", apply rule to all "FREE" cells
@@ -1590,42 +1600,131 @@ int Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 	// else, get all cells of that type
 	else
 	{
-		if (m_StatePositions.find(rule.first) == m_StatePositions.end()) return 0;
-
-		for (auto& cell : m_StatePositions[rule.first])
+		if (m_StatePositions.find(rule.first) == m_StatePositions.end()) return { 0,"" };
+		
+		// no condition -> iterate through all cells of this type
+		if (rule.second.condition.empty())
 		{
-			//wxLogDebug("CELL=%i,%i", cell.first-m_OffsetX, cell.second-m_OffsetY);
-			if (ApplyOnCell(cell.first, cell.second, rule.second, neighbors)) applied.push_back({ cell.first,cell.second });
+			for (auto& cell : m_StatePositions[rule.first])
+			{
+				//wxLogDebug("CELL=%i,%i", cell.first-m_OffsetX, cell.second-m_OffsetY);
+				if (ApplyOnCell(cell.first, cell.second, rule.second, neighbors)) applied.push_back({ cell.first,cell.second });
+			}
+		}
+		// decide whether it's faster to iterate through all cells of this type
+		// or through the condition states' neighbors
+		else
+		{
+			int n1 = m_StatePositions[rule.first].size();
+			int n2 = 0;
+			for (auto& state : rule.second.states)
+			{
+				if (m_StatePositions.find(state) == m_StatePositions.end()) continue;
+				n2 += m_StatePositions[state].size();
+			}
+
+			//wxLogDebug("n1=%i n2=%i s=%s",n1,n2,rule.first);
+
+			// iterate through the cells of this type
+			if (n1 <= n2)
+			{
+				for (auto& cell : m_StatePositions[rule.first])
+				{
+					//wxLogDebug("CELL=%i,%i", cell.first-m_OffsetX, cell.second-m_OffsetY);
+					if (ApplyOnCell(cell.first, cell.second, rule.second, neighbors)) applied.push_back({ cell.first,cell.second });
+				}
+			}
+			else
+			{
+				std::unordered_set<std::pair<int, int>, Hashes::PairInt> visited;
+
+				int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
+				int dy[8] = { -1,-1,0,1,1,1,0,-1 };
+
+				for (auto& state : rule.second.states)
+				{
+					if (state == "FREE")
+					{
+						for (int i = 0; i < Sizes::N_ROWS; i++)
+							for (int j = 0; j < Sizes::N_COLS; j++)
+								if (GetState(j, i) == "FREE" && visited.find({ j,i }) == visited.end())
+								{
+									visited.insert({ j,i });
+
+									if (ApplyOnCell(j, i, rule.second, neighbors)) applied.push_back({ j,i });
+								}
+					}
+					// cells of this type are placed on grid
+					else if (m_StatePositions.find(state) != m_StatePositions.end())
+					{
+						// get adjacent cells of type "FREE"
+						for (auto& cell : m_StatePositions[state])
+						{
+							int x = cell.first;
+							int y = cell.second;
+
+							for (int d = 0; d < 8; d++)
+							{
+								int nx = x + dx[d];
+								int ny = y + dy[d];
+
+								// valid position and unvisited yet
+								if (InBounds(nx, ny) && GetState(nx, ny) == rule.first && visited.find({ nx,ny }) == visited.end())
+								{
+									visited.insert({ nx,ny });
+
+									if (ApplyOnCell(nx, ny, rule.second, neighbors)) applied.push_back({ nx,ny });
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 
 	std::string newstate = rule.first + "*" + rule.second.state + "*";
 	for (auto& cell : applied) m_StatePositions[newstate].insert(cell);
 
-	return applied.size();
+	return { applied.size(), "" };
 }
 
-int Grid::ParseAllRules()
+std::pair<int, std::string> Grid::ParseAllRules()
 {
 	std::unordered_multimap<std::string, Transition> rules = m_InputRules->GetRules();
 	int changes = 0;
 
 	for (auto& rule : rules)
 	{
-		int n = ParseRule(rule);
+		std::pair<int, std::string> result = ParseRule(rule);
+		int n = result.first;
 
 		//wxLogDebug("RULE=%s/%s:%s", rule.first, rule.second.state, rule.second.condition);
 
-		if (n == -1) return -1;
+		if (n == -1)
+		{
+			int index = -1;
+
+			// mark the problematic rule index
+			for (int i = 0; i < m_InputRules->GetList()->GetItemCount(); i++)
+			{
+				if (m_InputRules->GetList()->GetState1(i) == rule.first
+					&& m_InputRules->GetList()->GetState2(i) == rule.second.state
+					&& m_InputRules->GetList()->GetCond(i) == rule.second.condition)
+				{
+					index = i;
+					break;
+				}
+			}
+
+			if (index != -1) result.second += " at rule number " + std::to_string(index + 1);
+
+			return result;
+		}
 		else changes += n;
 	}
 
-	return changes;
-}
-
-int Grid::ParseNextRule()
-{
-	return 0;
+	return { changes,"" };
 }
 
 bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::string>& neighbors)

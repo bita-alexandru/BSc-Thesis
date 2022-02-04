@@ -244,7 +244,9 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 												neighbors.push_back(direction);
 
 												if (transition.directions.find(direction) == transition.directions.end())
+												{
 													transition.directions.insert(direction);
+												}
 											}
 										}
 
@@ -288,6 +290,11 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 								{
 									// assign to transition
 									transition.andRules.back().first = { neighborhood };
+
+									if (neighborhood != "ALL" && transition.directions.find(neighborhood) == transition.directions.end())
+									{
+										transition.directions.insert(neighborhood);
+									}
 								}
 								// invalid token
 								else MarkInvalid(valid, invalid, neighborhood,  "<INVALID NEIGHBORHOOD>", cursor);
