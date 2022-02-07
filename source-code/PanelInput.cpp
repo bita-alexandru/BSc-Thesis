@@ -13,7 +13,7 @@ PanelInput::PanelInput(wxWindow* parent) : wxScrolledWindow(parent)
 	sizer->Add(m_InputNeighbors, 1, wxEXPAND | wxLEFT | wxRIGHT, 6);
 	sizer->Add(m_InputRules, 1, wxEXPAND | wxALL, 6);
 
-	SetSizerAndFit(sizer);
+	SetSizer(sizer);
 	SetScrollRate(1, 1);
 }
 

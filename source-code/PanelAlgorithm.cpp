@@ -7,7 +7,7 @@ PanelAlgorithm::PanelAlgorithm(wxWindow* parent) : wxScrolledWindow(parent)
 	wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, wxString("Algorithm parameters"));
 
 	SetScrollRate(1, 1);
-	SetSizerAndFit(sizer);
+	SetSizer(sizer);
 }
 
 PanelAlgorithm::~PanelAlgorithm()

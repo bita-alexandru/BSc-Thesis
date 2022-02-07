@@ -1,5 +1,9 @@
 #include "Grid.h"
+#include "RuleApplyFunctor.h"
+
 #include "wx/richmsgdlg.h"
+
+#include <thread>
 
 wxBEGIN_EVENT_TABLE(Grid, wxHVScrolledWindow)
 EVT_PAINT(Grid::OnPaint)
@@ -429,12 +433,12 @@ bool Grid::NextGeneration()
 {
 	if (m_Finished) return false;
 
-	std::pair<int, std::string> result = ParseAllRules();
-	int n = result.first;
-	
+	std::pair<std::vector<std::pair<std::string, std::pair<int, int>>>, std::string> result = ParseAllRules();
+
 	//wxLogDebug("PARSE_ALL_RULES=%i", n);
 
-	if (n == -1)
+	// error
+	if (result.second.size())
 	{
 		std::string message = result.second;
 
@@ -449,13 +453,13 @@ bool Grid::NextGeneration()
 		return false;
 	}
 
-	UpdateGeneration();
+	UpdateGeneration(result.first);
 	UpdateCoordsHovered();
 
 	m_StatusCells->UpdateCountGeneration(+1);
 	m_StatusCells->SetCountPopulation(m_Cells.size());
 
-	if (n == 0)
+	if (result.first.empty())
 	{
 		m_Finished = true;
 		m_Paused = false;
@@ -1508,200 +1512,96 @@ bool Grid::InVisibleBounds(int x, int y)
 		);
 }
 
-std::pair<int, std::string> Grid::ParseRule(std::pair<const std::string, Transition>& rule)
+std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 {
 	std::unordered_map<std::string, std::string> states = m_InputRules->GetInputStates()->GetStates();
 	std::unordered_set<std::string> neighbors = m_InputRules->GetInputNeighbors()->GetNeighbors();
 	std::vector<std::pair<int, int>> applied;
 
 	// check if rule might contain invalid states
-	if (states.find(rule.first) == states.end()) return { -1, "<INVALID FIRST STATE>"};
-	if (states.find(rule.second.state) == states.end()) return { -1, "<INVALID SECOND STATE>" };
+	if (states.find(rule.first) == states.end()) return { {}, "<INVALID FIRST STATE>" };
+	if (states.find(rule.second.state) == states.end()) return { {}, "<INVALID SECOND STATE>" };
 	for (auto& state : rule.second.states)
 	{
-		if (states.find(state) == states.end()) return { -1, "<INVALID CONDITION STATE>"};
+		if (states.find(state) == states.end()) return { {}, "<INVALID CONDITION STATE>" };
 	}
 	// check for neighborhood as well
 	for (auto& direction : rule.second.directions)
 	{
-		if (neighbors.find(direction) == neighbors.end()) return { -1, "<INVALID NEIGHBORHOOD>"};
+		if (neighbors.find(direction) == neighbors.end()) return { {}, "<INVALID NEIGHBORHOOD>" };
 	}
+
+	std::vector<std::thread> threads;
+	std::vector<RuleApplyFunctor*> functors;
+	const int BATCH_SIZE = 100;
 
 	// if state is "FREE", apply rule to all "FREE" cells
 	if (rule.first == "FREE")
 	{
-		//if (rule.second.condition.empty())
-		if (rule.second.allFree == true)
-		{
-			for (int i = 0; i < Sizes::N_ROWS; i++)
-				for (int j = 0; j < Sizes::N_COLS; j++)
-					if (GetState(j, i) == "FREE")
-					{
-						std::string newstate = rule.first + "*" + rule.second.state + "*";
-						m_StatePositions[newstate].insert({ j,i });
-					}
-		}
-		else
-		{
-			/*for (int i = 0; i < Sizes::N_ROWS; i++)
-				for (int j = 0; j < Sizes::N_COLS; j++)
-					if (GetState(j, i) == "FREE")
-					{
-						if (ApplyOnCell(j, i, rule.second, neighbors)) applied.push_back({ j,i });
-					}*/
+			int n = Sizes::N_ROWS * Sizes::N_COLS;
+			int sqrtn = sqrt(n);
+			int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
 
-			 {
-				std::unordered_set<std::pair<int, int>, Hashes::PairInt> visited;
+			for (int i = 0; i < n;)
+			{
+				int step = (i + batchsize > n) ? n - i : batchsize;
 
-				int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
-				int dy[8] = { -1,-1,0,1,1,1,0,-1 };
+				RuleApplyFunctor* functor = new RuleApplyFunctor("FREE", rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+				threads.push_back(std::thread(std::ref(*functor), i, step));
+				functors.push_back(functor);
 
-				for (auto& state : rule.second.states)
-				{
-					if (state == "FREE")
-					{
-						for (int i = 0; i < Sizes::N_ROWS; i++)
-							for (int j = 0; j < Sizes::N_COLS; j++)
-								if (GetState(j, i) == "FREE" && visited.find({ j,i }) == visited.end())
-								{
-									visited.insert({ j,i });
-
-									if (ApplyOnCell(j, i, rule.second, neighbors)) applied.push_back({ j,i });
-								}
-					}
-					// cells of this type are placed on grid
-					else if (m_StatePositions.find(state) != m_StatePositions.end())
-					{
-						// get adjacent cells of type "FREE"
-						for (auto& cell : m_StatePositions[state])
-						{
-							int x = cell.first;
-							int y = cell.second;
-
-							for (int d = 0; d < 8; d++)
-							{
-								int nx = x + dx[d];
-								int ny = y + dy[d];
-
-								// valid position and unvisited yet
-								if (InBounds(nx, ny) && GetState(nx, ny) == "FREE" && visited.find({ nx,ny }) == visited.end())
-								{
-									visited.insert({ nx,ny });
-
-									if (ApplyOnCell(nx, ny, rule.second, neighbors)) applied.push_back({ nx,ny });
-								}
-							}
-						}
-					}
-				}
-			} 
-		}
+				i += step;
+			}
 	}
 	// else, get all cells of that type
 	else
 	{
-		if (m_StatePositions.find(rule.first) == m_StatePositions.end()) return { 0,"" };
-		
-		// no condition -> iterate through all cells of this type
-		if (rule.second.condition.empty())
+		if (m_StatePositions.find(rule.first) == m_StatePositions.end()) return { {},"" };
+
+		int n = m_StatePositions[rule.first].size();
+		int sqrtn = sqrt(n);
+		int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
+
+		for (int i = 0; i < n;)
 		{
-			for (auto& cell : m_StatePositions[rule.first])
-			{
-				//wxLogDebug("CELL=%i,%i", cell.first-m_OffsetX, cell.second-m_OffsetY);
-				if (ApplyOnCell(cell.first, cell.second, rule.second, neighbors)) applied.push_back({ cell.first,cell.second });
-			}
-		}
-		// decide whether it's faster to iterate through all cells of this type
-		// or through the condition states' neighbors
-		else
-		{
-			int n1 = m_StatePositions[rule.first].size();
-			int n2 = 0;
-			for (auto& state : rule.second.states)
-			{
-				if (m_StatePositions.find(state) == m_StatePositions.end()) continue;
-				n2 += m_StatePositions[state].size();
-			}
+			int step = (i + batchsize > n) ? n - i : batchsize;
 
-			//wxLogDebug("n1=%i n2=%i s=%s",n1,n2,rule.first);
+			RuleApplyFunctor* functor = new RuleApplyFunctor(rule.first, rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+			threads.push_back(std::thread(std::ref(*functor), i, step));
+			functors.push_back(functor);
 
-			// iterate through the cells of this type
-			if (n1 <= n2)
-			{
-				for (auto& cell : m_StatePositions[rule.first])
-				{
-					//wxLogDebug("CELL=%i,%i", cell.first-m_OffsetX, cell.second-m_OffsetY);
-					if (ApplyOnCell(cell.first, cell.second, rule.second, neighbors)) applied.push_back({ cell.first,cell.second });
-				}
-			}
-			else
-			{
-				std::unordered_set<std::pair<int, int>, Hashes::PairInt> visited;
-
-				int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
-				int dy[8] = { -1,-1,0,1,1,1,0,-1 };
-
-				for (auto& state : rule.second.states)
-				{
-					if (state == "FREE")
-					{
-						for (int i = 0; i < Sizes::N_ROWS; i++)
-							for (int j = 0; j < Sizes::N_COLS; j++)
-								if (GetState(j, i) == "FREE" && visited.find({ j,i }) == visited.end())
-								{
-									visited.insert({ j,i });
-
-									if (ApplyOnCell(j, i, rule.second, neighbors)) applied.push_back({ j,i });
-								}
-					}
-					// cells of this type are placed on grid
-					else if (m_StatePositions.find(state) != m_StatePositions.end())
-					{
-						// get adjacent cells of type "FREE"
-						for (auto& cell : m_StatePositions[state])
-						{
-							int x = cell.first;
-							int y = cell.second;
-
-							for (int d = 0; d < 8; d++)
-							{
-								int nx = x + dx[d];
-								int ny = y + dy[d];
-
-								// valid position and unvisited yet
-								if (InBounds(nx, ny) && GetState(nx, ny) == rule.first && visited.find({ nx,ny }) == visited.end())
-								{
-									visited.insert({ nx,ny });
-
-									if (ApplyOnCell(nx, ny, rule.second, neighbors)) applied.push_back({ nx,ny });
-								}
-							}
-						}
-					}
-				}
-			}
+			i += step;
 		}
 	}
 
-	std::string newstate = rule.first + "*" + rule.second.state + "*";
-	for (auto& cell : applied) m_StatePositions[newstate].insert(cell);
+	for (auto &t : threads)
+	{
+		if (t.joinable()) t.join();
+	}
 
-	return { applied.size(), "" };
+	for (auto &f : functors)
+	{
+		for (auto& it : f->GetApplied()) applied.push_back(it);
+
+		wxDELETE(f);
+	}
+
+	return { applied, "" };
 }
 
-std::pair<int, std::string> Grid::ParseAllRules()
+std::pair<std::vector<std::pair<std::string, std::pair<int, int>>>, std::string> Grid::ParseAllRules()
 {
 	std::unordered_multimap<std::string, Transition> rules = m_InputRules->GetRules();
-	int changes = 0;
+	std::vector<std::pair<std::string, std::pair<int, int>>> changes;
 
 	for (auto& rule : rules)
 	{
-		std::pair<int, std::string> result = ParseRule(rule);
-		int n = result.first;
+		std::pair<std::vector<std::pair<int, int>>, std::string> result = ParseRule(rule);
 
 		//wxLogDebug("RULE=%s/%s:%s", rule.first, rule.second.state, rule.second.condition);
 
-		if (n == -1)
+		// error
+		if (result.second.size())
 		{
 			int index = -1;
 
@@ -1719,9 +1619,18 @@ std::pair<int, std::string> Grid::ParseAllRules()
 
 			if (index != -1) result.second += " at rule number " + std::to_string(index + 1);
 
-			return result;
+			return { {}, result.second };
 		}
-		else changes += n;
+		// concatenate changes
+		else
+		{
+			std::string newstate = rule.first + "*" + rule.second.state + "*";
+
+			for (auto& change : result.first)
+			{
+				changes.push_back({ newstate , change});
+			}
+		}
 	}
 
 	return { changes,"" };
@@ -1843,58 +1752,39 @@ std::unordered_map<std::string, std::string> Grid::GetNeighborhood(std::pair<int
 	return neighborhood;
 }
 
-void Grid::UpdateGeneration()
+void Grid::UpdateGeneration(std::vector<std::pair<std::string, std::pair<int, int>>> changes)
 {
 	std::unordered_map<std::string, wxColour> colors = GetColors();
 
-	for (auto it = m_StatePositions.begin(); it != m_StatePositions.end();)
+	for (auto& change : changes)
 	{
-		std::string state = it->first;
+		std::string state = change.first;
 
-		if (state.back() == '*')
+		//wxLogDebug("STATE=%s", state);
+
+		state.pop_back();
+
+		std::string prevState = "";
+		std::string currState = "";
+		bool separator = false;
+		// regain information of previous and current state
+		for (int i = 0; i < state.size(); i++)
 		{
-			//wxLogDebug("STATE=%s", state);
-
-			state.pop_back();
-
-			std::string prevState = "";
-			std::string currState = "";
-			bool separator = false;
-			// regain information of previous and current state
-			for (int i = 0; i < state.size(); i++)
+			if (state[i] == '*')
 			{
-				if (state[i] == '*')
-				{
-					separator = true;
-					continue;
-				}
-
-				if (!separator) prevState.push_back(state[i]);
-				else currState.push_back(state[i]);
+				separator = true;
+				continue;
 			}
 
-			//wxLogDebug("PREV=<%s> CURR=<%s>", prevState, currState);
-
-			// insert positions into the current state map and remove them from the previous one
-			for (auto& position : it->second)
-			{
-				//if (currState != "FREE") m_StatePositions[currState].insert(position);
-
-				InsertCell(position.first, position.second, currState, colors[currState], true);
-
-				//m_StatePositions[prevState].erase(position);
-				//if (m_StatePositions[prevState].size() == 0) m_StatePositions.erase(state);
-				// update the color
-				//m_Cells[position] = { currState, colors[currState] };
-
-				/*m_RedrawAll = false;
-				m_RedrawXYs.push_back(position);
-				m_RedrawColors.push_back(colors[currState]);*/
-			}
-
-			it = m_StatePositions.erase(it);
+			if (!separator) prevState.push_back(state[i]);
+			else currState.push_back(state[i]);
 		}
-		else it++;
+
+		//wxLogDebug("PREV=<%s> CURR=<%s>", prevState, currState);
+
+		// insert positions into the current state map and remove them from the previous one
+		auto position = change.second;
+		InsertCell(position.first, position.second, currState, colors[currState], true);
 	}
 
 	Refresh(false);

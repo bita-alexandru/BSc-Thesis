@@ -380,11 +380,8 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 											}
 
 											// optimization for "FREE" cells
-											if (state1 == "FREE" &&
-												(comparisonType == TYPE_MORE ||
-													(comparisonType == TYPE_EQUAL && n > 0)
-													)
-												) transition.allFree = false;
+											//if (state1 == "FREE" &&
+											if(comparisonType == TYPE_MORE || (comparisonType == TYPE_EQUAL && n > 0)) transition.all = false;
 
 											// number of cells
 											transition.andConditions.back().first.first = n;
@@ -621,11 +618,6 @@ int Interpreter::CheckNumber(string& number, Transition& transition, int& count)
 
 	// convert to number if valid
 	if (number.size() && number.find_first_not_of("0123456789") == string::npos) n = stoi(number);
-
-	// check that it does not surpass the neighborhood size limit
-	// also keep count of the total number tracked by the previous "AND" condition
-	//if (transition.andRules.back().first[0] == "ALL" && n + count > m_Neighbors.size()) n = -1;
-	//else if (transition.andRules.back().first[0] != "ALL" && n + count > transition.andRules.back().first.size()) n = -1;
 
 	return n;
 }

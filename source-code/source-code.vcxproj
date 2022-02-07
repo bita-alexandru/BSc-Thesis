@@ -38,11 +38,11 @@
     <ClInclude Include="PanelAlgorithm.h" />
     <ClInclude Include="PanelGrid.h" />
     <ClInclude Include="PanelInput.h" />
+    <ClInclude Include="RuleApplyFunctor.h" />
     <ClInclude Include="Sizes.h" />
     <ClInclude Include="StatusCells.h" />
     <ClInclude Include="StatusControls.h" />
     <ClInclude Include="StatusSpeed.h" />
-    <ClInclude Include="ThreadRuleApplier.h" />
     <ClInclude Include="ToolCoords.h" />
     <ClInclude Include="ToolModes.h" />
     <ClInclude Include="ToolStates.h" />
@@ -68,10 +68,10 @@
     <ClCompile Include="PanelAlgorithm.cpp" />
     <ClCompile Include="PanelGrid.cpp" />
     <ClCompile Include="PanelInput.cpp" />
+    <ClCompile Include="RuleApplyFunctor.cpp" />
     <ClCompile Include="StatusCells.cpp" />
     <ClCompile Include="StatusControls.cpp" />
     <ClCompile Include="StatusSpeed.cpp" />
-    <ClCompile Include="ThreadRuleApplier.cpp" />
     <ClCompile Include="ToolCoords.cpp" />
     <ClCompile Include="ToolModes.cpp" />
     <ClCompile Include="ToolStates.cpp" />

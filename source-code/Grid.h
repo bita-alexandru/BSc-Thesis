@@ -144,11 +144,11 @@ private:
 	bool InBounds(int x, int y);
 	bool InVisibleBounds(int x, int y);
 
-	std::pair<int, std::string> ParseRule(std::pair<const std::string, Transition>& rule);
-	std::pair<int, std::string> ParseAllRules();
+	std::pair<std::vector<std::pair<int, int>>, std::string> ParseRule(std::pair<const std::string, Transition>& rule);
+	std::pair<std::vector<std::pair<std::string, std::pair<int, int>>>, std::string> ParseAllRules();
 	bool ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::string>& neighbors);
 	std::unordered_map<std::string, std::string> GetNeighborhood(std::pair<int, int> xy, std::unordered_set<std::string>& neighbors);
-	void UpdateGeneration();
+	void UpdateGeneration(std::vector<std::pair<std::string, std::pair<int, int>>> changes);
 
 	void UpdateCoordsHovered();
 };

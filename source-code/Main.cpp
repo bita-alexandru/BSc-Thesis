@@ -376,7 +376,7 @@ void Main::MenuImport(wxCommandEvent& evt)
 			else
 			{
 				int nrows = std::stoi(rows);
-				int ncols = std::stoi(rows);
+				int ncols = std::stoi(cols);
 
 				if (nrows < 1 || nrows > Sizes::MAX_ROWS || ncols < 1 || ncols > Sizes::MAX_COLS)
 				{
@@ -503,7 +503,11 @@ void Main::MenuExport(wxCommandEvent& evt)
 	out << "[CELLS]\n";
 	for (auto& cell : m_PanelGrid->GetGrid()->GetCells())
 	{
-		out << cell.first.first - Sizes::N_COLS / 2 << ' ' << cell.first.second - Sizes::N_ROWS / 2 << ' ' << cell.second.first << ';' << '\n';
+		int x = cell.first.first - Sizes::N_COLS / 2;
+		int y = cell.first.second - Sizes::N_ROWS / 2;
+		std::string state = cell.second.first;
+
+		out << x << ' ' << y << ' ' << state << ';' << '\n';
 	}
 	out << '\n';
 }
