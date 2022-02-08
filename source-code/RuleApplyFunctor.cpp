@@ -4,6 +4,7 @@
 
 RuleApplyFunctor::RuleApplyFunctor
 (
+	string _type,
 	string _state,
 	pair<string, Transition> _rule,
 	unordered_map<string, string>* _states,
@@ -12,6 +13,7 @@ RuleApplyFunctor::RuleApplyFunctor
 	unordered_map<string, unordered_set<pair<int, int>, Hashes::PairInt>>* _statePositions
 )
 {
+	type = _type;
 	state = _state;
 	rule = _rule;
 	states = _states;
@@ -172,10 +174,9 @@ void RuleApplyFunctor::Clear()
 
 void RuleApplyFunctor::ApplyRule(int start, int size)
 {
-	if (state == "FREE")
+	//wxLogDebug("type=%s", type);
+	if (type == "FREE_ALL")
 	{
-		//wxLogDebug("%i-%i", start, size);
-		//wxLogDebug("%s-%s", rule.first, rule.second.state);
 		for (int i = start; i < start + size; i++)
 		{
 			int x = i % Sizes::N_COLS;
@@ -187,24 +188,48 @@ void RuleApplyFunctor::ApplyRule(int start, int size)
 		return;
 	}
 
-
-	//wxLogDebug("%i-%i", start, size);
-	//wxLogDebug("%s-%s", rule.first, rule.second.state);
-
-	auto i = statePositions->at(state).begin();
-	while (start--) i++;
-
-	while(size--)
+	if (type == "STATE_ALL")
 	{
-		int x = i->first;
-		int y = i->second;
+		auto i = statePositions->at(state).begin();
+		while (start--) i++;
 
-		//wxLogDebug("x,y=%i,%i", x, y);
+		while (size--)
+		{
+			int x = i->first;
+			int y = i->second;
 
-		if (ApplyOnCell(x, y, rule.second)) applied.push_back({ x,y });
+			if (ApplyOnCell(x, y, rule.second)) applied.push_back({ x,y });
 
-		i++;
+			i++;
+		}
+
+		return;
 	}
 
-	return;
+	if (type == "ADJACENT")
+	{
+		auto i = statePositions->at(state).begin();
+		while (start--) i++;
+
+		int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
+		int dy[8] = { -1,-1,0,1,1,1,0,-1 };
+
+		while (size--)
+		{
+			int x = i->first;
+			int y = i->second;
+
+			for (int d = 0; d < 8; d++)
+			{
+				int nx = x + dx[d];
+				int ny = y + dy[d];
+
+				if (InBounds(nx, ny) && GetState(nx, ny) == rule.first && ApplyOnCell(nx, ny, rule.second)) applied.push_back({ nx,ny });
+			}
+
+			i++;
+		}
+
+		return;
+	}
 }

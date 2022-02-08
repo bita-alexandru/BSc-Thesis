@@ -1538,7 +1538,11 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 	// if state is "FREE", apply rule to all "FREE" cells
 	if (rule.first == "FREE")
 	{
-			int n = Sizes::N_ROWS * Sizes::N_COLS;
+		// iterate through all cells
+		if (rule.second.all || rule.second.condition.empty())
+		{
+			wxLogDebug("FREE_ALL");
+			int n = Sizes::N_ROWS * Sizes::N_COLS - m_Cells.size();
 			int sqrtn = sqrt(n);
 			int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
 
@@ -1546,31 +1550,183 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 			{
 				int step = (i + batchsize > n) ? n - i : batchsize;
 
-				RuleApplyFunctor* functor = new RuleApplyFunctor("FREE", rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+				RuleApplyFunctor* functor = new RuleApplyFunctor("FREE_ALL", "FREE", rule, &states, &neighbors, &m_Cells, &m_StatePositions);
 				threads.push_back(std::thread(std::ref(*functor), i, step));
 				functors.push_back(functor);
 
 				i += step;
 			}
+		}
+		// decide if it's faster to iterate through all cells
+		// or through the condition states' neighbors
+		else
+		{
+			int n1 = Sizes::N_ROWS * Sizes::N_COLS - m_Cells.size();
+			int n2 = 0;
+			for (auto& state : rule.second.states)
+			{
+				if (m_StatePositions.find(state) == m_StatePositions.end()) continue;
+				n2 += m_StatePositions[state].size();
+			}
+			//wxLogDebug("N1=%i N2=%i",n1,n2);
+
+			// faster to iterate through all cells
+			if (n1 <= n2 || rule.second.condition.empty())
+			{
+				int n = n1;
+				int sqrtn = sqrt(n);
+				int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
+
+				for (int i = 0; i < n;)
+				{
+					int step = (i + batchsize > n) ? n - i : batchsize;
+
+					RuleApplyFunctor* functor = new RuleApplyFunctor("FREE_ALL", "FREE", rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+					threads.push_back(std::thread(std::ref(*functor), i, step));
+					functors.push_back(functor);
+
+					i += step;
+				}
+			}
+			// faster to iterate through the condition states' neighbors
+			else
+			{
+				for (auto& state : rule.second.states)
+				{
+					if (state == "FREE")
+					{
+						int n = n1;
+						int sqrtn = sqrt(n);
+						int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
+
+						for (int i = 0; i < n;)
+						{
+							int step = (i + batchsize > n) ? n - i : batchsize;
+
+							RuleApplyFunctor* functor = new RuleApplyFunctor("FREE_ALL", "FREE", rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+							threads.push_back(std::thread(std::ref(*functor), i, step));
+							functors.push_back(functor);
+
+							i += step;
+						}
+					}
+					// cells of this type are placed on grid
+					else if (m_StatePositions.find(state) != m_StatePositions.end())
+					{
+						int n = m_StatePositions[state].size();
+						int sqrtn = sqrt(n);
+						int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
+
+						for (int i = 0; i < n;)
+						{
+							int step = (i + batchsize > n) ? n - i : batchsize;
+
+							RuleApplyFunctor* functor = new RuleApplyFunctor("ADJACENT", state, rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+							threads.push_back(std::thread(std::ref(*functor), i, step));
+							functors.push_back(functor);
+
+							i += step;
+						}
+					}
+				}
+			}
+		}
 	}
 	// else, get all cells of that type
 	else
 	{
 		if (m_StatePositions.find(rule.first) == m_StatePositions.end()) return { {},"" };
-
-		int n = m_StatePositions[rule.first].size();
-		int sqrtn = sqrt(n);
-		int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
-
-		for (int i = 0; i < n;)
+		
+		// iterate through all cells
+		if (rule.second.all || rule.second.condition.empty())
 		{
-			int step = (i + batchsize > n) ? n - i : batchsize;
+			int n = m_StatePositions[rule.first].size();
+			int sqrtn = sqrt(n);
+			int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
 
-			RuleApplyFunctor* functor = new RuleApplyFunctor(rule.first, rule, &states, &neighbors, &m_Cells, &m_StatePositions);
-			threads.push_back(std::thread(std::ref(*functor), i, step));
-			functors.push_back(functor);
+			for (int i = 0; i < n;)
+			{
+				int step = (i + batchsize > n) ? n - i : batchsize;
 
-			i += step;
+				RuleApplyFunctor* functor = new RuleApplyFunctor("STATE_ALL", rule.first, rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+				threads.push_back(std::thread(std::ref(*functor), i, step));
+				functors.push_back(functor);
+
+				i += step;
+			}
+		}
+		// decide if it's faster to iterate through all cells
+		// or through the condition states' neighbors
+		else
+		{
+			int n1 = m_StatePositions[rule.first].size();
+			int n2 = 0;
+			for (auto& state : rule.second.states)
+			{
+				if (m_StatePositions.find(state) == m_StatePositions.end()) continue;
+				n2 += m_StatePositions[state].size();
+			}
+
+			// faster to iterate through all cells
+			if (n1 <= n2 || rule.second.condition.empty())
+			{
+				int n = n1;
+				int sqrtn = sqrt(n); 
+				int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
+
+				for (int i = 0; i < n;)
+				{
+					int step = (i + batchsize > n) ? n - i : batchsize;
+
+					RuleApplyFunctor* functor = new RuleApplyFunctor("STATE_ALL", rule.first, rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+					threads.push_back(std::thread(std::ref(*functor), i, step));
+					functors.push_back(functor);
+
+					i += step;
+				}
+			}
+			// faster to iterate through the condition states' neighbors
+			else
+			{
+				for (auto& state : rule.second.states)
+				{
+					if (state == "FREE")
+					{
+						int n = n1;
+						int sqrtn = sqrt(n);
+						int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
+
+						for (int i = 0; i < n;)
+						{
+							int step = (i + batchsize > n) ? n - i : batchsize;
+
+							RuleApplyFunctor* functor = new RuleApplyFunctor("STATE_ALL", rule.first, rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+							threads.push_back(std::thread(std::ref(*functor), i, step));
+							functors.push_back(functor);
+
+							i += step;
+						}
+					}
+					// cells of this type are placed on grid
+					else if (m_StatePositions.find(state) != m_StatePositions.end())
+					{
+						int n = m_StatePositions[state].size();
+						int sqrtn = sqrt(n);
+						int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
+
+						for (int i = 0; i < n;)
+						{
+							int step = (i + batchsize > n) ? n - i : batchsize;
+
+							RuleApplyFunctor* functor = new RuleApplyFunctor("ADJACENT", state, rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+							threads.push_back(std::thread(std::ref(*functor), i, step));
+							functors.push_back(functor);
+
+							i += step;
+						}
+					}
+				}
+			}
 		}
 	}
 

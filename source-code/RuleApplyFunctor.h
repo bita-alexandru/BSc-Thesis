@@ -17,6 +17,7 @@ class RuleApplyFunctor
 {
 public:
 	RuleApplyFunctor(
+		string _type,
 		string _state,
 		pair<string, Transition> _rule,
 		unordered_map<string, string>* _states,
@@ -33,6 +34,7 @@ public:
 private:
 	vector<pair<int, int>> applied;
 
+	string type;
 	string state;
 	pair<string, Transition> rule;
 	unordered_map<string, string>* states = nullptr;

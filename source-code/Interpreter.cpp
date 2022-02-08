@@ -379,9 +379,8 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 												count -= n;
 											}
 
-											// optimization for "FREE" cells
-											//if (state1 == "FREE" &&
-											if(comparisonType == TYPE_MORE || (comparisonType == TYPE_EQUAL && n > 0)) transition.all = false;
+											// optimization for whether rules need to include all cells of this type or not
+											if(comparisonType == TYPE_LESS || (comparisonType == TYPE_EQUAL && n == 0)) transition.all = true;
 
 											// number of cells
 											transition.andConditions.back().first.first = n;
