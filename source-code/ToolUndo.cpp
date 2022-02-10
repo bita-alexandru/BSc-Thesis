@@ -98,6 +98,7 @@ void ToolUndo::Reset()
 void ToolUndo::Undo(wxCommandEvent& evt)
 {
 	if (m_UndoCells.empty()) return;
+	if (m_Grid->GetGenerating()) return;
 
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells = m_Grid->GetCells();
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions = m_Grid->GetStatePositions();
@@ -145,6 +146,7 @@ void ToolUndo::Undo(wxCommandEvent& evt)
 void ToolUndo::Redo(wxCommandEvent& evt)
 {
 	if (m_RedoCells.empty()) return;
+	if (m_Grid->GetGenerating()) return;
 
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells = m_Grid->GetCells();
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions = m_Grid->GetStatePositions();

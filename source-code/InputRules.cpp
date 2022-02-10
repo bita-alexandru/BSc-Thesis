@@ -367,6 +367,15 @@ void InputRules::RuleGoTo()
 void InputRules::RuleDelete()
 {
     int selection = m_List->GetFirstSelected();
+
+    if (selection == -1) return;
+
+    if (m_InputStates->GetGrid()->GetGenerating())
+    {
+        wxMessageBox("Can't delete rules while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
+        return;
+    }
+
     std::unordered_set<std::string> toBeDeleted;
 
     while (selection != -1)

@@ -9,6 +9,11 @@ InputNeighbors::~InputNeighbors()
 {
 }
 
+void InputNeighbors::SetGrid(Grid* grid)
+{
+	m_Grid = grid;
+}
+
 std::unordered_set<std::string>& InputNeighbors::GetNeighbors()
 {
 	return m_Neighbors;
@@ -100,6 +105,16 @@ void InputNeighbors::BuildInterface()
 void InputNeighbors::OnToggleButton(wxCommandEvent& evt)
 {
 	std::string neighbor = m_Ids[evt.GetId()];
+
+	m_Grid->SetFocus();
+
+	if (m_Grid->GetGenerating())
+	{
+		m_Buttons[neighbor]->SetValue(!m_Buttons[neighbor]->GetValue());
+
+		wxMessageBox("Can't change neighborhood while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
+		return;
+	}
 
 	if (m_Neighbors.find(neighbor) != m_Neighbors.end())
 	{

@@ -16,6 +16,7 @@
 #include "ToolStates.h"
 #include "ToolCoords.h"
 #include "StatusCells.h"
+#include "StatusControls.h"
 #include "InputRules.h"
 #include "Transition.h"
 
@@ -24,6 +25,7 @@ class ToolUndo;
 class ToolStates;
 class ToolModes;
 class InputRules;
+class StatusControls;
 
 class Grid : public wxHVScrolledWindow
 {
@@ -47,13 +49,14 @@ public:
 	void SetToolModes(ToolModes* toolModes);
 	void SetToolStates(ToolStates* toolStates);
 	void SetToolCoords(ToolCoords* toolCoords);
+	void SetStatusControls(StatusControls* statusControls);
 	void SetStatusCells(StatusCells* statusCells);
 
-	void InsertCell(int x, int y, std::string state, wxColour color, bool multiple = false);
-	void RemoveCell(int x, int y, std::string state, wxColour color, bool multiple = false);
+	bool InsertCell(int x, int y, std::string state, wxColour color, bool multiple = false);
+	bool RemoveCell(int x, int y, std::string state, wxColour color, bool multiple = false);
 	void RemoveState(std::string state, bool update = true);
 	void UpdateState(std::string oldState, wxColour oldColor, std::string newState, wxColour newColor);
-	void EraseCell(int x, int y, bool multiple = false);
+	bool EraseCell(int x, int y, bool multiple = false);
 	std::string GetState(int x, int y);
 
 	void RefreshUpdate();
@@ -62,9 +65,18 @@ public:
 	std::unordered_map<std::string, wxColour>& GetColors();
 
 	void Reset();
-	bool StartUniverse();
-	bool PauseUniverse();
-	bool NextGeneration();
+	void PlayUniverse();
+	void PauseUniverse();
+	void NextGeneration();
+	void OnNextGeneration();
+	void OnPlayUniverse();
+
+	int GetPaused();
+	int GetFinished();
+	int GetGenerating();
+
+	void ResetUniverse();
+	void WaitForPause();
 private:
 	InputRules* m_InputRules = nullptr;
 	ToolZoom* m_ToolZoom = nullptr;
@@ -72,16 +84,18 @@ private:
 	ToolModes* m_ToolModes = nullptr;
 	ToolStates* m_ToolStates = nullptr;
 	ToolCoords* m_ToolCoords = nullptr;
+	StatusControls* m_StatusControls = nullptr;
 	StatusCells* m_StatusCells = nullptr;
 
 	int m_Size = Sizes::CELL_SIZE_DEFAULT;
 	int m_OffsetX = Sizes::N_COLS / 2;
 	int m_OffsetY = Sizes::N_ROWS / 2;
 	bool m_Centered = false;
-	bool m_Paused = false;
+
+	bool m_Paused = true;
 	bool m_Finished = false;
-	bool m_StartedParsing = false;
-	std::unordered_multimap<std::string, Transition>::iterator m_LastParsedRule;
+	bool m_Generating = false;
+	bool m_ForceClose = false;
 
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> m_Cells;
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> m_StatePositions;
@@ -101,6 +115,7 @@ private:
 	std::pair<int, int> m_PrevCell;
 	std::pair<int, int> m_LastDrawn;
 	std::pair<int, int> m_JustScrolled = { 0,0 };
+	std::pair<int, int> m_LastHovered = { -1,-1 };
 
 	std::unordered_set<int> m_Keys;
 

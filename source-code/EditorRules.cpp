@@ -381,6 +381,12 @@ void EditorRules::OnSave(wxCommandEvent& evt)
 	std::vector<std::pair<std::string, Transition>> data = GetData();
 	if (m_InvalidInput) return;
 
+	if (m_InputRules->GetInputStates()->GetGrid()->GetGenerating())
+	{
+		wxMessageBox("Can't change rules while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
+		return;
+	}
+
 	m_TextCtrl->MarkerDeleteAll(wxSTC_MARK_CIRCLE);
 	m_TextCtrl->Refresh(false);
 	m_MenuBar->Enable(Ids::ID_MARK_NEXT_RULES, false);
@@ -549,6 +555,12 @@ void EditorRules::OnNextMark(wxCommandEvent& evt)
 
 void EditorRules::OnImport(wxCommandEvent& evt)
 {
+	if (m_InputRules->GetInputStates()->GetGrid()->GetGenerating())
+	{
+		wxMessageBox("Can't import while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
+		return;
+	}
+
 	wxFileDialog dialogFile(this, "Import Rules", "", "", "TXT files (*.txt)|*.txt", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 	if (dialogFile.ShowModal() == wxID_CANCEL) return;
@@ -636,6 +648,12 @@ void EditorRules::CloseEditor(bool save)
 	
 	if (save)
 	{
+		if (m_InputRules->GetInputStates()->GetGrid()->GetGenerating())
+		{
+			wxMessageBox("Can't change rules while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
+			return;
+		}
+
 		std::vector<std::pair<std::string, Transition>> data = GetData();
 		if (m_InvalidInput) return;
 

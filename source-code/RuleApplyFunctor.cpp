@@ -10,7 +10,8 @@ RuleApplyFunctor::RuleApplyFunctor
 	unordered_map<string, string>* _states,
 	unordered_set<string>* _neighbors,
 	unordered_map<pair<int, int>, pair<string, wxColour>, Hashes::PairInt>* _cells,
-	unordered_map<string, unordered_set<pair<int, int>, Hashes::PairInt>>* _statePositions
+	unordered_map<string, unordered_set<pair<int, int>, Hashes::PairInt>>* _statePositions,
+	bool* _forceClose
 )
 {
 	type = _type;
@@ -20,6 +21,7 @@ RuleApplyFunctor::RuleApplyFunctor
 	neighbors = _neighbors;
 	cells = _cells;
 	statePositions = _statePositions;
+	forceClose = _forceClose;
 }
 
 RuleApplyFunctor::~RuleApplyFunctor()
@@ -36,11 +38,14 @@ void RuleApplyFunctor::operator()(int start, int size)
 
 vector<pair<int, int>> RuleApplyFunctor::GetApplied()
 {
+	if (forceClose && *forceClose == true) return {};
 	return applied;
 }
 
 string RuleApplyFunctor::GetState(int x, int y)
 {
+	if (*forceClose == true) return "FREE";
+
 	if (cells->find({ x,y }) == cells->end()) return "FREE";
 
 	return cells->at({x, y}).first;
@@ -142,6 +147,9 @@ bool RuleApplyFunctor::ApplyOnCell(int x, int y, Transition& rule)
 unordered_map<string, string> RuleApplyFunctor::GetNeighborhood(int x, int y)
 {
 	std::unordered_map<std::string, std::string> neighborhood;
+
+	if (*forceClose == true) return neighborhood;
+
 	std::unordered_map<std::string, std::pair<int, int>> dxy(
 		{
 			{ "NW",{-1,-1} }, { "N",{0,-1} }, { "NE",{1,-1} },
@@ -170,14 +178,14 @@ void RuleApplyFunctor::Clear()
 	neighbors = nullptr;
 	cells = nullptr;
 	statePositions = nullptr;
+	forceClose = nullptr;
 }
 
 void RuleApplyFunctor::ApplyRule(int start, int size)
 {
-	//wxLogDebug("type=%s", type);
 	if (type == "FREE_ALL")
 	{
-		for (int i = start; i < start + size; i++)
+		for (int i = start; i < start + size && *forceClose == false; i++)
 		{
 			int x = i % Sizes::N_COLS;
 			int y = i / Sizes::N_COLS;
@@ -191,9 +199,9 @@ void RuleApplyFunctor::ApplyRule(int start, int size)
 	if (type == "STATE_ALL")
 	{
 		auto i = statePositions->at(state).begin();
-		while (start--) i++;
+		while (start-- && *forceClose == false) i++;
 
-		while (size--)
+		while (size-- && *forceClose == false)
 		{
 			int x = i->first;
 			int y = i->second;
@@ -209,12 +217,12 @@ void RuleApplyFunctor::ApplyRule(int start, int size)
 	if (type == "ADJACENT")
 	{
 		auto i = statePositions->at(state).begin();
-		while (start--) i++;
+		while (start-- && *forceClose == false) i++;
 
 		int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
 		int dy[8] = { -1,-1,0,1,1,1,0,-1 };
 
-		while (size--)
+		while (size-- && *forceClose == false)
 		{
 			int x = i->first;
 			int y = i->second;

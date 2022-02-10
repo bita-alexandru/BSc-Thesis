@@ -154,7 +154,7 @@
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
     <ClInclude Include="RuleApplyFunctor.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Misc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -234,7 +234,7 @@
       <Filter>Source Files\Misc</Filter>
     </ClCompile>
     <ClCompile Include="RuleApplyFunctor.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Misc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

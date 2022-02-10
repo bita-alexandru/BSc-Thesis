@@ -447,6 +447,12 @@ void EditorStates::OnSave(wxCommandEvent& evt)
 	std::vector<std::string> data = GetData();
 	if (m_InvalidInput) return;
 
+	if (m_InputStates->GetGrid()->GetGenerating())
+	{
+		wxMessageBox("Can't change states while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
+		return;
+	}
+
 	m_TextCtrl->MarkerDeleteAll(wxSTC_MARK_CIRCLE);
 	m_TextCtrl->Refresh(false);
 	m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, false);
@@ -620,6 +626,12 @@ void EditorStates::OnNextMark(wxCommandEvent& evt)
 
 void EditorStates::OnImport(wxCommandEvent& evt)
 {
+	if (m_InputStates->GetGrid()->GetGenerating())
+	{
+		wxMessageBox("Can't import while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
+		return;
+	}
+
 	wxFileDialog dialogFile(this, "Import States", "", "", "TXT files (*.txt)|*.txt", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 	if (dialogFile.ShowModal() == wxID_CANCEL) return;
@@ -801,8 +813,20 @@ void EditorStates::CloseEditor(bool save)
 {
 	wxDELETE(m_FindData); wxDELETE(m_FindDialog);
 
+	if (m_ForceClose)
+	{
+		Close();
+		return;
+	}
+
 	if (save)
 	{
+		if (m_InputStates->GetGrid()->GetGenerating())
+		{
+			wxMessageBox("Can't change states while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
+			return;
+		}
+
 		std::vector<std::string> data = GetData();
 		if (m_InvalidInput) return;
 

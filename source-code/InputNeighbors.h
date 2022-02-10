@@ -3,6 +3,7 @@
 #include "wx/tglbtn.h"
 
 #include "Ids.h"
+#include "Grid.h"
 
 #include <unordered_set>
 
@@ -12,9 +13,13 @@ public:
 	InputNeighbors(wxWindow* parent);
 	~InputNeighbors();
 
+	void SetGrid(Grid* grid);
+
 	std::unordered_set<std::string>& GetNeighbors();
 	void SetNeighbors(std::vector<std::string> neighbors);
 private:
+	Grid* m_Grid = nullptr;
+
 	std::unordered_set<std::string> m_Neighbors;
 
 	std::unordered_map<std::string, wxBitmapToggleButton*> m_Buttons;

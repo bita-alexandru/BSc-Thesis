@@ -106,6 +106,15 @@ void Grid::ScrollToCenter(int x, int y)
 
 void Grid::SetDimensions(int rows, int cols)
 {
+	if (rows == Sizes::N_ROWS && cols == Sizes::N_COLS) return;
+	if (m_Generating)
+	{
+		wxMessageBox("Can't change grid dimensions while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
+		return;
+	}
+
+	ResetUniverse();
+
 	Sizes::N_ROWS = rows;
 	Sizes::N_COLS = cols;
 
@@ -115,6 +124,7 @@ void Grid::SetDimensions(int rows, int cols)
 	SetRowColumnCount(Sizes::N_ROWS, Sizes::N_COLS);
 
 	Reset();
+	ScrollToCenter();
 }
 
 void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells, std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions)
@@ -146,6 +156,8 @@ void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::strin
 	}
 
 	m_StatusCells->SetCountPopulation(m_Cells.size());
+
+	;//ResetUniverse();
 
 	Refresh(false);
 	Update();
@@ -181,23 +193,28 @@ void Grid::SetToolCoords(ToolCoords* toolCoords)
 	m_ToolCoords = toolCoords;
 }
 
+void Grid::SetStatusControls(StatusControls* statusControls)
+{
+	m_StatusControls = statusControls;
+}
+
 void Grid::SetStatusCells(StatusCells* statusCells)
 {
 	m_StatusCells = statusCells;
 }
 
-void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool multiple)
+bool Grid::InsertCell(int x, int y, std::string state, wxColour color, bool multiple)
 {
 	if (GetState(x, y) != "FREE")
 	{
 		// current cell is of state "FREE" but there's already a cell of another state
 		// on this exact position -> remove it
-		if (color == wxColour("white")) RemoveCell(x, y, state, color, multiple);
+		if (color == wxColour("white")) return RemoveCell(x, y, state, color, multiple);
 		// position is occupied
 		else
 		{
 			// same state -> don't do anything
-			if (m_Cells[{x, y}].first == state) return;
+			if (m_Cells[{x, y}].first == state) return false;
 
 			EraseCell(x, y);
 
@@ -223,6 +240,8 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 				Refresh(false);
 				Update();
 			}
+
+			return true;
 		}
 	}
 	// position is available
@@ -251,10 +270,14 @@ void Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 			Refresh(false);
 			Update();
 		}
+
+		return true;
 	}
+
+	return false;
 }
 
-void Grid::RemoveCell(int x, int y, std::string state, wxColour color, bool multiple)
+bool Grid::RemoveCell(int x, int y, std::string state, wxColour color, bool multiple)
 {
 	if (GetState(x, y) != "FREE")
 	{
@@ -267,7 +290,11 @@ void Grid::RemoveCell(int x, int y, std::string state, wxColour color, bool mult
 			Refresh(false);
 			Update();
 		}
+
+		return true;
 	}
+
+	return false;
 }
 
 void Grid::RemoveState(std::string state, bool update)
@@ -288,6 +315,8 @@ void Grid::RemoveState(std::string state, bool update)
 				m_RedrawColors.push_back(wxColour("white"));
 			}
 		}
+
+		;//ResetUniverse();
 
 		if (update)
 		{
@@ -340,6 +369,8 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 				m_StatePositions[newState].insert(it);
 			}
 
+			;//ResetUniverse();
+
 			m_StatePositions.erase(oldState);
 
 			m_ToolUndo->Reset();
@@ -347,14 +378,10 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 			m_PrevCells = m_Cells;
 			m_PrevStatePositions = m_StatePositions;
 		}
-		else
-		{
-			//RemoveState(oldState);
-		}
 	}
 }
 
-void Grid::EraseCell(int x, int y, bool multiple)
+bool Grid::EraseCell(int x, int y, bool multiple)
 {
 	std::string state = m_Cells[{x, y}].first;
 
@@ -382,6 +409,8 @@ void Grid::EraseCell(int x, int y, bool multiple)
 		m_RedrawXY = { x,y };
 		m_RedrawColor = wxColour("white");
 	}
+
+	return true;
 }
 
 std::string Grid::GetState(int x, int y)
@@ -393,6 +422,12 @@ std::string Grid::GetState(int x, int y)
 
 void Grid::Reset()
 {
+	if (m_Generating)
+	{
+		wxMessageBox("Can't reset grid while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
+		return;
+	}
+
 	m_Cells = std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt>();
 	m_StatePositions = std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>>();
 	m_PrevCells = m_Cells;
@@ -401,41 +436,50 @@ void Grid::Reset()
 	m_RedrawAll = true;
 	m_JustResized = false;
 	m_JustScrolled = { 0,0 };
+
 	m_IsDrawing = false;
 	m_IsErasing = false;
 	m_IsMoving = false;
 
 	m_ToolUndo->Reset();
-
-	// to do; reminder to come back here
-	m_StatusCells->SetCountGeneration(0);
 	m_StatusCells->SetCountPopulation(0);
 
-	m_Paused = false;
-	m_Finished = false;
-	m_StartedParsing = false;
+	ResetUniverse();
 
 	Refresh(false);
 	Update();
 }
 
-bool Grid::StartUniverse()
+void Grid::PlayUniverse()
 {
-	return false;
+	if (m_Finished) ResetUniverse();
+	m_Paused = false;
+
+	while (!m_Finished && !m_Paused && !m_ForceClose)
+	{
+		m_Generating = true;
+		NextGeneration();
+	}
 }
 
-bool Grid::PauseUniverse()
+void Grid::PauseUniverse()
 {
-	return false;
+	m_Generating = false;
+	m_Paused = true;
 }
 
-bool Grid::NextGeneration()
+void Grid::NextGeneration()
 {
-	if (m_Finished) return false;
+	if (m_ForceClose) return;
+
+	// to do: come back here for finished
+	if (m_Finished)
+	{
+		m_Generating = false;
+		return;
+	}
 
 	std::pair<std::vector<std::pair<std::string, std::pair<int, int>>>, std::string> result = ParseAllRules();
-
-	//wxLogDebug("PARSE_ALL_RULES=%i", n);
 
 	// error
 	if (result.second.size())
@@ -449,9 +493,13 @@ bool Grid::NextGeneration()
 		dialog.ShowDetailedText(message);
 
 		dialog.ShowModal();
+
+		m_Finished = true;
 		
-		return false;
+		return;
 	}
+
+	if (m_ForceClose) return;
 
 	UpdateGeneration(result.first);
 	UpdateCoordsHovered();
@@ -459,14 +507,67 @@ bool Grid::NextGeneration()
 	m_StatusCells->UpdateCountGeneration(+1);
 	m_StatusCells->SetCountPopulation(m_Cells.size());
 
+	// universe has come to an end
 	if (result.first.empty())
 	{
 		m_Finished = true;
-		m_Paused = false;
-		m_StatusCells->SetGenerationMessage("[OVER]");
+		m_StatusControls->SetPlayButton(1);
+		m_StatusCells->SetGenerationMessage(" [OVER]");
 	}
 
-	return true;
+	m_Generating = false;
+}
+
+void Grid::OnNextGeneration()
+{
+	if (!m_Generating)
+	{
+		m_Generating = true;
+
+		std::thread t(&Grid::NextGeneration, this);
+		t.detach();
+	}
+}
+
+void Grid::OnPlayUniverse()
+{
+	std::thread t(&Grid::PlayUniverse, this);
+	t.detach();
+}
+
+int Grid::GetPaused()
+{
+	return m_Paused;
+}
+
+int Grid::GetFinished()
+{
+	return m_Finished;
+}
+
+int Grid::GetGenerating()
+{
+	return m_Generating;
+}
+
+void Grid::ResetUniverse()
+{
+	if (m_StatusCells->GetCountGeneration() == 0) return;
+
+	m_StatusCells->SetCountGeneration(0);
+
+	m_Paused = true;
+	m_Finished = false;
+	m_Generating = false;
+
+	m_StatusControls->SetPlayButton(1);
+}
+
+void Grid::WaitForPause()
+{
+	m_ForceClose = true;
+
+	PauseUniverse();
 }
 
 void Grid::RefreshUpdate()
@@ -494,12 +595,21 @@ std::unordered_map<std::string, wxColour>& Grid::GetColors()
 
 void Grid::UpdateCoordsHovered()
 {
+	if (m_ForceClose) return;
+
 	if (!wxWindow::GetScreenRect().Contains(wxGetMousePosition())) return;
 
 	wxPoint xy = ScreenToClient(wxGetMouseState().GetPosition()) / m_Size;
 
+	// out of grid bounds
 	if (xy.x >= Sizes::N_COLS || xy.y >= Sizes::N_ROWS) return;
-	
+
+	// map to visible cell coordinates
+	xy.x = GetVisibleColumnsBegin() + xy.x;
+	xy.y = GetVisibleRowsBegin() + xy.y;
+
+	if (xy.x != m_LastHovered.first || xy.y != m_LastHovered.second) return;
+
 	ControlUpdateCoords(xy.x, xy.y);
 }
 
@@ -542,7 +652,9 @@ std::pair<int, int> Grid::GetHoveredCell(int X, int Y)
 	int x = X / m_Size + visible.GetCol();
 	int y = Y / m_Size + visible.GetRow();
 
-	return { x, y };
+	m_LastHovered = { x,y };
+
+	return m_LastHovered;
 }
 
 bool Grid::ControlSelectState()
@@ -605,11 +717,13 @@ bool Grid::ControlZoom(int x, int y, int rotation)
 std::string Grid::ControlUpdateCoords(int x, int y)
 {
 	// update coordinates displayed on screen
-	std::string name = GetState(x, y);
+	std::string state = GetState(x, y);
 
-	m_ToolCoords->Set(x - m_OffsetX, y - m_OffsetY, name);
+	if (m_ToolCoords->GetState() == state) return state;
 
-	return name;
+	m_ToolCoords->SetCoords(x - m_OffsetX, y - m_OffsetY, state);
+
+	return state;
 }
 
 bool Grid::ModeDraw(int x, int y, char mode)
@@ -622,6 +736,13 @@ bool Grid::ModeDraw(int x, int y, char mode)
 		// left click -> place a cell
 		if (mouse.LeftIsDown())
 		{
+			// don't interfere with the grid when the universe is playing
+			if (m_Generating)
+			{
+				wxMessageBox("Can't draw cells while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
+				return false;
+			}
+
 			SetFocus();
 			std::pair<std::string, wxColour> state = m_ToolStates->GetState();
 
@@ -640,7 +761,10 @@ bool Grid::ModeDraw(int x, int y, char mode)
 				m_IsErasing = false;
 				m_LastDrawn = { x,y };
 
-				if (!structure) InsertCell(x, y, state.first, state.second);
+				if (!structure)
+				{
+					if (InsertCell(x, y, state.first, state.second));// ResetUniverse();
+				}
 			}
 			// holding click
 			else
@@ -653,6 +777,13 @@ bool Grid::ModeDraw(int x, int y, char mode)
 		// right click -> remove a cell
 		else if (mouse.RightIsDown())
 		{
+			// don't interfere with the grid when the universe is playing
+			if (m_Generating)
+			{
+				wxMessageBox("Can't erase cells while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
+				return false;
+			}
+
 			SetFocus();
 			if (GetState(x, y) == "FREE")
 			{
@@ -678,7 +809,10 @@ bool Grid::ModeDraw(int x, int y, char mode)
 				m_IsDrawing = false;
 				m_LastDrawn = { x,y };
 
-				if (!structure) RemoveCell(x, y, state.first, state.second);
+				if (!structure)
+				{
+					if (RemoveCell(x, y, state.first, state.second));// ResetUniverse();
+				}
 			}
 			// holding click
 			else
@@ -1313,6 +1447,8 @@ void Grid::DeleteStructure(int X, int Y, std::string state)
 	std::stack<std::pair<int, int>> neighbors;
 	neighbors.push({ X,Y });
 
+	int changes = 0;
+
 	while (neighbors.size())
 	{
 		std::pair<int, int> neighbor = neighbors.top();
@@ -1323,9 +1459,9 @@ void Grid::DeleteStructure(int X, int Y, std::string state)
 		std::string neighborState = GetState(neighbor.first, neighbor.second);
 
 		// doesn't matter if the structure is composed of cells of the same stats
-		if (state == "") EraseCell(neighbor.first, neighbor.second, true);
+		if (state == "") changes += EraseCell(neighbor.first, neighbor.second, true);
 		// otherwise erase only if they share the same state
-		else if (state == neighborState) EraseCell(neighbor.first, neighbor.second, true);
+		else if (state == neighborState) changes += EraseCell(neighbor.first, neighbor.second, true);
 
 		for (int d = 0; d < 8; d++)
 		{
@@ -1338,10 +1474,15 @@ void Grid::DeleteStructure(int X, int Y, std::string state)
 		}
 	}
 
-	m_StatusCells->SetCountPopulation(m_Cells.size());
+	if (changes)
+	{
+		;//ResetUniverse();
 
-	Refresh(false);
-	Update();
+		m_StatusCells->SetCountPopulation(m_Cells.size());
+
+		Refresh(false);
+		Update();
+	}
 }
 
 void Grid::DrawStructure(int X, int Y, std::string state, wxColour color)
@@ -1358,6 +1499,8 @@ void Grid::DrawStructure(int X, int Y, std::string state, wxColour color)
 	wxPosition visibleBegin = GetVisibleBegin();
 	wxPosition visibleEnd = GetVisibleEnd();
 
+	int changes = 0;
+
 	while (neighbors.size())
 	{
 		std::pair<int, int> neighbor = neighbors.top();
@@ -1373,7 +1516,7 @@ void Grid::DrawStructure(int X, int Y, std::string state, wxColour color)
 		if (neighborState == state) continue;
 		if (neighborState != replace) continue;
 
-		InsertCell(neighbor.first, neighbor.second, state, color, true);
+		changes += InsertCell(neighbor.first, neighbor.second, state, color, true);
 
 		for (int d = 0; d < 4; d++)
 		{
@@ -1390,10 +1533,15 @@ void Grid::DrawStructure(int X, int Y, std::string state, wxColour color)
 		}
 	}
 
-	m_StatusCells->SetCountPopulation(m_Cells.size());
+	if (changes)
+	{
+		;//ResetUniverse();
 
-	Refresh(false);
-	Update();
+		m_StatusCells->SetCountPopulation(m_Cells.size());
+
+		Refresh(false);
+		Update();
+	}
 }
 
 void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove)
@@ -1402,7 +1550,7 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 	{
 		// apply the following algorithm to draw a line
 		// starting from the last drawn {x,y} to the current {x,y}
-		int changed = 0;
+		int changes = 0;
 		int d, ii, jj, di, ai, si, dj, aj, sj;
 		di = x - m_LastDrawn.first;
 		ai = abs(di) << 1;
@@ -1424,15 +1572,14 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 				{
 					if (!remove && state != "FREE")
 					{
-						InsertCell(ii, jj, state, color, true);
+						changes += InsertCell(ii, jj, state, color, true);
 						m_StatusCells->UpdateCountPopulation(1);
 					}
 					else
 					{
-						EraseCell(ii, jj, true);
+						changes += EraseCell(ii, jj, true);
 						m_StatusCells->UpdateCountPopulation(-1);
 					}
-					changed++;
 				}
 				if (d >= 0)
 				{
@@ -1453,15 +1600,14 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 				{
 					if (!remove && state != "FREE")
 					{
-						InsertCell(ii, jj, state, color, true);
+						changes += InsertCell(ii, jj, state, color, true);
 						m_StatusCells->UpdateCountPopulation(1);
 					}
 					else
 					{
-						EraseCell(ii, jj, true);
+						changes += EraseCell(ii, jj, true);
 						m_StatusCells->UpdateCountPopulation(-1);
 					}
-					changed++;
 				}
 				if (d >= 0)
 				{
@@ -1480,19 +1626,20 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 		{
 			if (!remove && state != "FREE")
 			{
-				InsertCell(ii, jj, state, color, true);
+				changes += InsertCell(ii, jj, state, color, true);
 				m_StatusCells->UpdateCountPopulation(1);
 			}
 			else
 			{
-				EraseCell(ii, jj, true);
+				changes += EraseCell(ii, jj, true);
 				m_StatusCells->UpdateCountPopulation(-1);
 			}
-			changed++;
 		}
 
-		if (changed > 0)
+		if (changes > 0)
 		{
+			;//ResetUniverse();
+
 			Refresh(false);
 			Update();
 		}
@@ -1514,6 +1661,11 @@ bool Grid::InVisibleBounds(int x, int y)
 
 std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pair<const std::string, Transition>& rule)
 {
+	if (m_ForceClose)
+	{
+		return { {}, "" };
+	}
+
 	std::unordered_map<std::string, std::string> states = m_InputRules->GetInputStates()->GetStates();
 	std::unordered_set<std::string> neighbors = m_InputRules->GetInputNeighbors()->GetNeighbors();
 	std::vector<std::pair<int, int>> applied;
@@ -1550,7 +1702,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 			{
 				int step = (i + batchsize > n) ? n - i : batchsize;
 
-				RuleApplyFunctor* functor = new RuleApplyFunctor("FREE_ALL", "FREE", rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+				RuleApplyFunctor* functor = new RuleApplyFunctor("FREE_ALL", "FREE", rule, &states, &neighbors, &m_Cells, &m_StatePositions, &m_ForceClose);
 				threads.push_back(std::thread(std::ref(*functor), i, step));
 				functors.push_back(functor);
 
@@ -1581,7 +1733,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 				{
 					int step = (i + batchsize > n) ? n - i : batchsize;
 
-					RuleApplyFunctor* functor = new RuleApplyFunctor("FREE_ALL", "FREE", rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+					RuleApplyFunctor* functor = new RuleApplyFunctor("FREE_ALL", "FREE", rule, &states, &neighbors, &m_Cells, &m_StatePositions, &m_ForceClose);
 					threads.push_back(std::thread(std::ref(*functor), i, step));
 					functors.push_back(functor);
 
@@ -1603,7 +1755,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 						{
 							int step = (i + batchsize > n) ? n - i : batchsize;
 
-							RuleApplyFunctor* functor = new RuleApplyFunctor("FREE_ALL", "FREE", rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+							RuleApplyFunctor* functor = new RuleApplyFunctor("FREE_ALL", "FREE", rule, &states, &neighbors, &m_Cells, &m_StatePositions, &m_ForceClose);
 							threads.push_back(std::thread(std::ref(*functor), i, step));
 							functors.push_back(functor);
 
@@ -1621,7 +1773,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 						{
 							int step = (i + batchsize > n) ? n - i : batchsize;
 
-							RuleApplyFunctor* functor = new RuleApplyFunctor("ADJACENT", state, rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+							RuleApplyFunctor* functor = new RuleApplyFunctor("ADJACENT", state, rule, &states, &neighbors, &m_Cells, &m_StatePositions, &m_ForceClose);
 							threads.push_back(std::thread(std::ref(*functor), i, step));
 							functors.push_back(functor);
 
@@ -1648,7 +1800,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 			{
 				int step = (i + batchsize > n) ? n - i : batchsize;
 
-				RuleApplyFunctor* functor = new RuleApplyFunctor("STATE_ALL", rule.first, rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+				RuleApplyFunctor* functor = new RuleApplyFunctor("STATE_ALL", rule.first, rule, &states, &neighbors, &m_Cells, &m_StatePositions, &m_ForceClose);
 				threads.push_back(std::thread(std::ref(*functor), i, step));
 				functors.push_back(functor);
 
@@ -1678,7 +1830,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 				{
 					int step = (i + batchsize > n) ? n - i : batchsize;
 
-					RuleApplyFunctor* functor = new RuleApplyFunctor("STATE_ALL", rule.first, rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+					RuleApplyFunctor* functor = new RuleApplyFunctor("STATE_ALL", rule.first, rule, &states, &neighbors, &m_Cells, &m_StatePositions, &m_ForceClose);
 					threads.push_back(std::thread(std::ref(*functor), i, step));
 					functors.push_back(functor);
 
@@ -1700,7 +1852,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 						{
 							int step = (i + batchsize > n) ? n - i : batchsize;
 
-							RuleApplyFunctor* functor = new RuleApplyFunctor("STATE_ALL", rule.first, rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+							RuleApplyFunctor* functor = new RuleApplyFunctor("STATE_ALL", rule.first, rule, &states, &neighbors, &m_Cells, &m_StatePositions, &m_ForceClose);
 							threads.push_back(std::thread(std::ref(*functor), i, step));
 							functors.push_back(functor);
 
@@ -1718,7 +1870,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 						{
 							int step = (i + batchsize > n) ? n - i : batchsize;
 
-							RuleApplyFunctor* functor = new RuleApplyFunctor("ADJACENT", state, rule, &states, &neighbors, &m_Cells, &m_StatePositions);
+							RuleApplyFunctor* functor = new RuleApplyFunctor("ADJACENT", state, rule, &states, &neighbors, &m_Cells, &m_StatePositions, &m_ForceClose);
 							threads.push_back(std::thread(std::ref(*functor), i, step));
 							functors.push_back(functor);
 
@@ -1737,7 +1889,10 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 
 	for (auto &f : functors)
 	{
-		for (auto& it : f->GetApplied()) applied.push_back(it);
+		if (!m_ForceClose)
+		{
+			for (auto& it : f->GetApplied()) applied.push_back(it);
+		}
 
 		wxDELETE(f);
 	}
@@ -1838,7 +1993,6 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 						{
 							if (neighborhood[neighbor] == conditionState) occurences++;
 						}
-						// otherwise, maybe throw error; to do: decide (line 1434)
 					}
 
 					//wxLogDebug("OCCURENCES=%i", occurences);

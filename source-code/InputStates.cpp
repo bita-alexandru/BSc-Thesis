@@ -150,6 +150,11 @@ void InputStates::SetInputRules(InputRules* inputRules)
     m_InputRules = inputRules;
 }
 
+Grid* InputStates::GetGrid()
+{
+    return m_Grid;
+}
+
 void InputStates::BuildInterface()
 {
     wxButton* edit = new wxButton(this, Ids::ID_EDIT_STATES, wxString("Edit States"));
@@ -452,6 +457,14 @@ void InputStates::StateErase()
 {
     int selection = m_List->GetFirstSelected();
 
+    if (selection == -1) return;
+
+    if (m_Grid->GetGenerating())
+    {
+        wxMessageBox("Can't erase states while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
+        return;
+    }
+
     while (selection != -1)
     {
         std::string state = m_List->Get(selection).second;
@@ -468,6 +481,15 @@ void InputStates::StateErase()
 void InputStates::StateDelete()
 {
     int selection = m_List->GetFirstSelected();
+
+    if (selection == -1) return;
+
+    if (m_Grid->GetGenerating())
+    {
+        wxMessageBox("Can't delete states while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
+        return;
+    }
+
     std::unordered_set<std::string> toBeDeleted;
 
     while (selection != -1)

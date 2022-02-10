@@ -4,26 +4,26 @@
 #include "Ids.h"
 #include "Grid.h"
 
+class Grid;
+
 class StatusControls : public wxPanel
 {
 public:
 	StatusControls(wxWindow* parent);
 	~StatusControls();
 
-	char GetStartState();
-	void SetStartState(char state);
-
 	void SetGrid(Grid* grid);
+	void SetPlayButton(bool play);
 private:
 	Grid* m_Grid = nullptr;
 
-	char m_StartState = 'S';
-	wxButton* m_StartButton = nullptr;
+	wxBitmapButton* m_PlayButton = nullptr;
 
 	void BuildInterface();
 
 	void GoToCenter(wxCommandEvent& evt);
 	void Reset(wxCommandEvent& evt);
+	void Play(wxCommandEvent& evt);
 	void NextGeneration(wxCommandEvent& evt);
 };
 

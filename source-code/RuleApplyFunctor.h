@@ -23,7 +23,8 @@ public:
 		unordered_map<string, string>* _states,
 		unordered_set<string>* _neighbors,
 		unordered_map<pair<int, int>, pair<string, wxColour>, Hashes::PairInt>* _cells,
-		unordered_map<string, unordered_set<pair<int, int>, Hashes::PairInt>>* _statePositions
+		unordered_map<string, unordered_set<pair<int, int>, Hashes::PairInt>>* _statePositions,
+		bool* _forceClose
 		)
 		;
 	~RuleApplyFunctor();
@@ -41,6 +42,7 @@ private:
 	unordered_set<string>* neighbors = nullptr;
 	unordered_map<pair<int, int>, pair<string, wxColour>, Hashes::PairInt>* cells = nullptr;
 	unordered_map<string, unordered_set<pair<int, int>, Hashes::PairInt>>* statePositions = nullptr;
+	bool* forceClose = nullptr;
 
 	string GetState(int x, int y);
 	bool InBounds(int x, int y);

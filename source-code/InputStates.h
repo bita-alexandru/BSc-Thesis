@@ -30,6 +30,8 @@ public:
 	void SetGrid(Grid* grid);
 	void SetEditorStates(EditorStates* editorStates);
 	void SetInputRules(InputRules* inputRules);
+
+	Grid* GetGrid();
 private:
 	ListStates* m_List = nullptr;
 	ToolStates* m_ToolStates = nullptr;

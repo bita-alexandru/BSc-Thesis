@@ -125,7 +125,8 @@ void Main::SetShortcuts()
 	// GridStatus
 	entries[11].Set(wxACCEL_CTRL, (int)'M', Ids::ID_BUTTON_CENTER);
 	entries[12].Set(wxACCEL_CTRL, (int)'R', Ids::ID_BUTTON_RESET);
-	entries[13].Set(wxACCEL_CTRL, (int)'G', Ids::ID_BUTTON_GENERATION);
+	entries[13].Set(wxACCEL_CTRL, (int)' ', Ids::ID_BUTTON_PLAY);
+	entries[14].Set(wxACCEL_CTRL, (int)'G', Ids::ID_BUTTON_GENERATION);
 
 	wxAcceleratorTable accel(16, entries);
 	this->SetAcceleratorTable(accel);
@@ -165,6 +166,8 @@ void Main::PrepareInput()
 	inputRules->SetInputStates(inputStates);
 	inputRules->SetInputNeighbors(inputNeighbors);
 
+	inputNeighbors->SetGrid(grid);
+
 	toolZoom->SetGrid(grid);
 	toolUndo->SetGrid(grid);
 	toolStates->SetListStates(inputStates->GetList());
@@ -179,6 +182,7 @@ void Main::PrepareInput()
 	grid->SetInputRules(inputRules);
 
 	grid->SetStatusCells(statusCells);
+	grid->SetStatusControls(statusControls);
 
 	statusControls->SetGrid(grid);
 
@@ -241,6 +245,12 @@ void Main::MenuChangeDimensions(wxCommandEvent& evt)
 
 void Main::MenuImport(wxCommandEvent& evt)
 {
+	if (m_PanelGrid->GetGrid()->GetGenerating())
+	{
+		wxMessageBox("Can't import while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
+		return;
+	}
+
 	wxFileDialog dialogFile(this, "Import States", "", "", "TXT files (*.txt)|*.txt", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 	if (dialogFile.ShowModal() == wxID_CANCEL) return;
@@ -466,9 +476,12 @@ void Main::MenuImport(wxCommandEvent& evt)
 
 	if (cells.size())
 	{
-		m_PanelGrid->GetGrid()->Reset();
-		for (auto& cell : cells) m_PanelGrid->GetGrid()->InsertCell(cell.first.first, cell.first.second, cell.second.first, cell.second.second, true);
-		m_PanelGrid->GetGrid()->RefreshUpdate();
+		Grid* grid = m_PanelGrid->GetGrid();
+		grid->Reset();
+
+		for (auto& cell : cells) grid->InsertCell(cell.first.first, cell.first.second, cell.second.first, cell.second.second, true);
+
+		grid->ScrollToCenter();
 	}
 
 	if (hasErrors) wxMessageBox("Some of the input appears to be invalid, as a result it has been ignored.", "Warning", wxICON_WARNING | wxOK);
@@ -514,6 +527,8 @@ void Main::MenuExport(wxCommandEvent& evt)
 
 void Main::OnClose(wxCloseEvent& evt)
 {
+	m_PanelGrid->GetGrid()->WaitForPause();
+
 	m_EditorStates->ForceClose();
 	m_EditorRules->ForceClose();
 

@@ -11,7 +11,7 @@ ToolCoords::~ToolCoords()
 {
 }
 
-void ToolCoords::Set(int x, int y, std::string state)
+void ToolCoords::SetCoords(int x, int y, std::string state)
 {
 	std::string coords = "(X,Y)=(" + std::to_string(x) + "," + std::to_string(y) + ")";
 	std::string name = "State=" + state;
@@ -21,6 +21,11 @@ void ToolCoords::Set(int x, int y, std::string state)
 	
 	//Layout();
 	//Update();
+}
+
+wxString ToolCoords::GetState()
+{
+	return m_State->GetLabel();
 }
 
 void ToolCoords::Reset()
