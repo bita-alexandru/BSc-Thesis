@@ -84,7 +84,7 @@ void StatusControls::Play(wxCommandEvent& evt)
     }
 
     // play
-    if (!m_Grid->GetFinished() && !m_Grid->GetGenerating())
+    if (m_Grid->GetPaused())
     {
         SetPlayButton(0);
         m_Grid->OnPlayUniverse();

@@ -480,7 +480,8 @@ void Main::MenuImport(wxCommandEvent& evt)
 		grid->Reset();
 
 		for (auto& cell : cells) grid->InsertCell(cell.first.first, cell.first.second, cell.second.first, cell.second.second, true);
-
+		
+		grid->UpdatePrev();
 		grid->ScrollToCenter();
 	}
 

@@ -71,11 +71,17 @@ void ToolUndo::PushBack(
 		}
 	}
 
-	m_UndoCells.push(cellChanges);
-	m_UndoStatePositions.push(statePositionsChanges);
+	m_UndoCells.push_back(cellChanges);
+	m_UndoStatePositions.push_back(statePositionsChanges);
 
-	m_RedoCells = std::stack<std::vector<std::pair<std::pair<int, int>, std::pair<std::string, wxColour>>>>();
-	m_RedoStatePositions = std::stack<std::vector<std::pair<std::string, std::pair<int, int>>>>();
+	if (m_UndoCells.size() > m_StackSize)
+	{
+		m_UndoCells.pop_front();
+		m_UndoStatePositions.pop_front();
+	}
+
+	m_RedoCells = std::deque<std::vector<std::pair<std::pair<int, int>, std::pair<std::string, wxColour>>>>();
+	m_RedoStatePositions = std::deque<std::vector<std::pair<std::string, std::pair<int, int>>>>();
 	m_Redo->Disable();
 
 	//SetFocus();
@@ -88,11 +94,11 @@ void ToolUndo::Reset()
 	m_Undo->Disable();
 	m_Redo->Disable();
 
-	m_RedoCells = std::stack<std::vector<std::pair<std::pair<int, int>, std::pair<std::string, wxColour>>>>();
-	m_RedoStatePositions = std::stack<std::vector<std::pair<std::string, std::pair<int, int>>>>();
+	m_RedoCells = std::deque<std::vector<std::pair<std::pair<int, int>, std::pair<std::string, wxColour>>>>();
+	m_RedoStatePositions = std::deque<std::vector<std::pair<std::string, std::pair<int, int>>>>();
 
-	m_UndoCells = std::stack<std::vector<std::pair<std::pair<int, int>, std::pair<std::string, wxColour>>>>();
-	m_UndoStatePositions = std::stack<std::vector<std::pair<std::string, std::pair<int, int>>>>();
+	m_UndoCells = std::deque<std::vector<std::pair<std::pair<int, int>, std::pair<std::string, wxColour>>>>();
+	m_UndoStatePositions = std::deque<std::vector<std::pair<std::string, std::pair<int, int>>>>();
 }
 
 void ToolUndo::Undo(wxCommandEvent& evt)
@@ -104,14 +110,14 @@ void ToolUndo::Undo(wxCommandEvent& evt)
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions = m_Grid->GetStatePositions();
 
 	// iterate through the most recent changes
-	for (auto& it : m_UndoCells.top())
+	for (auto& it : m_UndoCells.back())
 	{
 		// if i find a change in the current configuration -> delete it
 		if (cells.find(it.first) != cells.end()) cells.erase(it.first);
 		// otherwise -> add it
 		else cells.insert(it);
 	}
-	for (auto& it : m_UndoStatePositions.top())
+	for (auto& it : m_UndoStatePositions.back())
 	{
 		// if i find a change in the current configuration -> update/insert it
 		if (statePositions.find(it.first) != statePositions.end())
@@ -129,11 +135,11 @@ void ToolUndo::Undo(wxCommandEvent& evt)
 		}
 	}
 
-	m_RedoCells.push(m_UndoCells.top());
-	m_RedoStatePositions.push(m_UndoStatePositions.top());
+	m_RedoCells.push_back(m_UndoCells.back());
+	m_RedoStatePositions.push_back(m_UndoStatePositions.back());
 
-	m_UndoCells.pop();
-	m_UndoStatePositions.pop();
+	m_UndoCells.pop_back();
+	m_UndoStatePositions.pop_back();
 
 	m_Redo->Enable();
 
@@ -152,7 +158,7 @@ void ToolUndo::Redo(wxCommandEvent& evt)
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions = m_Grid->GetStatePositions();
 
 	// iterate through the most recent changes
-	for (auto& it : m_RedoCells.top())
+	for (auto& it : m_RedoCells.back())
 	{
 		// if i find a change in the current configuration -> delete it
 		if (cells.find(it.first) != cells.end()) cells.erase(it.first);
@@ -163,7 +169,7 @@ void ToolUndo::Redo(wxCommandEvent& evt)
 			cells.insert(it);
 		}
 	}
-	for (auto& it : m_RedoStatePositions.top())
+	for (auto& it : m_RedoStatePositions.back())
 	{
 		// if i find a change in the current configuration -> update/insert it
 		if (statePositions.find(it.first) != statePositions.end())
@@ -182,11 +188,11 @@ void ToolUndo::Redo(wxCommandEvent& evt)
 	}
 
 
-	m_UndoCells.push(m_RedoCells.top());
-	m_UndoStatePositions.push(m_RedoStatePositions.top());
+	m_UndoCells.push_back(m_RedoCells.back());
+	m_UndoStatePositions.push_back(m_RedoStatePositions.back());
 
-	m_RedoCells.pop();
-	m_RedoStatePositions.pop();
+	m_RedoCells.pop_back();
+	m_RedoStatePositions.pop_back();
 
 	m_Undo->Enable();
 

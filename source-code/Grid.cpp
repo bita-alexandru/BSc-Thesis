@@ -3,6 +3,7 @@
 
 #include "wx/richmsgdlg.h"
 
+#include <stack>
 #include <thread>
 
 wxBEGIN_EVENT_TABLE(Grid, wxHVScrolledWindow)
@@ -495,6 +496,7 @@ void Grid::NextGeneration()
 		dialog.ShowModal();
 
 		m_Finished = true;
+		m_Paused = true;
 		
 		return;
 	}
@@ -504,6 +506,11 @@ void Grid::NextGeneration()
 	UpdateGeneration(result.first);
 	UpdateCoordsHovered();
 
+	m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
+	m_PrevCells = m_Cells;
+	m_PrevStatePositions = m_StatePositions;
+	//m_ToolUndo->Reset();
+
 	m_StatusCells->UpdateCountGeneration(+1);
 	m_StatusCells->SetCountPopulation(m_Cells.size());
 
@@ -511,6 +518,8 @@ void Grid::NextGeneration()
 	if (result.first.empty())
 	{
 		m_Finished = true;
+		m_Paused = true;
+
 		m_StatusControls->SetPlayButton(1);
 		m_StatusCells->SetGenerationMessage(" [OVER]");
 	}
@@ -574,6 +583,14 @@ void Grid::RefreshUpdate()
 {
 	Refresh(false);
 	Update();
+
+	m_StatusCells->SetCountPopulation(m_Cells.size());
+}
+
+void Grid::UpdatePrev()
+{
+	m_PrevCells = m_Cells;
+	m_PrevStatePositions = m_StatePositions;
 
 	m_StatusCells->SetCountPopulation(m_Cells.size());
 }
@@ -1004,6 +1021,7 @@ void Grid::OnDraw(wxDC& dc)
 		std::vector<std::pair<int, int>> beforeScrolling;
 
 		// iterate through the cells in order of their states
+		m_MutexCells.lock();
 		for (auto& sp : m_StatePositions)
 		{
 			brush.SetColour(m_Cells[{sp.second.begin()->first, sp.second.begin()->second}].second);
@@ -1013,6 +1031,7 @@ void Grid::OnDraw(wxDC& dc)
 			for (auto& it : sp.second)
 			{
 				// the cell state before scrolling
+				// to do: bug when playing and moving, maybe mutex
 				int x = it.first;
 				int y = it.second;
 
@@ -1034,6 +1053,7 @@ void Grid::OnDraw(wxDC& dc)
 				}
 			}
 		}
+		m_MutexCells.unlock();
 
 		if (!m_RedrawAll)
 		{
@@ -1212,6 +1232,7 @@ void Grid::OnDraw(wxDC& dc)
 
 			m_RedrawXYs.clear();
 			m_RedrawColors.clear();
+
 			return;
 		}
 
@@ -1233,6 +1254,7 @@ void Grid::OnDraw(wxDC& dc)
 	brush.SetColour(wxColour("white"));
 	dc.SetBrush(brush);
 
+	m_MutexCells.lock();
 	for (int y = visibleBegin.GetRow(); y < visibleEnd.GetRow(); y++)
 	{
 		for (int x = visibleBegin.GetCol(); x < visibleEnd.GetCol(); x++)
@@ -1252,6 +1274,7 @@ void Grid::OnDraw(wxDC& dc)
 			dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
 		}
 	}
+	m_MutexCells.unlock();
 
 	if (!m_Centered)
 	{
@@ -2066,6 +2089,7 @@ void Grid::UpdateGeneration(std::vector<std::pair<std::string, std::pair<int, in
 {
 	std::unordered_map<std::string, wxColour> colors = GetColors();
 
+	m_MutexCells.lock();
 	for (auto& change : changes)
 	{
 		std::string state = change.first;
@@ -2094,8 +2118,10 @@ void Grid::UpdateGeneration(std::vector<std::pair<std::string, std::pair<int, in
 
 		// insert positions into the current state map and remove them from the previous one
 		auto position = change.second;
+
 		InsertCell(position.first, position.second, currState, colors[currState], true);
 	}
+	m_MutexCells.unlock();
 
 	Refresh(false);
 	Update();

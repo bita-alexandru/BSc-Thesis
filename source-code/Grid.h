@@ -6,6 +6,7 @@
 #include "wx/dcbuffer.h"
 
 #include <unordered_set>
+#include <mutex>
 
 #include "Ids.h"
 #include "Sizes.h"
@@ -60,6 +61,7 @@ public:
 	std::string GetState(int x, int y);
 
 	void RefreshUpdate();
+	void UpdatePrev();
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> GetCells();
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> GetStatePositions();
 	std::unordered_map<std::string, wxColour>& GetColors();
@@ -126,6 +128,8 @@ private:
 	std::vector<std::pair<int, int>> m_RedrawXYs;
 	std::vector<wxColour> m_RedrawColors;
 	wxColour m_RedrawColor;
+
+	std::mutex m_MutexCells;
 
 	virtual wxCoord OnGetRowHeight(size_t row) const;
 	virtual wxCoord OnGetColumnWidth(size_t row) const;
