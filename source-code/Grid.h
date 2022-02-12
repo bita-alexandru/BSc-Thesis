@@ -130,6 +130,7 @@ private:
 	wxColour m_RedrawColor;
 
 	std::mutex m_MutexCells;
+	std::mutex m_MutexStatus;
 
 	virtual wxCoord OnGetRowHeight(size_t row) const;
 	virtual wxCoord OnGetColumnWidth(size_t row) const;

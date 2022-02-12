@@ -216,7 +216,6 @@ bool Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 		{
 			// same state -> don't do anything
 			if (m_Cells[{x, y}].first == state) return false;
-
 			EraseCell(x, y);
 
 			m_Cells[{x, y}] = { state, color };
@@ -437,6 +436,8 @@ void Grid::Reset()
 	m_RedrawAll = true;
 	m_JustResized = false;
 	m_JustScrolled = { 0,0 };
+	m_LastDrawn = { -1,-1 };
+	m_LastHovered = { -1,-1 };
 
 	m_IsDrawing = false;
 	m_IsErasing = false;
@@ -503,13 +504,20 @@ void Grid::NextGeneration()
 
 	if (m_ForceClose) return;
 
+	//m_MutexStatus.lock();
+
 	UpdateGeneration(result.first);
 	UpdateCoordsHovered();
 
-	m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
-	m_PrevCells = m_Cells;
-	m_PrevStatePositions = m_StatePositions;
-	//m_ToolUndo->Reset();
+	//m_MutexCells.lock();
+	if (m_Cells != m_PrevCells)
+	{
+		m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
+		m_PrevCells = m_Cells;
+		m_PrevStatePositions = m_StatePositions;
+		//m_ToolUndo->Reset();
+	}
+	//m_MutexCells.unlock();
 
 	m_StatusCells->UpdateCountGeneration(+1);
 	m_StatusCells->SetCountPopulation(m_Cells.size());
@@ -525,12 +533,15 @@ void Grid::NextGeneration()
 	}
 
 	m_Generating = false;
+
+	//m_MutexStatus.unlock();
 }
 
 void Grid::OnNextGeneration()
 {
 	if (!m_Generating)
 	{
+		if (m_Finished) ResetUniverse();
 		m_Generating = true;
 
 		std::thread t(&Grid::NextGeneration, this);
