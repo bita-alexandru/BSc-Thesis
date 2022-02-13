@@ -108,7 +108,7 @@ void InputNeighbors::OnToggleButton(wxCommandEvent& evt)
 
 	m_Grid->SetFocus();
 
-	if (m_Grid->GetGenerating())
+	if (m_Grid->GetGenerating() || !m_Grid->GetPaused())
 	{
 		m_Buttons[neighbor]->SetValue(!m_Buttons[neighbor]->GetValue());
 

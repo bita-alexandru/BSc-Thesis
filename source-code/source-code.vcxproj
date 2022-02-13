@@ -27,6 +27,7 @@
     <ClInclude Include="GridStatus.h" />
     <ClInclude Include="GridTools.h" />
     <ClInclude Include="Hashes.h" />
+    <ClInclude Include="HelpWindow.h" />
     <ClInclude Include="Ids.h" />
     <ClInclude Include="InputNeighbors.h" />
     <ClInclude Include="InputRules.h" />
@@ -58,6 +59,7 @@
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="GridStatus.cpp" />
     <ClCompile Include="GridTools.cpp" />
+    <ClCompile Include="HelpWindow.cpp" />
     <ClCompile Include="InputNeighbors.cpp" />
     <ClCompile Include="InputRules.cpp" />
     <ClCompile Include="InputStates.cpp" />

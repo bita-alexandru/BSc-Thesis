@@ -18,7 +18,7 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(
 
     //SetBackgroundColour(wxColour(255, 255, 255));
 
-	BuildMenubar();
+	BuildMenuBar();
 
 	BuildInterface();
 
@@ -38,31 +38,34 @@ void Main::BuildInterface()
 	m_SplitterInputGrid = new wxSplitterWindow(this, wxID_ANY);
 	m_PanelInput = new PanelInput(m_SplitterInputGrid);
 
-	m_SplitterGridAlgorithm = new wxSplitterWindow(m_SplitterInputGrid, wxID_ANY);
-	m_PanelGrid = new PanelGrid(m_SplitterGridAlgorithm);
-	m_PanelAlgorithm = new PanelAlgorithm(m_SplitterGridAlgorithm);
+	//m_SplitterGridAlgorithm = new wxSplitterWindow(m_SplitterInputGrid, wxID_ANY);
+	//m_PanelGrid = new PanelGrid(m_SplitterGridAlgorithm);
+	m_PanelGrid = new PanelGrid(m_SplitterInputGrid);
+	//m_PanelAlgorithm = new PanelAlgorithm(m_SplitterGridAlgorithm);
 
-	wxBoxSizer* sizerGridAlgorithm = new wxBoxSizer(wxVERTICAL);
-	sizerGridAlgorithm->Add(m_PanelGrid, 0);
-	sizerGridAlgorithm->Add(m_PanelAlgorithm, 0);
+	//wxBoxSizer* sizerGridAlgorithm = new wxBoxSizer(wxVERTICAL);
+	//sizerGridAlgorithm->Add(m_PanelGrid, 0);
+	//sizerGridAlgorithm->Add(m_PanelAlgorithm, 0);
 
-	m_SplitterGridAlgorithm->SetSizer(sizerGridAlgorithm);
-	m_SplitterGridAlgorithm->SplitHorizontally(m_PanelGrid, m_PanelAlgorithm);
-	m_SplitterGridAlgorithm->SetMinimumPaneSize(1);
-	m_SplitterGridAlgorithm->SetSashGravity(0.75);
+	//m_SplitterGridAlgorithm->SetSizer(sizerGridAlgorithm);
+	//m_SplitterGridAlgorithm->SplitHorizontally(m_PanelGrid, m_PanelAlgorithm);
+	//m_SplitterGridAlgorithm->SetMinimumPaneSize(1);
+	//m_SplitterGridAlgorithm->SetSashGravity(0.75);
 
-	m_SplitterInputGrid->SplitVertically(m_PanelInput, m_SplitterGridAlgorithm);
+	//m_SplitterInputGrid->SplitVertically(m_PanelInput, m_SplitterGridAlgorithm);
+	m_SplitterInputGrid->SplitVertically(m_PanelInput, m_PanelGrid);
 	m_SplitterInputGrid->SetMinimumPaneSize(1);
 	m_SplitterInputGrid->SetSashGravity(0.2);
 
 	m_SplitterInputGrid->SetSashPosition(GetClientSize().GetX() * 0.2);
-	m_SplitterGridAlgorithm->SetSashPosition(GetClientSize().GetY() * 0.75);
+	//m_SplitterGridAlgorithm->SetSashPosition(GetClientSize().GetY() * 0.75);
 
 	m_EditorStates = new EditorStates(this);
 	m_EditorRules = new EditorRules(this);
+	m_HelpWindow = new HelpWindow(this);
 }
 
-void Main::BuildMenubar()
+void Main::BuildMenuBar()
 {
 	wxMenu* menuFile = new wxMenu();
 	wxMenu* menuView = new wxMenu();
@@ -78,11 +81,12 @@ void Main::BuildMenubar()
 	menuView->Append(Ids::ID_VIEW_STATES, "&States Editor\tCtrl+1");
 	menuView->Append(Ids::ID_VIEW_RULES, "&Rules Editor\tCtrl+2");
 	menuView->AppendSeparator();
-	menuView->Append(Ids::ID_VIEW_DEFAULT, "&Default Perspective\tF1");
-	menuView->Append(Ids::ID_VIEW_GRID, "&Grid Perspective\tF2");
+	menuView->Append(Ids::ID_VIEW_DEFAULT, "&Default Perspective\tShift+1");
+	menuView->Append(Ids::ID_VIEW_GRID, "&Grid Perspective\tShift+2");
+	menuView->AppendSeparator();
+	menuView->Append(Ids::ID_VIEW_FULLSCREEN, "&Full Screen\tF11");
 
-	menuHelp->Append(Ids::ID_USERMANUAL, "&User Manual\tCtrl+U");
-	menuHelp->Append(Ids::ID_SHORTCUTS, "&Shortcuts\tCtrl+J");
+	menuHelp->Append(Ids::ID_USERMANUAL, "&User Manual\tF1");
 
 	wxMenuBar* menuBar = new wxMenuBar();
 	menuBar->Append(menuFile, "&File");
@@ -99,11 +103,13 @@ void Main::BuildMenubar()
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuEditorRules, this, Ids::ID_VIEW_RULES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuPerspectiveDefault, this, Ids::ID_VIEW_DEFAULT);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuPerspectiveGrid, this, Ids::ID_VIEW_GRID);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuFullScreen, this, Ids::ID_VIEW_FULLSCREEN);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &Main::MenuHelp, this, Ids::ID_USERMANUAL);
 }
 
 void Main::SetShortcuts()
 {
-	wxAcceleratorEntry entries[16];
+	wxAcceleratorEntry entries[20];
 	// ToolZoom
 	entries[0].Set(wxACCEL_CTRL, (int)'+', Ids::ID_ZOOM_IN);
 	entries[1].Set(wxACCEL_CTRL, (int)'-', Ids::ID_ZOOM_OUT);
@@ -127,9 +133,11 @@ void Main::SetShortcuts()
 	entries[12].Set(wxACCEL_CTRL, (int)'R', Ids::ID_BUTTON_RESET);
 	entries[13].Set(wxACCEL_CTRL, (int)' ', Ids::ID_BUTTON_PLAY);
 	entries[14].Set(wxACCEL_CTRL, (int)'G', Ids::ID_BUTTON_GENERATION);
+	entries[15].Set(wxACCEL_CTRL, (int)',', Ids::ID_BUTTON_SLOWER);
+	entries[16].Set(wxACCEL_CTRL, (int)'.', Ids::ID_BUTTON_FASTER);
 
-	wxAcceleratorTable accel(16, entries);
-	this->SetAcceleratorTable(accel);
+	wxAcceleratorTable accel(20, entries);
+	SetAcceleratorTable(accel);
 }
 
 void Main::PrepareInput()
@@ -155,7 +163,9 @@ void Main::PrepareInput()
 	grid->SetFocus();
 
 	m_EditorStates->SetInputStates(inputStates);
+	m_EditorStates->SetHelpWindow(m_HelpWindow);
 	m_EditorRules->SetInputRules(inputRules);
+	m_EditorRules->SetHelpWindow(m_HelpWindow);
 
 	inputStates->SetToolStates(toolStates);
 	inputStates->SetGrid(grid);
@@ -199,7 +209,7 @@ void Main::MenuExit(wxCommandEvent& evt)
 
 void Main::MenuPerspectiveDefault(wxCommandEvent& evt)
 {
-	m_SplitterGridAlgorithm->SetSashPosition(GetClientSize().GetY() * 0.75);
+	//m_SplitterGridAlgorithm->SetSashPosition(GetClientSize().GetY() * 0.75);
 	m_SplitterInputGrid->SetSashPosition(GetClientSize().GetX() * 0.2);
 }
 
@@ -210,14 +220,14 @@ void Main::MenuPerspectiveInput(wxCommandEvent& evt)
 
 void Main::MenuPerspectiveGrid(wxCommandEvent& evt)
 {
-	m_SplitterGridAlgorithm->SetSashPosition(9999);
+	//m_SplitterGridAlgorithm->SetSashPosition(9999);
 	m_SplitterInputGrid->SetSashPosition(-9999);
 }
 
 void Main::MenuPerspectiveAlgorithm(wxCommandEvent& evt)
 {
-	m_SplitterGridAlgorithm->SetSashPosition(-9999);
-	m_SplitterInputGrid->SetSashPosition(-9999);
+	//m_SplitterGridAlgorithm->SetSashPosition(-9999);
+	//m_SplitterInputGrid->SetSashPosition(-9999);
 }
 
 void Main::MenuEditorStates(wxCommandEvent& evt)
@@ -245,9 +255,15 @@ void Main::MenuChangeDimensions(wxCommandEvent& evt)
 	}
 }
 
+void Main::MenuFullScreen(wxCommandEvent& evt)
+{
+	if (IsFullScreen()) ShowFullScreen(false);
+	else ShowFullScreen(true);
+}
+
 void Main::MenuImport(wxCommandEvent& evt)
 {
-	if (m_PanelGrid->GetGrid()->GetGenerating())
+	if (m_PanelGrid->GetGrid()->GetGenerating() || !m_PanelGrid->GetGrid()->GetPaused())
 	{
 		wxMessageBox("Can't import while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
 		return;
@@ -527,6 +543,12 @@ void Main::MenuExport(wxCommandEvent& evt)
 		out << x << ' ' << y << ' ' << state << ';' << '\n';
 	}
 	out << '\n';
+}
+
+void Main::MenuHelp(wxCommandEvent& evt)
+{
+	m_HelpWindow->Show();
+	m_HelpWindow->SetFocus();
 }
 
 void Main::OnClose(wxCloseEvent& evt)

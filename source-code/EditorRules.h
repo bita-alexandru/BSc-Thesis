@@ -8,6 +8,7 @@
 #include "Sizes.h"
 #include "InputRules.h"
 #include "Transition.h"
+#include "HelpWindow.h"
 
 class InputRules;
 
@@ -18,6 +19,7 @@ public:
 	~EditorRules();
 
 	void SetInputRules(InputRules* inputRules);
+	void SetHelpWindow(HelpWindow* helpWindow);
 
 	std::pair<std::vector<std::pair<std::string, Transition>>, std::vector<std::pair<int, std::string>>> Process(wxString states);
 	vector<pair<string, Transition>> GetData();
@@ -30,6 +32,7 @@ public:
 	wxString GetText();
 private:
 	InputRules* m_InputRules = nullptr;
+	HelpWindow* m_HelpWindow = nullptr;
 
 	wxMenuBar* m_MenuBar = nullptr;
 	wxFindReplaceData* m_FindData = nullptr;
@@ -44,7 +47,7 @@ private:
 	bool m_InvalidInput = false;
 
 	void BuildMenuBar();
-	void BuildInputPanel();
+	void BuildInterface();
 	void BuildDialogFind(std::string title, long style);
 	
 	wxDECLARE_EVENT_TABLE();
@@ -69,6 +72,8 @@ private:
 
 	void OnImport(wxCommandEvent& evt);
 	void OnExport(wxCommandEvent& evt);
+
+	void OnHelp(wxCommandEvent& evt);
 
 	void CloseEditor(bool save = false);
 

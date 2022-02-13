@@ -459,7 +459,7 @@ void InputStates::StateErase()
 
     if (selection == -1) return;
 
-    if (m_Grid->GetGenerating())
+    if (m_Grid->GetGenerating() || !m_Grid->GetPaused())
     {
         wxMessageBox("Can't erase states while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
         return;
@@ -484,7 +484,7 @@ void InputStates::StateDelete()
 
     if (selection == -1) return;
 
-    if (m_Grid->GetGenerating())
+    if (m_Grid->GetGenerating() || !m_Grid->GetPaused())
     {
         wxMessageBox("Can't delete states while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
         return;

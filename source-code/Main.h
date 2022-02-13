@@ -12,6 +12,7 @@
 #include "PanelAlgorithm.h"
 #include "EditorStates.h"
 #include "EditorRules.h"
+#include "HelpWindow.h"
 
 class MenuBar;
 
@@ -27,12 +28,13 @@ private:
 	PanelAlgorithm* m_PanelAlgorithm = nullptr;
 	EditorStates* m_EditorStates = nullptr;
 	EditorRules* m_EditorRules = nullptr;
+	HelpWindow* m_HelpWindow = nullptr;
 
 	wxSplitterWindow* m_SplitterInputGrid = nullptr;
 	wxSplitterWindow* m_SplitterGridAlgorithm = nullptr;
 
 	void BuildInterface();
-	void BuildMenubar();
+	void BuildMenuBar();
 	void SetShortcuts();
 	void PrepareInput();
 
@@ -44,8 +46,10 @@ private:
 	void MenuEditorStates(wxCommandEvent& evt);
 	void MenuEditorRules(wxCommandEvent& evt);
 	void MenuChangeDimensions(wxCommandEvent& evt);
+	void MenuFullScreen(wxCommandEvent& evt);
 	void MenuImport(wxCommandEvent& evt);
 	void MenuExport(wxCommandEvent& evt);
+	void MenuHelp(wxCommandEvent& evt);
 
 	void OnClose(wxCloseEvent& evt);
 

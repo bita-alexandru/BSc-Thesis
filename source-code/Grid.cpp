@@ -109,7 +109,7 @@ void Grid::ScrollToCenter(int x, int y)
 void Grid::SetDimensions(int rows, int cols)
 {
 	if (rows == Sizes::N_ROWS && cols == Sizes::N_COLS) return;
-	if (m_Generating)
+	if (m_Generating || !m_Paused)
 	{
 		wxMessageBox("Can't change grid dimensions while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
 		return;
@@ -428,7 +428,7 @@ std::string Grid::GetState(int x, int y)
 
 void Grid::Reset()
 {
-	if (m_Generating)
+	if (m_Generating || !m_Paused)
 	{
 		wxMessageBox("Can't reset grid while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
 		return;
@@ -773,7 +773,7 @@ bool Grid::ModeDraw(int x, int y, char mode)
 		if (mouse.LeftIsDown())
 		{
 			// don't interfere with the grid when the universe is playing
-			if (m_Generating)
+			if (m_Generating || !m_Paused)
 			{
 				wxMessageBox("Can't draw cells while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
 				return false;
@@ -814,7 +814,7 @@ bool Grid::ModeDraw(int x, int y, char mode)
 		else if (mouse.RightIsDown())
 		{
 			// don't interfere with the grid when the universe is playing
-			if (m_Generating)
+			if (m_Generating || !m_Paused)
 			{
 				wxMessageBox("Can't erase cells while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
 				return false;

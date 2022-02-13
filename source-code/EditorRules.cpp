@@ -23,7 +23,7 @@ EditorRules::EditorRules(wxFrame* parent) : wxFrame(parent, wxID_ANY, "CellyGen:
 
 	BuildMenuBar();
 
-	BuildInputPanel();
+	BuildInterface();
 }
 
 EditorRules::~EditorRules()
@@ -35,6 +35,11 @@ EditorRules::~EditorRules()
 void EditorRules::SetInputRules(InputRules* inputRules)
 {
 	m_InputRules = inputRules;
+}
+
+void EditorRules::SetHelpWindow(HelpWindow* helpWindow)
+{
+	m_HelpWindow = helpWindow;
 }
 
 std::pair<std::vector<std::pair<std::string, Transition>>, std::vector<std::pair<int, std::string>>> EditorRules::Process(wxString text)
@@ -227,6 +232,7 @@ void EditorRules::BuildMenuBar()
 {
 	wxMenu* menuFile = new wxMenu();
 	wxMenu* menuEdit = new wxMenu();
+	wxMenu* menuHelp = new wxMenu();
 
 	menuFile->Append(Ids::ID_IMPORT_RULES, "&Import\tCtrl+O");
 	menuFile->Append(Ids::ID_EXPORT_RULES, "Ex&port\tCtrl+Shift+S");
@@ -235,6 +241,7 @@ void EditorRules::BuildMenuBar()
 	menuFile->Append(Ids::ID_SAVE_CLOSE_RULES, "Sa&ve && Close\tAlt+S");
 	menuFile->AppendSeparator();
 	menuFile->Append(Ids::ID_CLOSE_RULES, "&Close\tEsc");
+
 	menuEdit->Append(Ids::ID_FIND_RULES, "&Find\tCtrl+F");
 	menuEdit->Append(Ids::ID_REPLACE_RULES, "&Replace\tCtrl+H");
 	menuEdit->AppendSeparator();
@@ -243,14 +250,17 @@ void EditorRules::BuildMenuBar()
 	menuEdit->AppendSeparator();
 	menuEdit->Append(Ids::ID_FORMAT_RULES, "Forma&t\tCtrl+T");
 
+	menuHelp->Append(Ids::ID_HELP_RULES, "&How to Use\tF1");
+
 	m_MenuBar = new wxMenuBar();
 	m_MenuBar->Append(menuFile, "&File");
 	m_MenuBar->Append(menuEdit, "&Edit");
+	m_MenuBar->Append(menuHelp, "&Help");
 
 	m_MenuBar->Enable(Ids::ID_MARK_NEXT_RULES, false);
 	m_MenuBar->Enable(Ids::ID_MARK_PREV_RULES, false);
 
-	this->SetMenuBar(m_MenuBar);
+	SetMenuBar(m_MenuBar);
 
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorRules::OnImport, this, Ids::ID_IMPORT_RULES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorRules::OnExport, this, Ids::ID_EXPORT_RULES);
@@ -262,9 +272,10 @@ void EditorRules::BuildMenuBar()
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorRules::OnPrevMark, this, Ids::ID_MARK_PREV_RULES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorRules::OnNextMark, this, Ids::ID_MARK_NEXT_RULES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorRules::OnFormat, this, Ids::ID_FORMAT_RULES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorRules::OnHelp, this, Ids::ID_HELP_RULES);
 }
 
-void EditorRules::BuildInputPanel()
+void EditorRules::BuildInterface()
 {
 	m_TextCtrl = new wxStyledTextCtrl(this);
 	m_TextCtrl->SetMarginWidth(wxSTC_MARGIN_NUMBER, 80);
@@ -381,7 +392,7 @@ void EditorRules::OnSave(wxCommandEvent& evt)
 	std::vector<std::pair<std::string, Transition>> data = GetData();
 	if (m_InvalidInput) return;
 
-	if (m_InputRules->GetInputStates()->GetGrid()->GetGenerating())
+	if (m_InputRules->GetInputStates()->GetGrid()->GetGenerating() && !m_InputRules->GetInputStates()->GetGrid()->GetPaused())
 	{
 		wxMessageBox("Can't change rules while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
 		return;
@@ -555,7 +566,7 @@ void EditorRules::OnNextMark(wxCommandEvent& evt)
 
 void EditorRules::OnImport(wxCommandEvent& evt)
 {
-	if (m_InputRules->GetInputStates()->GetGrid()->GetGenerating())
+	if (m_InputRules->GetInputStates()->GetGrid()->GetGenerating() && !m_InputRules->GetInputStates()->GetGrid()->GetPaused())
 	{
 		wxMessageBox("Can't import while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
 		return;
@@ -636,6 +647,10 @@ void EditorRules::OnExport(wxCommandEvent& evt)
 	out << m_TextCtrl->GetText().ToStdString();
 }
 
+void EditorRules::OnHelp(wxCommandEvent& evt)
+{
+}
+
 void EditorRules::CloseEditor(bool save)
 {
 	wxDELETE(m_FindData); wxDELETE(m_FindDialog);
@@ -648,7 +663,7 @@ void EditorRules::CloseEditor(bool save)
 	
 	if (save)
 	{
-		if (m_InputRules->GetInputStates()->GetGrid()->GetGenerating())
+		if (m_InputRules->GetInputStates()->GetGrid()->GetGenerating() && !m_InputRules->GetInputStates()->GetGrid()->GetPaused())
 		{
 			wxMessageBox("Can't change rules while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
 			return;

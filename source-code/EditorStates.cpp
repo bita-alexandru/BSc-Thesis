@@ -22,7 +22,7 @@ EditorStates::EditorStates(wxFrame* parent) : wxFrame(parent, wxID_ANY, "CellyGe
 
 	BuildMenuBar();
 
-	BuildInputPanel();
+	BuildInterface();
 }
 
 EditorStates::~EditorStates()
@@ -34,6 +34,11 @@ EditorStates::~EditorStates()
 void EditorStates::SetInputStates(InputStates* inputStates)
 {
 	m_InputStates = inputStates;
+}
+
+void EditorStates::SetHelpWindow(HelpWindow* helpWindow)
+{
+	m_HelpWindow = helpWindow;
 }
 
 std::pair<std::vector<std::string>, std::vector<std::pair<int, std::string>>> EditorStates::Process(wxString text)
@@ -289,6 +294,7 @@ void EditorStates::BuildMenuBar()
 {
 	wxMenu* menuFile = new wxMenu();
 	wxMenu* menuEdit = new wxMenu();
+	wxMenu* menuHelp = new wxMenu();
 
 	menuFile->Append(Ids::ID_IMPORT_STATES, "&Import\tCtrl+O");
 	menuFile->Append(Ids::ID_EXPORT_STATES, "Ex&port\tCtrl+Shift+S");
@@ -297,6 +303,7 @@ void EditorStates::BuildMenuBar()
 	menuFile->Append(Ids::ID_SAVE_CLOSE_STATES, "Sa&ve && Close\tAlt+S");
 	menuFile->AppendSeparator();
 	menuFile->Append(Ids::ID_CLOSE_STATES, "&Close\tEsc");
+
 	menuEdit->Append(Ids::ID_FIND_STATES, "&Find\tCtrl+F");
 	menuEdit->Append(Ids::ID_REPLACE_STATES, "&Replace\tCtrl+H");
 	menuEdit->AppendSeparator();
@@ -305,14 +312,17 @@ void EditorStates::BuildMenuBar()
 	menuEdit->AppendSeparator();
 	menuEdit->Append(Ids::ID_FORMAT_STATES, "Forma&t\tCtrl+T");
 
+	menuHelp->Append(Ids::ID_HELP_STATES, "&How to Use\tF1");
+
 	m_MenuBar = new wxMenuBar();
 	m_MenuBar->Append(menuFile, "&File");
 	m_MenuBar->Append(menuEdit, "&Edit");
+	m_MenuBar->Append(menuHelp, "&Help");
 
 	m_MenuBar->Enable(Ids::ID_MARK_NEXT_STATES, false);
 	m_MenuBar->Enable(Ids::ID_MARK_PREV_STATES, false);
 
-	this->SetMenuBar(m_MenuBar);
+	SetMenuBar(m_MenuBar);
 
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnImport, this, Ids::ID_IMPORT_STATES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnExport, this, Ids::ID_EXPORT_STATES);
@@ -324,9 +334,10 @@ void EditorStates::BuildMenuBar()
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnPrevMark, this, Ids::ID_MARK_PREV_STATES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnNextMark, this, Ids::ID_MARK_NEXT_STATES);
 	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnFormat, this, Ids::ID_FORMAT_STATES);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &EditorStates::OnHelp, this, Ids::ID_HELP_STATES);
 }
 
-void EditorStates::BuildInputPanel()
+void EditorStates::BuildInterface()
 {
 	m_TextCtrl = new wxStyledTextCtrl(this);
 	m_TextCtrl->SetMarginWidth(wxSTC_MARGIN_NUMBER, 80);
@@ -447,7 +458,7 @@ void EditorStates::OnSave(wxCommandEvent& evt)
 	std::vector<std::string> data = GetData();
 	if (m_InvalidInput) return;
 
-	if (m_InputStates->GetGrid()->GetGenerating())
+	if (m_InputStates->GetGrid()->GetGenerating() || !m_InputStates->GetGrid()->GetPaused())
 	{
 		wxMessageBox("Can't change states while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
 		return;
@@ -626,7 +637,7 @@ void EditorStates::OnNextMark(wxCommandEvent& evt)
 
 void EditorStates::OnImport(wxCommandEvent& evt)
 {
-	if (m_InputStates->GetGrid()->GetGenerating())
+	if (m_InputStates->GetGrid()->GetGenerating() || !m_InputStates->GetGrid()->GetPaused())
 	{
 		wxMessageBox("Can't import while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
 		return;
@@ -705,6 +716,10 @@ void EditorStates::OnExport(wxCommandEvent& evt)
 	std::ofstream out(dialogFile.GetPath().ToStdString());
 	out << "[STATES]\n";
 	out << m_TextCtrl->GetText().ToStdString();
+}
+
+void EditorStates::OnHelp(wxCommandEvent& evt)
+{
 }
 
 void EditorStates::UpdateLineColMouse(wxMouseEvent& evt)
@@ -821,7 +836,7 @@ void EditorStates::CloseEditor(bool save)
 
 	if (save)
 	{
-		if (m_InputStates->GetGrid()->GetGenerating())
+		if (m_InputStates->GetGrid()->GetGenerating() || !m_InputStates->GetGrid()->GetPaused())
 		{
 			wxMessageBox("Can't change states while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
 			return;

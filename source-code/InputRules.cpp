@@ -370,7 +370,7 @@ void InputRules::RuleDelete()
 
     if (selection == -1) return;
 
-    if (m_InputStates->GetGrid()->GetGenerating())
+    if (m_InputStates->GetGrid()->GetGenerating() || !m_InputStates->GetGrid()->GetPaused())
     {
         wxMessageBox("Can't delete rules while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
         return;

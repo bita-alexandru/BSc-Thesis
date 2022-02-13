@@ -7,6 +7,7 @@
 #include "Ids.h"
 #include "Sizes.h"
 #include "InputStates.h"
+#include "HelpWindow.h"
 
 class InputStates;
 
@@ -17,6 +18,7 @@ public:
 	~EditorStates();
 
 	void SetInputStates(InputStates* inputStates);
+	void SetHelpWindow(HelpWindow* helpWindow);
 
 	std::pair<std::vector<std::string>, std::vector<std::pair<int, std::string>>> Process(wxString text);
 	std::vector<std::string> GetData();
@@ -29,6 +31,7 @@ public:
 	wxString GetText();
 private:
 	InputStates* m_InputStates = nullptr;
+	HelpWindow* m_HelpWindow = nullptr;
 
 	wxMenuBar* m_MenuBar = nullptr;
 	wxFindReplaceData* m_FindData = nullptr;
@@ -43,7 +46,7 @@ private:
 	bool m_InvalidInput = false;
 
 	void BuildMenuBar();
-	void BuildInputPanel();
+	void BuildInterface();
 	void BuildDialogFind(std::string title, long style);
 	
 	wxDECLARE_EVENT_TABLE();
@@ -68,6 +71,8 @@ private:
 
 	void OnImport(wxCommandEvent& evt);
 	void OnExport(wxCommandEvent& evt);
+
+	void OnHelp(wxCommandEvent& evt);
 
 	void CloseEditor(bool save = false);
 

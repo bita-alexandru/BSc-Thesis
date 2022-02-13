@@ -37,7 +37,7 @@ void StatusDelay::BuildInterface()
     //delay.erase(delay.find_last_not_of('0') + 1, std::string::npos);
     delay += "s";
 
-    std::string label = "Delay: " + delay;
+    std::string label = "Delay=" + delay;
     m_TextDelay = new wxStaticText(this, wxID_ANY, label);
 
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -56,7 +56,7 @@ void StatusDelay::UpdateTextDelay()
 
     delay += "s";
 
-    m_TextDelay->SetLabel("Delay: " + delay);
+    m_TextDelay->SetLabel("Delay=" + delay);
 
     // Layout();
     // Update();
