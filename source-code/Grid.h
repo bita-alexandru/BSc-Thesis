@@ -18,6 +18,7 @@
 #include "ToolCoords.h"
 #include "StatusCells.h"
 #include "StatusControls.h"
+#include "StatusDelay.h"
 #include "InputRules.h"
 #include "Transition.h"
 
@@ -27,6 +28,7 @@ class ToolStates;
 class ToolModes;
 class InputRules;
 class StatusControls;
+class StatusDelay;
 
 class Grid : public wxHVScrolledWindow
 {
@@ -52,6 +54,7 @@ public:
 	void SetToolCoords(ToolCoords* toolCoords);
 	void SetStatusControls(StatusControls* statusControls);
 	void SetStatusCells(StatusCells* statusCells);
+	void SetStatusDelay(StatusDelay* statusDelay);
 
 	bool InsertCell(int x, int y, std::string state, wxColour color, bool multiple = false);
 	bool RemoveCell(int x, int y, std::string state, wxColour color, bool multiple = false);
@@ -88,6 +91,7 @@ private:
 	ToolCoords* m_ToolCoords = nullptr;
 	StatusControls* m_StatusControls = nullptr;
 	StatusCells* m_StatusCells = nullptr;
+	StatusDelay* m_StatusDelay = nullptr;
 
 	int m_Size = Sizes::CELL_SIZE_DEFAULT;
 	int m_OffsetX = Sizes::N_COLS / 2;

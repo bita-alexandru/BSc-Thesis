@@ -4,15 +4,13 @@ GridStatus::GridStatus(wxWindow* parent) : wxPanel(parent, wxID_ANY, wxDefaultPo
 {
     SetBackgroundColour(wxColor(211, 211, 211));
 
-	m_StatusSpeed = new StatusSpeed(this);
+	m_StatusDelay = new StatusDelay(this);
 	m_StatusControls = new StatusControls(this);
 	m_StatusCells = new StatusCells(this);
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
-	sizer->Add(m_StatusSpeed, 0, wxEXPAND);
-	sizer->AddSpacer(32);
+	sizer->Add(m_StatusDelay, 0, wxEXPAND);
 	sizer->Add(m_StatusControls, 0, wxEXPAND);
-	sizer->AddSpacer(32);
 	sizer->Add(m_StatusCells, 0, wxEXPAND | wxTOP | wxBOTTOM, 4);
 
 	SetSizerAndFit(sizer);
@@ -20,14 +18,14 @@ GridStatus::GridStatus(wxWindow* parent) : wxPanel(parent, wxID_ANY, wxDefaultPo
 
 GridStatus::~GridStatus()
 {
-	wxDELETE(m_StatusSpeed);
+	wxDELETE(m_StatusDelay);
 	wxDELETE(m_StatusControls);
 	wxDELETE(m_StatusCells);
 }
 
-StatusSpeed* GridStatus::GetStatusSpeed()
+StatusDelay* GridStatus::GetStatusDelay()
 {
-	return m_StatusSpeed;
+	return m_StatusDelay;
 }
 
 StatusControls* GridStatus::GetStatusControls()

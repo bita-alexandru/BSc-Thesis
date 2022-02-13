@@ -69,7 +69,7 @@ void ToolZoom::BuildInterface()
 	sizer->Add(zoomOut, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->Add(zoomIn, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->Add(m_TextScale, 0, wxALIGN_CENTER_VERTICAL);
-	sizer->AddSpacer(8);
+	sizer->AddSpacer(16);
 
 	this->SetSizerAndFit(sizer);
 }

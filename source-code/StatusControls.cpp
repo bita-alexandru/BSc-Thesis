@@ -54,6 +54,7 @@ void StatusControls::BuildInterface()
     sizer->Add(reset, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(m_PlayButton, 0, wxALIGN_CENTER_VERTICAL);
     sizer->Add(generation, 0, wxALIGN_CENTER_VERTICAL);
+    sizer->AddSpacer(16);
 
     SetSizerAndFit(sizer);
 }

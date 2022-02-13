@@ -1,7 +1,7 @@
 #pragma once
 #include "wx/wx.h"
 
-#include "StatusSpeed.h"
+#include "StatusDelay.h"
 #include "StatusControls.h"
 #include "StatusCells.h"
 
@@ -11,11 +11,11 @@ public:
 	GridStatus(wxWindow* parent);
 	~GridStatus();
 
-	StatusSpeed* GetStatusSpeed();
+	StatusDelay* GetStatusDelay();
 	StatusControls* GetStatusControls();
 	StatusCells* GetStatusCells();
 private:
-	StatusSpeed* m_StatusSpeed = nullptr;
+	StatusDelay* m_StatusDelay = nullptr;
 	StatusControls* m_StatusControls = nullptr;
 	StatusCells* m_StatusCells = nullptr;
 };

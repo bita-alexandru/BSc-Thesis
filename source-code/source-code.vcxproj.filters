@@ -84,7 +84,7 @@
     <ClInclude Include="StatusControls.h">
       <Filter>Header Files\Status</Filter>
     </ClInclude>
-    <ClInclude Include="StatusSpeed.h">
+    <ClInclude Include="StatusDelay.h">
       <Filter>Header Files\Status</Filter>
     </ClInclude>
     <ClInclude Include="ToolCoords.h">
@@ -206,7 +206,7 @@
     <ClCompile Include="StatusControls.cpp">
       <Filter>Source Files\Status</Filter>
     </ClCompile>
-    <ClCompile Include="StatusSpeed.cpp">
+    <ClCompile Include="StatusDelay.cpp">
       <Filter>Source Files\Status</Filter>
     </ClCompile>
     <ClCompile Include="EditorStates.cpp">

@@ -148,7 +148,7 @@ void Main::PrepareInput()
 	ToolStates* toolStates = gridTools->GetToolStates();
 	ToolCoords* toolCoords = gridTools->GetToolCoords();
 
-	StatusSpeed* statusSpeed = gridStatus->GetStatusSpeed();
+	StatusDelay* statusDelay = gridStatus->GetStatusDelay();
 	StatusControls* statusControls = gridStatus->GetStatusControls();
 	StatusCells* statusCells = gridStatus->GetStatusCells();
 
@@ -183,8 +183,10 @@ void Main::PrepareInput()
 
 	grid->SetStatusCells(statusCells);
 	grid->SetStatusControls(statusControls);
+	grid->SetStatusDelay(statusDelay);
 
 	statusControls->SetGrid(grid);
+	statusDelay->SetGrid(grid);
 
 	//inputNeighbors->SetNeighbors({ "NW","N","NE","W","C","E","SW","S","SE"});
 	//inputStates->SetStates({ "FREE","LIVE" });

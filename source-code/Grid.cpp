@@ -5,6 +5,7 @@
 
 #include <stack>
 #include <thread>
+#include <chrono>
 
 wxBEGIN_EVENT_TABLE(Grid, wxHVScrolledWindow)
 EVT_PAINT(Grid::OnPaint)
@@ -202,6 +203,11 @@ void Grid::SetStatusControls(StatusControls* statusControls)
 void Grid::SetStatusCells(StatusCells* statusCells)
 {
 	m_StatusCells = statusCells;
+}
+
+void Grid::SetStatusDelay(StatusDelay* statusDelay)
+{
+	m_StatusDelay = statusDelay;
 }
 
 bool Grid::InsertCell(int x, int y, std::string state, wxColour color, bool multiple)
@@ -533,6 +539,8 @@ void Grid::NextGeneration()
 	}
 
 	m_Generating = false;
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(m_StatusDelay->GetDelay()));
 
 	//m_MutexStatus.unlock();
 }

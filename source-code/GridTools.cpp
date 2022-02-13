@@ -12,13 +12,9 @@ GridTools::GridTools(wxWindow* parent): wxPanel(parent, wxID_ANY, wxDefaultPosit
 
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
     sizer->Add(m_ToolZoom, 0, wxEXPAND);
-    sizer->AddSpacer(32);
     sizer->Add(m_ToolUndo, 0, wxEXPAND);
-    sizer->AddSpacer(32);
     sizer->Add(m_ToolModes, 0, wxEXPAND);
-    sizer->AddSpacer(8);
     sizer->Add(m_ToolStates, 0, wxEXPAND);
-    sizer->AddSpacer(8);
     sizer->Add(m_ToolCoords, 0, wxEXPAND | wxTOP | wxBOTTOM, 4);
 
     SetSizerAndFit(sizer);

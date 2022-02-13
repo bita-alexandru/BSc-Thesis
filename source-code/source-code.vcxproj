@@ -42,7 +42,7 @@
     <ClInclude Include="Sizes.h" />
     <ClInclude Include="StatusCells.h" />
     <ClInclude Include="StatusControls.h" />
-    <ClInclude Include="StatusSpeed.h" />
+    <ClInclude Include="StatusDelay.h" />
     <ClInclude Include="ToolCoords.h" />
     <ClInclude Include="ToolModes.h" />
     <ClInclude Include="ToolStates.h" />
@@ -71,7 +71,7 @@
     <ClCompile Include="RuleApplyFunctor.cpp" />
     <ClCompile Include="StatusCells.cpp" />
     <ClCompile Include="StatusControls.cpp" />
-    <ClCompile Include="StatusSpeed.cpp" />
+    <ClCompile Include="StatusDelay.cpp" />
     <ClCompile Include="ToolCoords.cpp" />
     <ClCompile Include="ToolModes.cpp" />
     <ClCompile Include="ToolStates.cpp" />

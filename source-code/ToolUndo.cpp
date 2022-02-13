@@ -217,6 +217,7 @@ void ToolUndo::BuildInterface()
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 	sizer->Add(m_Undo, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->Add(m_Redo, 0, wxALIGN_CENTER_VERTICAL);
+	sizer->AddSpacer(16);
 
 	this->SetSizerAndFit(sizer);
 }
