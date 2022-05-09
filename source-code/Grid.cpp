@@ -6,6 +6,8 @@
 #include <stack>
 #include <thread>
 #include <chrono>
+#include <random>
+#include <algorithm>
 
 wxBEGIN_EVENT_TABLE(Grid, wxHVScrolledWindow)
 EVT_PAINT(Grid::OnPaint)
@@ -426,7 +428,7 @@ std::string Grid::GetState(int x, int y)
 	return m_Cells[{x, y}].first;
 }
 
-void Grid::Reset()
+void Grid::Reset(bool refresh)
 {
 	if (m_Generating || !m_Paused)
 	{
@@ -454,8 +456,11 @@ void Grid::Reset()
 
 	ResetUniverse();
 
-	Refresh(false);
-	Update();
+	if (refresh)
+	{
+		Refresh(false);
+		Update();
+	}
 }
 
 void Grid::PlayUniverse()
@@ -502,8 +507,9 @@ void Grid::NextGeneration()
 
 		dialog.ShowModal();
 
-		m_Finished = true;
+		m_Finished = false;
 		m_Paused = true;
+		m_Generating = false;
 		
 		return;
 	}
@@ -561,6 +567,61 @@ void Grid::OnPlayUniverse()
 {
 	std::thread t(&Grid::PlayUniverse, this);
 	t.detach();
+}
+
+void Grid::OnPopulate(double probability)
+{
+	if (!m_Generating)
+	{
+		Reset();
+
+		vector<pair<string, wxColour>> states;
+		for (auto& it : m_ToolStates->GetColors())
+		{
+			states.push_back(it);
+		}
+
+		const int statesSize = states.size();
+		if (statesSize > 1)
+		{
+			vector<pair<pair<int, int>, pair<string, wxColour>>> population;
+
+			const int n = Sizes::N_ROWS;
+			const int m = Sizes::N_COLS;
+
+			srand(time(NULL));
+
+			for (int i = 0; i < n; i++)
+			{
+				for (int j = 0; j < m; j++)
+				{
+					double p = (rand() % 10) * 0.1;
+
+					if (p <= probability)
+					{
+						int k = rand() % statesSize;
+
+						population.push_back({ {i,j}, states[k] });
+					}
+				}
+			}
+
+			if (population.size())
+			{
+				for (auto& cell : population)
+				{
+					int y = cell.first.first;
+					int x = cell.first.second;
+					string state = cell.second.first;
+					wxColour color = cell.second.second;
+
+					InsertCell(x, y, state, color, true);
+				}
+			}
+		}
+
+		RefreshUpdate();
+	}
 }
 
 int Grid::GetPaused()
@@ -1735,10 +1796,10 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 		// iterate through all cells
 		if (rule.second.all || rule.second.condition.empty())
 		{
-			wxLogDebug("FREE_ALL");
+			//wxLogDebug("FREE_ALL");
 			int n = Sizes::N_ROWS * Sizes::N_COLS - m_Cells.size();
 			int sqrtn = sqrt(n);
-			int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
+			int batchsize = n; // (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
 
 			for (int i = 0; i < n;)
 			{
@@ -1769,7 +1830,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 			{
 				int n = n1;
 				int sqrtn = sqrt(n);
-				int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
+				int batchsize = n; // (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
 
 				for (int i = 0; i < n;)
 				{
@@ -1791,7 +1852,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 					{
 						int n = n1;
 						int sqrtn = sqrt(n);
-						int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
+						int batchsize = n; // (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
 
 						for (int i = 0; i < n;)
 						{
@@ -1809,7 +1870,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 					{
 						int n = m_StatePositions[state].size();
 						int sqrtn = sqrt(n);
-						int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
+						int batchsize = n; // (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
 
 						for (int i = 0; i < n;)
 						{
@@ -1836,7 +1897,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 		{
 			int n = m_StatePositions[rule.first].size();
 			int sqrtn = sqrt(n);
-			int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
+			int batchsize = n; // (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
 
 			for (int i = 0; i < n;)
 			{
@@ -1866,7 +1927,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 			{
 				int n = n1;
 				int sqrtn = sqrt(n); 
-				int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
+				int batchsize = n; // (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
 
 				for (int i = 0; i < n;)
 				{
@@ -1888,7 +1949,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 					{
 						int n = n1;
 						int sqrtn = sqrt(n);
-						int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
+						int batchsize = n; // (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
 
 						for (int i = 0; i < n;)
 						{
@@ -1906,7 +1967,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 					{
 						int n = m_StatePositions[state].size();
 						int sqrtn = sqrt(n);
-						int batchsize = (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
+						int batchsize = n; // (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
 
 						for (int i = 0; i < n;)
 						{
@@ -2176,5 +2237,6 @@ void Grid::OnScroll(wxScrollWinEvent& evt)
 void Grid::OnSize(wxSizeEvent& evt)
 {
 	m_JustResized = true;
+	Refresh(false);
 	evt.Skip();
 }

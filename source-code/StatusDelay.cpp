@@ -15,7 +15,7 @@ StatusDelay::~StatusDelay()
 
 int StatusDelay::GetDelay()
 {
-    return m_Delay;
+    return m_Delays[m_Delay];
 }
 
 void StatusDelay::SetGrid(Grid* grid)
@@ -33,7 +33,7 @@ void StatusDelay::BuildInterface()
     slower->Bind(wxEVT_BUTTON, &StatusDelay::DecreaseDelay, this);
     faster->Bind(wxEVT_BUTTON, &StatusDelay::IncreaseDelay, this);
 
-    std::string delay = std::to_string(m_Delay);
+    std::string delay = "0.10";
     //delay.erase(delay.find_last_not_of('0') + 1, std::string::npos);
     delay += "s";
 
@@ -46,12 +46,12 @@ void StatusDelay::BuildInterface()
     sizer->Add(m_TextDelay, 0, wxALIGN_CENTER_VERTICAL);
     sizer->AddSpacer(24);
 
-    SetSizerAndFit(sizer);
+    SetSizer(sizer);
 }
 
 void StatusDelay::UpdateTextDelay()
 {
-    std::string delay = std::to_string(m_Delay * 0.001f);
+    std::string delay = std::to_string(GetDelay() * 0.001f);
     for (int i = 4; i < delay.size();) delay.pop_back();
 
     delay += "s";
@@ -66,9 +66,9 @@ void StatusDelay::IncreaseDelay(wxCommandEvent& evt)
 {
     m_Grid->SetFocus();
 
-    if (m_Delay + m_IncrementDelay > m_MaximumDelay) return;
+    if (m_Delay == 4) return;
 
-    m_Delay += m_IncrementDelay;
+    m_Delay++;
 
     UpdateTextDelay();
 }
@@ -77,9 +77,9 @@ void StatusDelay::DecreaseDelay(wxCommandEvent& evt)
 {
     m_Grid->SetFocus();
 
-    if (m_Delay - m_IncrementDelay < 0) return;
+    if (m_Delay == 0) return;
 
-    m_Delay -= m_IncrementDelay;
+    m_Delay--;
 
     UpdateTextDelay();
 }

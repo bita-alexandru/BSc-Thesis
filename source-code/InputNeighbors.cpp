@@ -82,7 +82,7 @@ void InputNeighbors::BuildInterface()
 	sizer->Add(row2, 1, wxEXPAND);
 	sizer->Add(row3, 1, wxEXPAND);
 
-	this->SetSizer(sizer);
+	SetSizer(sizer);
 
 	m_Buttons = {
 		{"NW", m_NW}, {"N", m_N}, {"NE", m_NE},

@@ -69,7 +69,7 @@ void ToolModes::BuildInterface()
 	sizer->Add(m_TextMode, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->AddSpacer(8);
 
-	this->SetSizerAndFit(sizer);
+	SetSizer(sizer);
 
 	for (auto it : { m_Draw, m_Pick, m_Move })
 	{

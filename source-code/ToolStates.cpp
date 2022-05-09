@@ -41,7 +41,7 @@ void ToolStates::SetStates(std::vector<std::pair<std::string, wxColour>> states)
 {
 	m_States = states;
 	m_Colors.clear();
-	for (auto it : states) m_Colors[it.first] = it.second;
+	for (auto& it : states) m_Colors[it.first] = it.second;
 
 	int size = states.size() - 1;
 	if (m_Index > size)
@@ -149,7 +149,7 @@ void ToolStates::BuildInterface()
 	sizer->Add(m_TextIndex, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->AddSpacer(32);
 
-	this->SetSizerAndFit(sizer);
+	SetSizer(sizer);
 }
 
 void ToolStates::UpdateTextIndex()

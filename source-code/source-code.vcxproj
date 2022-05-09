@@ -19,6 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AlgorithmOutput.h" />
+    <ClInclude Include="AlgorithmPattern.h" />
+    <ClInclude Include="AlgorithmParameters.h" />
     <ClInclude Include="App.h" />
     <ClInclude Include="DialogDimensions.h" />
     <ClInclude Include="EditorRules.h" />
@@ -52,6 +55,9 @@
     <ClInclude Include="Transition.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AlgorithmOutput.cpp" />
+    <ClCompile Include="AlgorithmPattern.cpp" />
+    <ClCompile Include="AlgorithmParameters.cpp" />
     <ClCompile Include="App.cpp" />
     <ClCompile Include="DialogDimensions.cpp" />
     <ClCompile Include="EditorRules.cpp" />

@@ -201,9 +201,11 @@ void EditorRules::DeleteRule(std::string rule)
 	if (position.first != -1)
 	{
 		m_TextCtrl->ShowPosition(position.first);
-		m_TextCtrl->SetSelection(position.first, position.second);
+		//m_TextCtrl->SetSelection(position.first, position.second);
+		if (position.first > 0)position.first--;
+		m_TextCtrl->Remove(position.first, position.second);
 
-		m_TextCtrl->DeleteBack();
+		//m_TextCtrl->DeleteBack();
 		m_PrevText = m_TextCtrl->GetText();
 	}
 }
@@ -280,7 +282,7 @@ void EditorRules::BuildInterface()
 	m_TextCtrl = new wxStyledTextCtrl(this);
 	m_TextCtrl->SetMarginWidth(wxSTC_MARGIN_NUMBER, 80);
 	m_TextCtrl->SetMarginType(wxSTC_MARGINOPTION_SUBLINESELECT, wxSTC_MARGIN_NUMBER);
-	m_TextCtrl->SetScrollWidth(1);
+	//m_TextCtrl->SetScrollWidth(1);
 	m_TextCtrl->MarkerSetBackground(wxSTC_MARK_CIRCLE, wxColour("red"));
 
 	m_TextCtrl->Bind(wxEVT_KEY_UP, &EditorRules::UpdateLineColKey, this);

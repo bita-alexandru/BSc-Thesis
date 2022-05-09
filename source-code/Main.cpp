@@ -33,32 +33,32 @@ Main::~Main()
 
 void Main::BuildInterface()
 {
-	Sizes::N_COLS = 51; Sizes::N_ROWS = 51;
+	Sizes::N_COLS = 31; Sizes::N_ROWS = 31;
 
 	m_SplitterInputGrid = new wxSplitterWindow(this, wxID_ANY);
 	m_PanelInput = new PanelInput(m_SplitterInputGrid);
 
-	//m_SplitterGridAlgorithm = new wxSplitterWindow(m_SplitterInputGrid, wxID_ANY);
-	//m_PanelGrid = new PanelGrid(m_SplitterGridAlgorithm);
-	m_PanelGrid = new PanelGrid(m_SplitterInputGrid);
-	//m_PanelAlgorithm = new PanelAlgorithm(m_SplitterGridAlgorithm);
+	m_SplitterGridAlgorithm = new wxSplitterWindow(m_SplitterInputGrid, wxID_ANY);
+	m_PanelGrid = new PanelGrid(m_SplitterGridAlgorithm);
+	//m_PanelGrid = new PanelGrid(m_SplitterInputGrid);
+	m_PanelAlgorithm = new PanelAlgorithm(m_SplitterGridAlgorithm);
 
-	//wxBoxSizer* sizerGridAlgorithm = new wxBoxSizer(wxVERTICAL);
-	//sizerGridAlgorithm->Add(m_PanelGrid, 0);
-	//sizerGridAlgorithm->Add(m_PanelAlgorithm, 0);
+	wxBoxSizer* sizerGridAlgorithm = new wxBoxSizer(wxVERTICAL);
+	sizerGridAlgorithm->Add(m_PanelGrid, 0);
+	sizerGridAlgorithm->Add(m_PanelAlgorithm, 0);
 
-	//m_SplitterGridAlgorithm->SetSizer(sizerGridAlgorithm);
-	//m_SplitterGridAlgorithm->SplitHorizontally(m_PanelGrid, m_PanelAlgorithm);
-	//m_SplitterGridAlgorithm->SetMinimumPaneSize(1);
-	//m_SplitterGridAlgorithm->SetSashGravity(0.75);
+	m_SplitterGridAlgorithm->SetSizer(sizerGridAlgorithm);
+	m_SplitterGridAlgorithm->SplitHorizontally(m_PanelGrid, m_PanelAlgorithm);
+	m_SplitterGridAlgorithm->SetMinimumPaneSize(1);
+	m_SplitterGridAlgorithm->SetSashGravity(0.75);
 
-	//m_SplitterInputGrid->SplitVertically(m_PanelInput, m_SplitterGridAlgorithm);
-	m_SplitterInputGrid->SplitVertically(m_PanelInput, m_PanelGrid);
+	m_SplitterInputGrid->SplitVertically(m_PanelInput, m_SplitterGridAlgorithm);
+	//m_SplitterInputGrid->SplitVertically(m_PanelInput, m_PanelGrid);
 	m_SplitterInputGrid->SetMinimumPaneSize(1);
 	m_SplitterInputGrid->SetSashGravity(0.2);
 
 	m_SplitterInputGrid->SetSashPosition(GetClientSize().GetX() * 0.2);
-	//m_SplitterGridAlgorithm->SetSashPosition(GetClientSize().GetY() * 0.75);
+	m_SplitterGridAlgorithm->SetSashPosition(GetClientSize().GetY() * 0.75);
 
 	m_EditorStates = new EditorStates(this);
 	m_EditorRules = new EditorRules(this);
@@ -109,7 +109,7 @@ void Main::BuildMenuBar()
 
 void Main::SetShortcuts()
 {
-	wxAcceleratorEntry entries[20];
+	wxAcceleratorEntry entries[17];
 	// ToolZoom
 	entries[0].Set(wxACCEL_CTRL, (int)'+', Ids::ID_ZOOM_IN);
 	entries[1].Set(wxACCEL_CTRL, (int)'-', Ids::ID_ZOOM_OUT);
@@ -126,8 +126,8 @@ void Main::SetShortcuts()
 	// Editors and their Searchbars
 	//entries[9].Set(wxACCEL_CTRL, (int)'1', Ids::ID_EDIT_STATES);
 	//entries[10].Set(wxACCEL_CTRL, (int)'2', Ids::ID_EDIT_RULES);
-	entries[9].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'1', Ids::ID_SEARCH_STATES);
-	entries[10].Set(wxACCEL_CTRL | wxACCEL_SHIFT, (int)'2', Ids::ID_SEARCH_RULES);
+	entries[9].Set(wxACCEL_ALT, (int)'1', Ids::ID_SEARCH_STATES);
+	entries[10].Set(wxACCEL_ALT, (int)'2', Ids::ID_SEARCH_RULES);
 	// GridStatus
 	entries[11].Set(wxACCEL_CTRL, (int)'M', Ids::ID_BUTTON_CENTER);
 	entries[12].Set(wxACCEL_CTRL, (int)'R', Ids::ID_BUTTON_RESET);
@@ -136,7 +136,7 @@ void Main::SetShortcuts()
 	entries[15].Set(wxACCEL_CTRL, (int)',', Ids::ID_BUTTON_SLOWER);
 	entries[16].Set(wxACCEL_CTRL, (int)'.', Ids::ID_BUTTON_FASTER);
 
-	wxAcceleratorTable accel(20, entries);
+	wxAcceleratorTable accel(17, entries);
 	SetAcceleratorTable(accel);
 }
 

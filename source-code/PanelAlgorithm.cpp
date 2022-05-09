@@ -4,12 +4,29 @@ PanelAlgorithm::PanelAlgorithm(wxWindow* parent) : wxScrolledWindow(parent)
 {
     SetBackgroundColour(wxColor(220, 220, 220));
 
-	wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, wxString("Algorithm parameters"));
+	m_AlgorithmParameters = new AlgorithmParameters(this);
+	m_AlgorithmOutput = new AlgorithmOutput(this);
 
-	SetScrollRate(1, 1);
+	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+	sizer->Add(m_AlgorithmParameters, 1, wxEXPAND | wxALL, 6);
+	sizer->Add(m_AlgorithmOutput, 1, wxEXPAND | wxALL, 6);
+
+	SetScrollRate(4, 4);
 	SetSizer(sizer);
 }
 
 PanelAlgorithm::~PanelAlgorithm()
 {
+	wxDELETE(m_AlgorithmParameters);
+	wxDELETE(m_AlgorithmOutput);
+}
+
+AlgorithmParameters* PanelAlgorithm::GetAlgorithmParameters()
+{
+	return m_AlgorithmParameters;
+}
+
+AlgorithmOutput* PanelAlgorithm::GetAlgorithmOutput()
+{
+	return m_AlgorithmOutput;
 }

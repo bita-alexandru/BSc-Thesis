@@ -78,7 +78,7 @@ void StatusCells::BuildInterface()
 	sizer->Add(m_TextCountGeneration, 0, wxRIGHT, 256);
 	sizer->Add(m_TextCountPopulation, 0, wxRIGHT, 256);
 
-	SetSizerAndFit(sizer);
+	SetSizer(sizer);
 }
 
 void StatusCells::UpdateTextCountGeneration()

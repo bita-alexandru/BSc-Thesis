@@ -6,7 +6,7 @@ wxBEGIN_EVENT_TABLE(HelpWindow, wxFrame)
 	EVT_CLOSE(HelpWindow::OnCloseEvent)
 wxEND_EVENT_TABLE()
 
-HelpWindow::HelpWindow(wxWindow* parent) : wxFrame(parent, wxID_ANY, "CellyGen::Rules", wxDefaultPosition, wxSize(1280, 720))
+HelpWindow::HelpWindow(wxWindow* parent) : wxFrame(parent, wxID_ANY, "CellyGen::Help", wxDefaultPosition, wxSize(1280, 720))
 {
 	SetIcon(wxICON(aaaIcon));
 

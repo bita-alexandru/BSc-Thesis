@@ -64,6 +64,12 @@
     <Filter Include="Source Files\Lists">
       <UniqueIdentifier>{f845e92f-61a9-4d1c-a54a-910506d0c551}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Algorithms">
+      <UniqueIdentifier>{d8c7fbce-f0d6-4615-8af5-af0b138dd1b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Algorithms">
+      <UniqueIdentifier>{7210a2d2-2996-42f8-a170-858267a73d8b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Main.h">
@@ -159,6 +165,15 @@
     <ClInclude Include="HelpWindow.h">
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
+    <ClInclude Include="AlgorithmParameters.h">
+      <Filter>Header Files\Algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="AlgorithmOutput.h">
+      <Filter>Header Files\Algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="AlgorithmPattern.h">
+      <Filter>Header Files\Algorithms</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -241,6 +256,15 @@
     </ClCompile>
     <ClCompile Include="HelpWindow.cpp">
       <Filter>Source Files\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="AlgorithmOutput.cpp">
+      <Filter>Source Files\Algorithms</Filter>
+    </ClCompile>
+    <ClCompile Include="AlgorithmPattern.cpp">
+      <Filter>Source Files\Algorithms</Filter>
+    </ClCompile>
+    <ClCompile Include="AlgorithmParameters.cpp">
+      <Filter>Source Files\Algorithms</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -211,7 +211,7 @@ void InputRules::BuildInterface()
     sizer->Add(m_Search, 0, wxEXPAND);
 	sizer->Add(m_List, 1, wxEXPAND);
 
-	this->SetSizer(sizer);
+	SetSizer(sizer);
 }
 
 void InputRules::Search(wxCommandEvent& evt)

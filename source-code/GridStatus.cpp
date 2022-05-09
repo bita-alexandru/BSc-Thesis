@@ -13,7 +13,7 @@ GridStatus::GridStatus(wxWindow* parent) : wxPanel(parent, wxID_ANY, wxDefaultPo
 	sizer->Add(m_StatusControls, 0, wxEXPAND);
 	sizer->Add(m_StatusCells, 0, wxEXPAND | wxTOP | wxBOTTOM, 4);
 
-	SetSizerAndFit(sizer);
+	SetSizer(sizer);
 }
 
 GridStatus::~GridStatus()

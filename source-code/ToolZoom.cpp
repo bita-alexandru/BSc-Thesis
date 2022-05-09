@@ -71,7 +71,7 @@ void ToolZoom::BuildInterface()
 	sizer->Add(m_TextScale, 0, wxALIGN_CENTER_VERTICAL);
 	sizer->AddSpacer(16);
 
-	this->SetSizerAndFit(sizer);
+	SetSizer(sizer);
 }
 
 void ToolZoom::UpdateTextScale()

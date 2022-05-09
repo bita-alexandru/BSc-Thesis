@@ -19,9 +19,5 @@ private:
 	InputStates* m_InputStates = nullptr;
 	InputNeighbors* m_InputNeighbors = nullptr;
 	InputRules* m_InputRules = nullptr;
-
-	wxSplitterWindow* s1 = nullptr;
-	wxSplitterWindow* s2 = nullptr;
-	wxSplitterWindow* s3 = nullptr;
 };
 

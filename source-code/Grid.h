@@ -69,12 +69,13 @@ public:
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> GetStatePositions();
 	std::unordered_map<std::string, wxColour>& GetColors();
 
-	void Reset();
+	void Reset(bool refresh = true);
 	void PlayUniverse();
 	void PauseUniverse();
 	void NextGeneration();
 	void OnNextGeneration();
 	void OnPlayUniverse();
+	void OnPopulate(double probability);
 
 	int GetPaused();
 	int GetFinished();

@@ -46,5 +46,5 @@ void ToolCoords::BuildInterface()
 	sizer->Add(m_Coords, 0, wxRIGHT, 256);
 	sizer->Add(m_State, 0, wxRIGHT, 256);
 
-	this->SetSizerAndFit(sizer);
+	SetSizer(sizer);
 }
