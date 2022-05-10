@@ -185,12 +185,19 @@ void RuleApplyFunctor::ApplyRule(int start, int size)
 {
 	if (type == "FREE_ALL")
 	{
-		for (int i = start; i < start + size && *forceClose == false; i++)
+		int n = Sizes::N_ROWS * Sizes::N_COLS;
+		
+		for (int i = 0; i < n && *forceClose == false; i++)
 		{
 			int x = i % Sizes::N_COLS;
 			int y = i / Sizes::N_COLS;
 
-			if (GetState(x, y) == "FREE" && ApplyOnCell(x, y, rule.second)) applied.push_back({ x,y });
+			if (GetState(x, y) == "FREE" && ApplyOnCell(x, y, rule.second))
+			{
+				applied.push_back({ x,y });
+
+				if (applied.size() == size) break;
+			}
 		}
 
 		return;

@@ -198,6 +198,9 @@ void Main::PrepareInput()
 	statusControls->SetGrid(grid);
 	statusDelay->SetGrid(grid);
 
+	AlgorithmOutput* algorithmOutput = m_PanelAlgorithm->GetAlgorithmOutput();
+	algorithmOutput->SetGrid(grid);
+
 	//inputNeighbors->SetNeighbors({ "NW","N","NE","W","C","E","SW","S","SE"});
 	//inputStates->SetStates({ "FREE","LIVE" });
 }
@@ -209,19 +212,20 @@ void Main::MenuExit(wxCommandEvent& evt)
 
 void Main::MenuPerspectiveDefault(wxCommandEvent& evt)
 {
-	//m_SplitterGridAlgorithm->SetSashPosition(GetClientSize().GetY() * 0.75);
 	m_SplitterInputGrid->SetSashPosition(GetClientSize().GetX() * 0.2);
+	m_SplitterGridAlgorithm->SetSashPosition(GetClientSize().GetY() * 0.75);
 }
 
 void Main::MenuPerspectiveInput(wxCommandEvent& evt)
 {
 	m_SplitterInputGrid->SetSashPosition(9999);
+	m_SplitterGridAlgorithm->SetSashPosition(-9999);
 }
 
 void Main::MenuPerspectiveGrid(wxCommandEvent& evt)
 {
-	//m_SplitterGridAlgorithm->SetSashPosition(9999);
 	m_SplitterInputGrid->SetSashPosition(-9999);
+	m_SplitterGridAlgorithm->SetSashPosition(9999);
 }
 
 void Main::MenuPerspectiveAlgorithm(wxCommandEvent& evt)

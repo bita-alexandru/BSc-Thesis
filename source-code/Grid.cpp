@@ -497,6 +497,8 @@ void Grid::NextGeneration()
 	// error
 	if (result.second.size())
 	{
+		m_StatusControls->SetPlayButton(true);
+
 		std::string message = result.second;
 
 		wxRichMessageDialog dialog(
@@ -1800,7 +1802,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 			int n = Sizes::N_ROWS * Sizes::N_COLS - m_Cells.size();
 			int sqrtn = sqrt(n);
 			int batchsize = n; // (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
-
+			
 			for (int i = 0; i < n;)
 			{
 				int step = (i + batchsize > n) ? n - i : batchsize;
