@@ -68,6 +68,21 @@ void ListRules::RefreshAfterUpdate(bool eraseBackground)
 	Refresh(eraseBackground);
 }
 
+std::vector<std::string> ListRules::GetRules()
+{
+	std::vector<std::string> rules;
+
+	for (int i = 0; i < items.size(); i++)
+	{
+		std::string rule = std::get<1>(items[i]) + "/" + std::get<2>(items[i])
+			+ (std::get<3>(items[i]).size() ? ":" + std::get<3>(items[i]) + ";" : ";");
+
+		rules.push_back(rule);
+	}
+
+	return rules;
+}
+
 long ListRules::GetFirstSelected()
 {
 	return GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);

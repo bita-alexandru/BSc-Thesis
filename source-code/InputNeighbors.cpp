@@ -19,6 +19,18 @@ std::unordered_set<std::string>& InputNeighbors::GetNeighbors()
 	return m_Neighbors;
 }
 
+std::vector<std::string> InputNeighbors::GetNeighborsAsVector()
+{
+	std::vector<std::string> neighbors;
+
+	for (auto it : { "N", "NE", "E", "SE", "S", "SW", "W", "NW" })
+	{
+		if (m_Neighbors.find(it) != m_Neighbors.end()) neighbors.push_back(it);
+	}
+
+	return neighbors;
+}
+
 void InputNeighbors::SetNeighbors(std::vector<std::string> neighbors)
 {
 	for (auto& it : m_Buttons)

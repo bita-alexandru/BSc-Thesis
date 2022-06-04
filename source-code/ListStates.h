@@ -12,6 +12,8 @@ public:
 	virtual wxItemAttr* OnGetItemAttr(long index) const;
 	void RefreshAfterUpdate(bool eraseBackground = true);
 
+	std::vector<std::string> GetStates();
+
 	long GetFirstSelected();
 	long GetNextSelected(long selection);
 	void Select(long index, bool state = true);

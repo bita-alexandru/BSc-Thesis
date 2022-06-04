@@ -61,20 +61,20 @@ void AlgorithmParameters::BuildInterface()
 	spinGFM->SetIncrement(0.1);
 	spinGFM->SetValue(1.0);
 
-	wxStaticText* textIPFM = new wxStaticText(this, wxID_ANY, "Initial Population Fitness Multiplier");
-	textIPFM->SetToolTip("0.0 - 1.0");
-	wxSpinCtrlDouble* spinIPFM = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
-	spinIPFM->SetDigits(1);
-	spinIPFM->SetRange(0, 1.0);
-	spinIPFM->SetIncrement(0.1);
-	spinIPFM->SetValue(1.0);
+	wxStaticText* textISFM = new wxStaticText(this, wxID_ANY, "Initial Size Fitness Multiplier");
+	textISFM->SetToolTip("0.0 - 1.0");
+	wxSpinCtrlDouble* spinISFM = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
+	spinISFM->SetDigits(1);
+	spinISFM->SetRange(0, 1.0);
+	spinISFM->SetIncrement(0.1);
+	spinISFM->SetValue(1.0);
 
 	sizerP->Add(textPFM, 0);
 	sizerP->Add(textGFM, 0);
-	sizerP->Add(textIPFM, 0);
+	sizerP->Add(textISFM, 0);
 	sizerP->Add(spinPFM, 0, wxEXPAND);
 	sizerP->Add(spinGFM, 0, wxEXPAND);
-	sizerP->Add(spinIPFM, 0, wxEXPAND);
+	sizerP->Add(spinISFM, 0, wxEXPAND);
 
 	// SELECTION
 	wxStaticText* textSelection = new wxStaticText(this, wxID_ANY, "Selection Method");
@@ -82,43 +82,43 @@ void AlgorithmParameters::BuildInterface()
 	comboSelection->Set({"Roulette Wheel Selection", "Rank Selection", "Steady State Selection", "Tournament Selection", "Elitism Selection", "Boltzmann Selection"});
 	comboSelection->SetValue("Roulette Wheel Selection");
 
-	wxBoxSizer* sizerS = new wxBoxSizer(wxHORIZONTAL);
-	sizerS->Add(textSelection, 0, wxALIGN_CENTER_VERTICAL);
-	sizerS->Add(comboSelection, 0, wxEXPAND | wxLEFT, 8);
+	wxBoxSizer* sizerSelection = new wxBoxSizer(wxHORIZONTAL);
+	sizerSelection->Add(textSelection, 0, wxALIGN_CENTER_VERTICAL);
+	sizerSelection->Add(comboSelection, 0, wxEXPAND | wxLEFT, 8);
 
 	// PATTERN TARGETS
-	wxStaticText* textMPT = new wxStaticText(this, wxID_ANY, "Minimum Population Target");
-	textMPT->SetToolTip("0 - 1000");
-	wxSpinCtrl* spinMPT = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
-	spinMPT->SetRange(0, 1000);
-	spinMPT->SetValue(0);
+	wxStaticText* textPT = new wxStaticText(this, wxID_ANY, "Population Target");
+	textPT->SetToolTip("0 - 1000");
+	wxSpinCtrl* spinPT = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
+	spinPT->SetRange(0, 1000);
+	spinPT->SetValue(0);
 
-	wxStaticText* textMGT = new wxStaticText(this, wxID_ANY, "Minimum Generation Target");
-	textMGT->SetToolTip("0 - 1000");
-	wxSpinCtrl* spinMGT = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
-	spinMGT->SetRange(0, 1000);
-	spinMGT->SetValue(0);
+	wxStaticText* textGT = new wxStaticText(this, wxID_ANY, "Generation Target");
+	textGT->SetToolTip("0 - 1000");
+	wxSpinCtrl* spinGT = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
+	spinGT->SetRange(0, 1000);
+	spinGT->SetValue(0);
 
-	wxStaticText* textMIPT = new wxStaticText(this, wxID_ANY, "Maximum Initial Population Target");
-	textMPT->SetToolTip("0 - 1000");
-	wxSpinCtrl* spinMIPT = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
-	spinMIPT->SetRange(0, 1000);
-	spinMIPT->SetValue(0);
+	wxStaticText* textET = new wxStaticText(this, wxID_ANY, "Epochs Target");
+	textET->SetToolTip("0 - 1000");
+	wxSpinCtrl* spinET = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
+	spinET->SetRange(0, 1000);
+	spinET->SetValue(0);
 
-	wxGridSizer* sizerPT = new wxGridSizer(2, 3, 0, 6);
-	sizerPT->Add(textMPT, 0);
-	sizerPT->Add(textMGT, 0);
-	sizerPT->Add(textMIPT, 0);
-	sizerPT->Add(spinMPT, 0, wxEXPAND);
-	sizerPT->Add(spinMGT, 0, wxEXPAND);
-	sizerPT->Add(spinMIPT, 0, wxEXPAND);
+	wxGridSizer* sizerTargets = new wxGridSizer(2, 3, 0, 6);
+	sizerTargets->Add(textPT, 0);
+	sizerTargets->Add(textGT, 0);
+	sizerTargets->Add(textET, 0);
+	sizerTargets->Add(spinPT, 0, wxEXPAND);
+	sizerTargets->Add(spinGT, 0, wxEXPAND);
+	sizerTargets->Add(spinET, 0, wxEXPAND);
 
 	wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "Algorithm Parameters");
 	sizer->Add(sizerP, 0, wxTOP | wxLEFT, 8);
 	sizer->AddSpacer(16);
-	sizer->Add(sizerS, 0, wxLEFT, 8);
+	sizer->Add(sizerSelection, 0, wxLEFT, 8);
 	sizer->AddSpacer(16);
-	sizer->Add(sizerPT, 0, wxLEFT, 8);
+	sizer->Add(sizerTargets, 0, wxLEFT, 8);
 
 	SetSizer(sizer);
 }

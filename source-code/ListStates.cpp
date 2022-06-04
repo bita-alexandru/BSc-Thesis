@@ -40,6 +40,15 @@ void ListStates::RefreshAfterUpdate(bool eraseBackground)
 	Refresh(eraseBackground);
 }
 
+std::vector<std::string> ListStates::GetStates()
+{
+	std::vector<std::string> states;
+
+	for (int i = 0; i < items.size(); i++) states.push_back(items[i].second);
+
+	return states;
+}
+
 long ListStates::GetFirstSelected()
 {
 	return GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);

@@ -42,7 +42,7 @@ private:
 	wxMenu* m_Menu = nullptr;
 	wxSearchCtrl* m_Search = nullptr;
 
-	std::deque<std::string> m_Colors = std::deque<std::string>();
+	std::deque<std::string> m_Colors;
 	std::unordered_map<std::string, std::string> m_States;
 
 	void BuildInterface();

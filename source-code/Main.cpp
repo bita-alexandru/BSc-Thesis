@@ -33,7 +33,7 @@ Main::~Main()
 
 void Main::BuildInterface()
 {
-	Sizes::N_COLS = 31; Sizes::N_ROWS = 31;
+	Sizes::N_COLS = 11; Sizes::N_ROWS = 11;
 
 	m_SplitterInputGrid = new wxSplitterWindow(this, wxID_ANY);
 	m_PanelInput = new PanelInput(m_SplitterInputGrid);
@@ -200,6 +200,9 @@ void Main::PrepareInput()
 
 	AlgorithmOutput* algorithmOutput = m_PanelAlgorithm->GetAlgorithmOutput();
 	algorithmOutput->SetGrid(grid);
+	algorithmOutput->SetInputStates(inputStates);
+	algorithmOutput->SetInputRules(inputRules);
+	algorithmOutput->SetInputNeighbors(inputNeighbors);
 
 	//inputNeighbors->SetNeighbors({ "NW","N","NE","W","C","E","SW","S","SE"});
 	//inputStates->SetStates({ "FREE","LIVE" });

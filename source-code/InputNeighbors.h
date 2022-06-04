@@ -16,6 +16,7 @@ public:
 	void SetGrid(Grid* grid);
 
 	std::unordered_set<std::string>& GetNeighbors();
+	std::vector<std::string> GetNeighborsAsVector();
 	void SetNeighbors(std::vector<std::string> neighbors);
 private:
 	Grid* m_Grid = nullptr;

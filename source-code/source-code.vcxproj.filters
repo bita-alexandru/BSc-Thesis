@@ -49,9 +49,6 @@
     <Filter Include="Source Files\Inputs">
       <UniqueIdentifier>{60731db1-d9d6-4dd0-b329-342a00dfd3e9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Editors">
-      <UniqueIdentifier>{97bfd37f-2a97-4c60-8344-d06e4d306ddb}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Editors">
       <UniqueIdentifier>{aa914eb0-d853-4856-bb6c-a834d5a6e2f1}</UniqueIdentifier>
     </Filter>
@@ -69,6 +66,9 @@
     </Filter>
     <Filter Include="Source Files\Algorithms">
       <UniqueIdentifier>{7210a2d2-2996-42f8-a170-858267a73d8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Editors">
+      <UniqueIdentifier>{97bfd37f-2a97-4c60-8344-d06e4d306ddb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -172,6 +172,9 @@
       <Filter>Header Files\Algorithms</Filter>
     </ClInclude>
     <ClInclude Include="AlgorithmPattern.h">
+      <Filter>Header Files\Algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="Chromosome.h">
       <Filter>Header Files\Algorithms</Filter>
     </ClInclude>
   </ItemGroup>

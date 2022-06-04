@@ -13,6 +13,8 @@ public:
 	virtual wxItemAttr* OnGetItemColumnAttr(long index, long column) const;
 	void RefreshAfterUpdate(bool eraseBackground = false);
 
+	std::vector<std::string> GetRules();
+
 	long GetFirstSelected();
 	long GetNextSelected(long selection);
 	void Select(long index, bool state = true);
