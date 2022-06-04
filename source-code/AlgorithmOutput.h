@@ -94,6 +94,9 @@ private:
 	bool InBounds(int x, int y);
 	unordered_map<string, string> GetNeighborhood(int x, int y, unordered_map<int, string>& cells);
 	bool ApplyOnCell(int x, int y, Transition& rule, unordered_map<int, string>& cells, unordered_set<string>& neighbors);
-	void UpdateGeneration(vector<pair<string, pair<int, int>>>& changes,
+	void UpdateGeneration(vector<pair<string, pair<int, int>>>& changes, vector<int>& pattern,
 		unordered_map<int, string>& cells, unordered_map<string, unordered_set<int>>& statePositions);
+
+	void UpdateChromosomesMaps(vector<Chromosome>& population);
+	void ShowChromosomePattern(Chromosome& chromosome);
 };

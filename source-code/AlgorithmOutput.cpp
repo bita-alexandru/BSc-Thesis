@@ -93,10 +93,6 @@ void AlgorithmOutput::RunAlgorithm()
 {
 	m_States = m_InputStates->GetList()->GetStates();
 	m_Rules = m_InputRules->GetList()->GetRules();
-	for (int i = 0; i < m_Rules.size(); i++)
-	{
-		wxLogDebug("RULES %i=%s", i, m_Rules[i]);
-	}
 	m_Neighbors = m_InputNeighbors->GetNeighborsAsVector();
 
 	unordered_map<string, string> states = m_InputStates->GetStates();
@@ -115,8 +111,9 @@ void AlgorithmOutput::RunAlgorithm()
 	EvaluatePopulation(population, states, rules, neighbors);
 
 	Chromosome bestChromosome = GetBestChromosome(population);
+	m_BestChromosome = bestChromosome;
 
-	int epochs = 0;
+	int epochs = 1;
 	while (epochs++ < 1000)
 	{
 		wxLogDebug("Epoch %i", epochs);
@@ -125,11 +122,12 @@ void AlgorithmOutput::RunAlgorithm()
 		DoCrossover(population);
 		DoMutatiton(population);
 
+		UpdateChromosomesMaps(population);
 		EvaluatePopulation(population, states, rules, neighbors);
+		
 		bestChromosome = GetBestChromosome(population);
+		if (bestChromosome > m_BestChromosome) m_BestChromosome = bestChromosome;
 	}
-
-	m_BestChromosome = bestChromosome;
 
 	m_Start->Enable();
 	m_Stop->Disable();
@@ -171,10 +169,12 @@ vector<Chromosome> AlgorithmOutput::InitializePopulation()
 		chromosome.pattern = pattern;
 		chromosome.initialPattern = pattern;
 		chromosome.initialSize = initialSize;
+		chromosome.cells = cells;
+		chromosome.statePositions = statePositions;
 		chromosome.generation = 0;
 		chromosome.fitness = 0.0;
 
-		wxLogDebug("Generated chromosome %i with size %i", i, initialSize);
+		wxLogDebug("Generated chromosome %i with size %i", chromosome.id, initialSize);
 		population.push_back(chromosome);
 	}
 
@@ -187,17 +187,19 @@ void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unorder
 {
 	wxLogDebug("Evaluate pop [start]");
 
-	const int TARGET_GENERATION = 10;
+	const int TARGET_GENERATIONS = 100;
 
 	for (int i = 0; i < n; i++)
 	{
 		wxLogDebug("Chromosome %i", population[i].id);
 
-		int generation = 0;
-		int popsize = 0;
-		while (++generation)
+		int nOfGenerations = 0;
+		double avgPopulation = 0;
+		while (++nOfGenerations)
 		{
-			wxLogDebug("Generation %i", generation);
+			wxLogDebug("Generation %i", nOfGenerations);
+
+			//ShowChromosomePattern(population[i]);
 
 			pair<vector<pair<string, pair<int, int>>>, string> result = 
 				ParseAllRules(population[i].cells, population[i].statePositions, states, rules, neighbors);
@@ -208,20 +210,23 @@ void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unorder
 				break;
 			}
 
-			UpdateGeneration(result.first, population[i].cells, population[i].statePositions);
+			UpdateGeneration(result.first, population[i].pattern, population[i].cells, population[i].statePositions);
 
 			if (result.first.empty())
 			{
 				wxLogDebug("End of universe");
-				if (population[i].cells.size() > popsize) popsize = population[i].cells.size();
+				avgPopulation += population[i].cells.size();
 
 				break;
 			}
 
-			if (generation == TARGET_GENERATION) break;
+			if (nOfGenerations == TARGET_GENERATIONS) break;
 		}
+		avgPopulation /= nOfGenerations;
 
-		double fitness = 1.0 * generation;// +0.0 * popsize - 1.0 * population[i].initialSize;
+		//ShowChromosomePattern(population[i]);
+
+		double fitness = 1.0 * nOfGenerations;// +1.0 * avgPopulation - 1.0 * population[i].initialSize;
 		wxLogDebug("Fitness: %f", fitness);
 
 		population[i].fitness = fitness;
@@ -242,11 +247,11 @@ vector<Chromosome> AlgorithmOutput::SelectPopulation(vector<Chromosome>& populat
 	vector<double> q(n + 1);
 	for (int i = 0; i < n; i++)
 	{
-		wxLogDebug("%i. Chromosome %i", population[i].id);
+		//wxLogDebug("%i. Chromosome %i", i, population[i].id);
 		double p = population[i].fitness / totalFitness;
 		q[i + 1] = q[i] + p;
 
-		wxLogDebug("p=%f q=%f", p, q[i + 1]);
+		//wxLogDebug("p=%f q=%f", p, q[i + 1]);
 	}
 
 	vector<Chromosome> newPopulation;
@@ -364,10 +369,12 @@ Chromosome AlgorithmOutput::GetBestChromosome(vector<Chromosome>& population)
 	{
 		if (population[i] > chromosome)
 		{
-			wxLogDebug("New best %i with fitness %f", population[i].id, population[i].fitness);
+			//wxLogDebug("New best %i with fitness %f", population[i].id, population[i].fitness);
 			chromosome = population[i];
 		}
 	}
+
+	wxLogDebug("Best chromosome of this epoch is %i with fitness %f", chromosome.id, chromosome.fitness);
 
 	wxLogDebug("Get best [end]");
 
@@ -489,9 +496,9 @@ pair<vector<pair<string, pair<int, int>>>, string> AlgorithmOutput::ParseAllRule
 
 	for (auto& rule : rules)
 	{
-		pair<vector<pair<int, int>>, string> result = ParseRule(rule, cells, statePositions, states, neighbors);
-
 		//wxLogDebug("RULE=%s/%s:%s", rule.first, rule.second.state, rule.second.condition);
+
+		pair<vector<pair<int, int>>, string> result = ParseRule(rule, cells, statePositions, states, neighbors);
 
 		// error
 		if (result.second.size())
@@ -566,6 +573,7 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<const strin
 
 				if (GetState(x, y, cells) == "FREE" && ApplyOnCell(x, y, rule.second, cells, neighbors))
 				{
+					//wxLogDebug("111");
 					applied.push_back({ x,y });
 				}
 			}
@@ -586,6 +594,7 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<const strin
 			// faster to iterate through all cells
 			if (n1 <= n2 || rule.second.condition.empty())
 			{
+				//wxLogDebug("FREE ALL");
 				const int N = rows * cols;
 
 				for (int i = 0; i < N; i++)
@@ -595,6 +604,7 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<const strin
 
 					if (GetState(x, y, cells) == "FREE" && ApplyOnCell(x, y, rule.second, cells, neighbors))
 					{
+						//wxLogDebug("112");
 						applied.push_back({ x,y });
 					}
 				}
@@ -602,10 +612,12 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<const strin
 			// faster to iterate through the condition states' neighbors
 			else
 			{
+				//wxLogDebug("FREE NEIGHBORS");
 				for (auto& state : rule.second.states)
 				{
 					if (state == "FREE")
 					{
+						wxLogDebug("FREE ALL");
 						const int N = rows * cols;
 
 						for (int i = 0; i < N; i++)
@@ -615,6 +627,7 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<const strin
 
 							if (GetState(x, y, cells) == "FREE" && ApplyOnCell(x, y, rule.second, cells, neighbors))
 							{
+								wxLogDebug("121");
 								applied.push_back({ x,y });
 							}
 						}
@@ -622,6 +635,7 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<const strin
 					// cells of this type are placed on grid
 					else if (statePositions.find(state) != statePositions.end())
 					{
+						//wxLogDebug("FREE ADJACENTS");
 						int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
 						int dy[8] = { -1,-1,0,1,1,1,0,-1 };
 
@@ -636,7 +650,11 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<const strin
 								int nx = x + dx[d];
 								int ny = y + dy[d];
 
-								if (InBounds(nx, ny) && GetState(nx, ny, cells) == rule.first && ApplyOnCell(nx, ny, rule.second, cells, neighbors)) applied.push_back({ nx,ny });
+								if (InBounds(nx, ny) && GetState(nx, ny, cells) == rule.first && ApplyOnCell(nx, ny, rule.second, cells, neighbors))
+								{
+									//wxLogDebug("122");
+									applied.push_back({ nx,ny });
+								}
 							}
 						}
 					}
@@ -653,13 +671,18 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<const strin
 		if (rule.second.all || rule.second.condition.empty())
 		{
 			string state = rule.first;
+			//wxLogDebug("STATE ALL");
 			for (auto i = statePositions.at(state).begin(); i != statePositions.at(state).end();i++)
 			{
 				int k = *i;
 				int x = k % cols;
 				int y = k / cols;
 
-				if (ApplyOnCell(x, y, rule.second, cells, neighbors)) applied.push_back({ x,y });
+				if (ApplyOnCell(x, y, rule.second, cells, neighbors))
+				{
+					//wxLogDebug("211");
+					applied.push_back({ x,y });
+				}
 			}
 		}
 		// decide if it's faster to iterate through all cells
@@ -677,6 +700,7 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<const strin
 			// faster to iterate through all cells
 			if (n1 <= n2 || rule.second.condition.empty())
 			{
+				//wxLogDebug("STATE ALL");
 				string state = rule.first;
 				for (auto i = statePositions.at(state).begin(); i != statePositions.at(state).end();i++)
 				{
@@ -684,7 +708,11 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<const strin
 					int x = k % cols;
 					int y = k / cols;
 
-					if (ApplyOnCell(x, y, rule.second, cells, neighbors)) applied.push_back({ x,y });
+					if (ApplyOnCell(x, y, rule.second, cells, neighbors))
+					{
+						//wxLogDebug("221");
+						applied.push_back({ x,y });
+					}
 				}
 			}
 			// faster to iterate through the condition states' neighbors
@@ -694,6 +722,7 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<const strin
 				{
 					if (state == "FREE")
 					{
+						//wxLogDebug("FREE ALL");
 						string state = rule.first;
 						for (auto i = statePositions.at(state).begin(); i != statePositions.at(state).end();i++)
 						{
@@ -701,12 +730,17 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<const strin
 							int x = k % cols;
 							int y = k / cols;
 
-							if (ApplyOnCell(x, y, rule.second, cells, neighbors)) applied.push_back({ x,y });
+							if (ApplyOnCell(x, y, rule.second, cells, neighbors))
+							{
+								//wxLogDebug("231");
+								applied.push_back({ x,y });
+							}
 						}
 					}
 					// cells of this type are placed on grid
 					else if (statePositions.find(state) != statePositions.end())
 					{
+						//wxLogDebug("STATE ADJACENTS");
 						int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
 						int dy[8] = { -1,-1,0,1,1,1,0,-1 };
 
@@ -721,7 +755,11 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<const strin
 								int nx = x + dx[d];
 								int ny = y + dy[d];
 
-								if (InBounds(nx, ny) && GetState(nx, ny, cells) == rule.first && ApplyOnCell(nx, ny, rule.second, cells, neighbors)) applied.push_back({ nx,ny });
+								if (InBounds(nx, ny) && GetState(nx, ny, cells) == rule.first && ApplyOnCell(nx, ny, rule.second, cells, neighbors))
+								{
+									//wxLogDebug("232");
+									applied.push_back({ nx,ny });
+								}
 							}
 						}
 					}
@@ -860,7 +898,7 @@ bool AlgorithmOutput::ApplyOnCell(int x, int y, Transition& rule, unordered_map<
 	return ruleValid;
 }
 
-void AlgorithmOutput::UpdateGeneration(vector<pair<string, pair<int, int>>>& changes,
+void AlgorithmOutput::UpdateGeneration(vector<pair<string, pair<int, int>>>& changes, vector<int>& pattern,
 	unordered_map<int, string>& cells, unordered_map<string, unordered_set<int>>& statePositions)
 {
 	for (auto& change : changes)
@@ -901,11 +939,24 @@ void AlgorithmOutput::UpdateGeneration(vector<pair<string, pair<int, int>>>& cha
 			{
 				cells[k] = currState;
 				statePositions[currState].insert(k);
+				pattern[k] = find(m_States.begin(), m_States.end(), currState) - m_States.begin();
 			}
 		}
 		else
 		{
-			if (cells[k] != currState)
+			if (currState == "FREE")
+			{
+				cells.erase(k);
+				statePositions[prevState].erase(k);
+				pattern[k] = 0;
+
+				// there are no more cells of this state anymore -> remove it from our map
+				if (statePositions[prevState].size() == 0)
+				{
+					statePositions.erase(prevState);
+				}
+			}
+			else if (cells[k] != currState)
 			{
 				cells.erase(k);
 				statePositions[prevState].erase(k);
@@ -918,7 +969,50 @@ void AlgorithmOutput::UpdateGeneration(vector<pair<string, pair<int, int>>>& cha
 
 				cells[k] = currState;
 				statePositions[currState].insert(k);
+				pattern[k] = find(m_States.begin(), m_States.end(), currState) - m_States.begin();
 			}
 		}
 	}
+}
+
+void AlgorithmOutput::UpdateChromosomesMaps(vector<Chromosome>& population)
+{
+	for (int i = 0; i < n; i++)
+	{
+		unordered_map<int, string> cells;
+		unordered_map<string, unordered_set<int>> statePositions;
+
+		for (int j = 0; j < rows * cols; j++)
+		{
+			int cellType = population[i].initialPattern[j];
+
+			if (cellType)
+			{
+				cells[j] = m_States[cellType];
+				statePositions[m_States[cellType]].insert(j);
+			}
+		}
+		
+		population[i].cells = cells;
+		population[i].statePositions = statePositions;
+	}
+
+}
+
+void AlgorithmOutput::ShowChromosomePattern(Chromosome& chromosome)
+{
+	wxLogDebug("--- Start Pattern ---");
+	for (int i = 0; i < rows; i++)
+	{
+		string line = "";
+		for (int j = 0; j < cols; j++)
+		{
+			int k = i * cols + j;
+			line += to_string(chromosome.pattern[k]);
+		}
+
+		wxLogDebug("%s", line);
+	}
+	
+	wxLogDebug("--- End Pattern ---");
 }
