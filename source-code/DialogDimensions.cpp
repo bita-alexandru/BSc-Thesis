@@ -8,13 +8,14 @@ DialogDimensions::DialogDimensions(wxWindow* parent) : wxDialog(parent, wxID_ANY
 	Centre();
 
 	wxBoxSizer* sizerRows = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText* textRows = new wxStaticText(this, wxID_ANY, "Rows:");
+
+	wxStaticText* textRows = new wxStaticText(this, wxID_ANY, wxString::Format("Rows (%i-%i):", 1, Sizes::MAX_ROWS));
 	m_SpinRows = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxSP_WRAP, 1, Sizes::MAX_ROWS, Sizes::N_ROWS);
 	sizerRows->Add(textRows, 0, wxALIGN_CENTER_VERTICAL);
 	sizerRows->Add(m_SpinRows, 1, wxLEFT | wxALIGN_CENTER_VERTICAL, 4);
 
 	wxBoxSizer* sizerCols = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText* textCols = new wxStaticText(this, wxID_ANY, "Columns:");
+	wxStaticText* textCols = new wxStaticText(this, wxID_ANY, wxString::Format("Columns (%i-%i):", 1, Sizes::MAX_ROWS));
 	m_SpinCols = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxSP_WRAP, 1, Sizes::MAX_COLS, Sizes::N_COLS);
 	sizerCols->Add(textCols, 0, wxALIGN_CENTER_VERTICAL);
 	sizerCols->Add(m_SpinCols, 1, wxLEFT | wxALIGN_CENTER_VERTICAL, 4);
