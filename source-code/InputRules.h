@@ -20,7 +20,7 @@ public:
 	~InputRules();
 
 	ListRules* GetList();
-	std::unordered_multimap<std::string, Transition>& GetRules();
+	std::vector<std::pair<std::string, Transition>>& GetRules();
 
 	InputStates* GetInputStates();
 	InputNeighbors* GetInputNeighbors();
@@ -40,7 +40,7 @@ private:
 	wxMenu* m_Menu = nullptr;
 	wxSearchCtrl* m_Search = nullptr;
 
-	std::unordered_multimap<std::string, Transition> m_Rules;
+	std::vector<std::pair<std::string, Transition>> m_Rules;
 	std::unordered_map<std::string, std::string> m_States;
 
 	void BuildInterface();

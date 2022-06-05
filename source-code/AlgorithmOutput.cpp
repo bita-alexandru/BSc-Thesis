@@ -96,7 +96,7 @@ void AlgorithmOutput::RunAlgorithm()
 	m_Neighbors = m_InputNeighbors->GetNeighborsAsVector();
 
 	unordered_map<string, string> states = m_InputStates->GetStates();
-	unordered_multimap<string, Transition> rules = m_InputRules->GetRules();
+	vector<pair<string, Transition>> rules = m_InputRules->GetRules();
 	unordered_set<string> neighbors = m_InputNeighbors->GetNeighbors();
 
 	n = 30;
@@ -113,8 +113,8 @@ void AlgorithmOutput::RunAlgorithm()
 	Chromosome bestChromosome = GetBestChromosome(population);
 	m_BestChromosome = bestChromosome;
 
-	int epochs = 1;
-	while (epochs++ < 1000)
+	int epochs = 0;
+	while (epochs++ < 100)
 	{
 		wxLogDebug("Epoch %i", epochs);
 
@@ -183,7 +183,7 @@ vector<Chromosome> AlgorithmOutput::InitializePopulation()
 }
 
 void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unordered_map<string, string>& states,
-	unordered_multimap<string, Transition>& rules, unordered_set<string>& neighbors)
+	vector<pair<string, Transition>>& rules, unordered_set<string>& neighbors)
 {
 	wxLogDebug("Evaluate pop [start]");
 
@@ -201,6 +201,8 @@ void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unorder
 
 			//ShowChromosomePattern(population[i]);
 
+			avgPopulation += population[i].cells.size();
+
 			pair<vector<pair<string, pair<int, int>>>, string> result = 
 				ParseAllRules(population[i].cells, population[i].statePositions, states, rules, neighbors);
 
@@ -215,8 +217,6 @@ void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unorder
 			if (result.first.empty())
 			{
 				wxLogDebug("End of universe");
-				avgPopulation += population[i].cells.size();
-
 				break;
 			}
 
@@ -226,7 +226,7 @@ void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unorder
 
 		//ShowChromosomePattern(population[i]);
 
-		double fitness = 1.0 * nOfGenerations;// +1.0 * avgPopulation - 1.0 * population[i].initialSize;
+		double fitness = 0.0 * nOfGenerations + 1.0 * avgPopulation / (1.0 * population[i].initialSize);
 		wxLogDebug("Fitness: %f", fitness);
 
 		population[i].fitness = fitness;
@@ -262,6 +262,7 @@ vector<Chromosome> AlgorithmOutput::SelectPopulation(vector<Chromosome>& populat
 		{
 			double p = (rand() % 10001) * 0.0001;
 			//wxLogDebug("%i. Generated probability: %f", i, p);
+			//wxLogDebug("%i. %f <= %f < %f = %i", i, q[j], p, q[j + 1], (p >= q[j] && p < q[j + 1]));
 
 			if (p >= q[j] && p < q[j + 1])
 			{
@@ -317,7 +318,7 @@ void AlgorithmOutput::DoCrossover(vector<Chromosome>& population)
 
 		if (xp1 > xp2) swap(xp1, xp2);
 
-		wxLogDebug("Generated cutpoints: %i, %i", xp1, xp2);
+		//wxLogDebug("Generated cutpoints: %i, %i", xp1, xp2);
 
 		for (int j = xp1; j <= xp2; j++)
 		{
@@ -341,7 +342,7 @@ void AlgorithmOutput::DoMutatiton(vector<Chromosome>& population)
 
 	for (int i = 0; i < n; i++)
 	{
-		wxLogDebug("%i. Chromosome %i", i, population[i].id);
+		//wxLogDebug("%i. Chromosome %i", i, population[i].id);
 		for (int j = 0; j < N; j++)
 		{
 			double p = (rand() % 1001) * 0.001;
@@ -351,7 +352,7 @@ void AlgorithmOutput::DoMutatiton(vector<Chromosome>& population)
 			{
 				int cellType = rand() % m_States.size();
 
-				wxLogDebug("Changing [%i](=%i) with %i", j, population[i].initialPattern[j], cellType);
+				//wxLogDebug("Changing [%i](=%i) with %i", j, population[i].initialPattern[j], cellType);
 				population[i].initialPattern[j] = cellType;
 			}
 		}
@@ -489,7 +490,7 @@ void AlgorithmOutput::UpdateTextLast(Chromosome chromosome)
 
 pair<vector<pair<string, pair<int, int>>>, string> AlgorithmOutput::ParseAllRules(
 	unordered_map<int, string>& cells, unordered_map<string, unordered_set<int>>& statePositions,
-	unordered_map<string, string>& states, unordered_multimap<string, Transition>& rules, unordered_set<string>& neighbors
+	unordered_map<string, string>& states, vector<pair<string, Transition>>& rules, unordered_set<string>& neighbors
 )
 {
 	vector<pair<string, pair<int, int>>> changes;
@@ -538,7 +539,7 @@ pair<vector<pair<string, pair<int, int>>>, string> AlgorithmOutput::ParseAllRule
 	return { changes,"" };
 }
 
-pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<const string, Transition>& rule,
+pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<string, Transition>& rule,
 	unordered_map<int, string>& cells, unordered_map<string, unordered_set<int>>& statePositions,
 	unordered_map<string, string>& states, unordered_set<string>& neighbors)
 {
@@ -979,6 +980,7 @@ void AlgorithmOutput::UpdateChromosomesMaps(vector<Chromosome>& population)
 {
 	for (int i = 0; i < n; i++)
 	{
+		int initialSize = 0;
 		unordered_map<int, string> cells;
 		unordered_map<string, unordered_set<int>> statePositions;
 
@@ -988,11 +990,13 @@ void AlgorithmOutput::UpdateChromosomesMaps(vector<Chromosome>& population)
 
 			if (cellType)
 			{
+				initialSize++;
 				cells[j] = m_States[cellType];
 				statePositions[m_States[cellType]].insert(j);
 			}
 		}
 		
+		population[i].initialSize = initialSize;
 		population[i].cells = cells;
 		population[i].statePositions = statePositions;
 	}

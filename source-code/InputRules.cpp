@@ -20,7 +20,7 @@ ListRules* InputRules::GetList()
     return m_List;
 }
 
-std::unordered_multimap<std::string, Transition>& InputRules::GetRules()
+std::vector<std::pair<std::string, Transition>>& InputRules::GetRules()
 {
 	return m_Rules;
 }
@@ -52,7 +52,7 @@ void InputRules::SetInputNeighbors(InputNeighbors* inputNeighbors)
 
 void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
 {
-    // rules appear in our multimap but not in the given list -> they got recently deleted
+    // rules appear in our vector but not in the given list -> they got recently deleted
     for (auto it = m_Rules.begin(); it != m_Rules.end();)
     {
         bool present = false;
@@ -72,23 +72,19 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
     // rules appear in the given list but not in our map -> they got recently introduced
     for (int i = 0; i < rules.size(); i++)
     {
-        if (m_Rules.find(rules[i].first) == m_Rules.end()) m_Rules.insert(rules[i]);
-        else if (m_Rules.find(rules[i].first) != m_Rules.end())
+        //wxLogDebug("imported-rule=<%s>", rules[i].first+"/"+rules[i].second.state+":"+rules[i].second.condition);
+        bool present = false;
+        for (auto it = m_Rules.begin(); it != m_Rules.end(); it++)
         {
-            auto er = m_Rules.equal_range(rules[i].first);
-            bool present = false;
-
-            for (auto& it = er.first; it != er.second; it++)
+            //wxLogDebug("present-rule=<%s>", it->first + "/" + it->second.state + ":" + it->second.condition);
+            if (it->first == rules[i].first && it->second.state == rules[i].second.state && it->second.condition == rules[i].second.condition)
             {
-                if (rules[i].second.condition == it->second.condition)
-                {
-                    present = true;
-                    break;
-                }
+                present = true;
+                break;
             }
-
-            if (!present) m_Rules.insert(rules[i]);
         }
+        //wxLogDebug("present? %i", present);
+        if (!present) m_Rules.push_back(rules[i]);
     }
 
     m_States = m_InputStates->GetStates();

@@ -512,7 +512,7 @@ void Grid::NextGeneration()
 		m_Finished = false;
 		m_Paused = true;
 		m_Generating = false;
-		
+
 		return;
 	}
 
@@ -1330,7 +1330,7 @@ void Grid::OnDraw(wxDC& dc)
 		dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
 		return;
 	}
-	
+
 	dc.Clear();
 
 	brush.SetColour(wxColour("white"));
@@ -1574,7 +1574,7 @@ void Grid::DeleteStructure(int X, int Y, std::string state)
 			int y = neighbor.second + dy[d];
 
 			// valid neighbor -> push onto stack
-			if (state == "" && GetState(x, y) != "FREE" && visited.find({x, y}) == visited.end()) neighbors.push({ x,y });
+			if (state == "" && GetState(x, y) != "FREE" && visited.find({ x, y }) == visited.end()) neighbors.push({ x,y });
 			else if (state == neighborState && GetState(x, y) == state && visited.find({ x, y }) == visited.end()) neighbors.push({ x,y });
 		}
 	}
@@ -1764,7 +1764,7 @@ bool Grid::InVisibleBounds(int x, int y)
 		);
 }
 
-std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pair<const std::string, Transition>& rule)
+std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pair<std::string, Transition>& rule)
 {
 	if (m_ForceClose)
 	{
@@ -1802,7 +1802,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 			int n = Sizes::N_ROWS * Sizes::N_COLS - m_Cells.size();
 			int sqrtn = sqrt(n);
 			int batchsize = n; // (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
-			
+
 			for (int i = 0; i < n;)
 			{
 				int step = (i + batchsize > n) ? n - i : batchsize;
@@ -1893,7 +1893,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 	else
 	{
 		if (m_StatePositions.find(rule.first) == m_StatePositions.end()) return { {},"" };
-		
+
 		// iterate through all cells
 		if (rule.second.all || rule.second.condition.empty())
 		{
@@ -1928,7 +1928,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 			if (n1 <= n2 || rule.second.condition.empty())
 			{
 				int n = n1;
-				int sqrtn = sqrt(n); 
+				int sqrtn = sqrt(n);
 				int batchsize = n; // (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
 
 				for (int i = 0; i < n;)
@@ -1987,12 +1987,12 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 		}
 	}
 
-	for (auto &t : threads)
+	for (auto& t : threads)
 	{
 		if (t.joinable()) t.join();
 	}
 
-	for (auto &f : functors)
+	for (auto& f : functors)
 	{
 		if (!m_ForceClose)
 		{
@@ -2007,14 +2007,13 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 
 std::pair<std::vector<std::pair<std::string, std::pair<int, int>>>, std::string> Grid::ParseAllRules()
 {
-	std::unordered_multimap<std::string, Transition> rules = m_InputRules->GetRules();
+	std::vector<std::pair<std::string, Transition>> rules = m_InputRules->GetRules();
 	std::vector<std::pair<std::string, std::pair<int, int>>> changes;
 
 	for (auto& rule : rules)
 	{
-		std::pair<std::vector<std::pair<int, int>>, std::string> result = ParseRule(rule);
-
 		//wxLogDebug("RULE=%s/%s:%s", rule.first, rule.second.state, rule.second.condition);
+		std::pair<std::vector<std::pair<int, int>>, std::string> result = ParseRule(rule);
 
 		// error
 		if (result.second.size())
@@ -2044,7 +2043,7 @@ std::pair<std::vector<std::pair<std::string, std::pair<int, int>>>, std::string>
 
 			for (auto& change : result.first)
 			{
-				changes.push_back({ newstate , change});
+				changes.push_back({ newstate , change });
 			}
 		}
 	}

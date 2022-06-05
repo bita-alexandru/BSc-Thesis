@@ -63,7 +63,7 @@ private:
 
 	vector<Chromosome> InitializePopulation();
 	void EvaluatePopulation(vector<Chromosome>& population, unordered_map<string, string>& states,
-		unordered_multimap<string, Transition>& rules, unordered_set<string>& neighbors);
+		vector<pair<string, Transition>>& rules, unordered_set<string>& neighbors);
 	vector<Chromosome> SelectPopulation(vector<Chromosome>& population);
 	void DoCrossover(vector<Chromosome>& population);
 	void DoMutatiton(vector<Chromosome>& population);
@@ -85,8 +85,8 @@ private:
 
 	pair<vector<pair<string, pair<int, int>>>, string> ParseAllRules(
 		unordered_map<int, string>& cells, unordered_map<string, unordered_set<int>>& statePositions,
-		unordered_map<string, string>& states, unordered_multimap<string, Transition>& rules, unordered_set<string>& neighbors);
-	pair<vector<pair<int, int>>, string> ParseRule(pair<const string, Transition>& rule,
+		unordered_map<string, string>& states, vector<pair<string, Transition>>& rules, unordered_set<string>& neighbors);
+	pair<vector<pair<int, int>>, string> ParseRule(pair<string, Transition>& rule,
 		unordered_map<int, string>& cells, unordered_map<string, unordered_set<int>>& statePositions,
 		unordered_map<string, string>& states, unordered_set<string>& neighbors);
 
