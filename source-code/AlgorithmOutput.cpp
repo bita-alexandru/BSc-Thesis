@@ -3,6 +3,10 @@
 #include <thread>
 #include <fstream>
 
+wxBEGIN_EVENT_TABLE(AlgorithmOutput, wxPanel)
+EVT_TIMER(Ids::ID_TIMER_ELAPSED, AlgorithmOutput::UpdateTimer)
+wxEND_EVENT_TABLE()
+
 AlgorithmOutput::AlgorithmOutput(wxWindow* parent) : wxPanel(parent)
 {
 	BuildInterface();
@@ -10,6 +14,7 @@ AlgorithmOutput::AlgorithmOutput(wxWindow* parent) : wxPanel(parent)
 
 AlgorithmOutput::~AlgorithmOutput()
 {
+	wxDELETE(m_Timer);
 }
 
 void AlgorithmOutput::SetGrid(Grid* grid)
@@ -34,6 +39,9 @@ void AlgorithmOutput::SetInputNeighbors(InputNeighbors* inputNeighbors)
 
 void AlgorithmOutput::BuildInterface()
 {
+	m_Timer = new wxTimer(this, Ids::ID_TIMER_ELAPSED);
+	//m_Timer->Bind(wxEVT_TIMER, &AlgorithmOutput::UpdateTimer, this);
+
 	m_Start = new wxButton(this, wxID_ANY, "Start");
 	m_Start->Bind(wxEVT_BUTTON, &AlgorithmOutput::OnStart, this);
 
@@ -50,39 +58,53 @@ void AlgorithmOutput::BuildInterface()
 	sizerButtons->Add(m_Stop, 0, wxLEFT | wxRIGHT, 4);
 	sizerButtons->Add(m_Save, 0);
 
-	wxCheckBox* checkRender = new wxCheckBox(this, wxID_ANY, "Render on Screen");
-	checkRender->Bind(wxEVT_CHECKBOX, &AlgorithmOutput::OnRender, this);
+	//wxCheckBox* checkRender = new wxCheckBox(this, wxID_ANY, "Render on Screen");
+	//checkRender->Bind(wxEVT_CHECKBOX, &AlgorithmOutput::OnRender, this);
 
 	m_TextEpoch = new wxStaticText(this, wxID_ANY, "Epoch: -");
 
-	m_TextLastGeneration = new wxStaticText(this, wxID_ANY, "-");
-	m_TextLastPopulation = new wxStaticText(this, wxID_ANY, "-");
-	m_TextLastInitial = new wxStaticText(this, wxID_ANY, "-");
+	m_TextLastNofGeneration = new wxStaticText(this, wxID_ANY, "-");
+	m_TextLastAvgPopulation = new wxStaticText(this, wxID_ANY, "-");
+	m_TextLastInitialSize = new wxStaticText(this, wxID_ANY, "-");
 	m_TextLastFitness = new wxStaticText(this, wxID_ANY, "-");
 
+	m_TextBestNofGeneration = new wxStaticText(this, wxID_ANY, "-");
+	m_TextBestAvgPopulation = new wxStaticText(this, wxID_ANY, "-");
+	m_TextBestInitialSize = new wxStaticText(this, wxID_ANY, "-");
+	m_TextBestFitness = new wxStaticText(this, wxID_ANY, "-");
+
 	wxFlexGridSizer* sizerLast = new wxFlexGridSizer(2, 4, wxSize(24, 0));
-	sizerLast->Add(new wxStaticText(this, wxID_ANY, "Last #Generation"), 0, wxALIGN_RIGHT);
-	sizerLast->Add(new wxStaticText(this, wxID_ANY, "Last #Population"), 0, wxALIGN_RIGHT);
+	sizerLast->Add(new wxStaticText(this, wxID_ANY, "Last No. Generations"), 0, wxALIGN_RIGHT);
+	sizerLast->Add(new wxStaticText(this, wxID_ANY, "Last Avg. Population"), 0, wxALIGN_RIGHT);
 	sizerLast->Add(new wxStaticText(this, wxID_ANY, "Last Initial Size"), 0, wxALIGN_RIGHT);
 	sizerLast->Add(new wxStaticText(this, wxID_ANY, "Last Fitness"), 0, wxALIGN_RIGHT);
-	sizerLast->Add(m_TextLastPopulation, 0, wxALIGN_RIGHT);
-	sizerLast->Add(m_TextLastGeneration, 0, wxALIGN_RIGHT);
-	sizerLast->Add(m_TextLastInitial, 0, wxALIGN_RIGHT);
+	sizerLast->Add(m_TextLastAvgPopulation, 0, wxALIGN_RIGHT);
+	sizerLast->Add(m_TextLastNofGeneration, 0, wxALIGN_RIGHT);
+	sizerLast->Add(m_TextLastInitialSize, 0, wxALIGN_RIGHT);
 	sizerLast->Add(m_TextLastFitness, 0, wxALIGN_RIGHT);
 
-	m_TextFitness = new wxStaticText(this, wxID_ANY, "Best Fitness: -");
+	wxFlexGridSizer* sizerBest = new wxFlexGridSizer(2, 4, wxSize(24, 0));
+	sizerBest->Add(new wxStaticText(this, wxID_ANY, "Best No. Generations"), 0, wxALIGN_RIGHT);
+	sizerBest->Add(new wxStaticText(this, wxID_ANY, "Best Avg. Population"), 0, wxALIGN_RIGHT);
+	sizerBest->Add(new wxStaticText(this, wxID_ANY, "Best Initial Size"), 0, wxALIGN_RIGHT);
+	sizerBest->Add(new wxStaticText(this, wxID_ANY, "Best Fitness"), 0, wxALIGN_RIGHT);
+	sizerBest->Add(m_TextBestAvgPopulation, 0, wxALIGN_RIGHT);
+	sizerBest->Add(m_TextBestNofGeneration, 0, wxALIGN_RIGHT);
+	sizerBest->Add(m_TextBestInitialSize, 0, wxALIGN_RIGHT);
+	sizerBest->Add(m_TextBestFitness, 0, wxALIGN_RIGHT);
+
 	m_TextElapsed = new wxStaticText(this, wxID_ANY, "Time Elapsed: -");
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 	sizer->Add(sizerButtons, 0);
-	sizer->AddSpacer(4);
-	sizer->Add(checkRender, 0);
+	//sizer->AddSpacer(4);
+	//sizer->Add(checkRender, 0);
 	sizer->AddSpacer(8);
 	sizer->Add(m_TextEpoch, 0);
 	sizer->AddSpacer(8);
 	sizer->Add(sizerLast, 0);
 	sizer->AddSpacer(8);
-	sizer->Add(m_TextFitness, 0);
+	sizer->Add(sizerBest, 0);
 	sizer->AddSpacer(8);
 	sizer->Add(m_TextElapsed, 0);
 
@@ -99,6 +121,12 @@ void AlgorithmOutput::RunAlgorithm()
 	vector<pair<string, Transition>> rules = m_InputRules->GetRules();
 	unordered_set<string> neighbors = m_InputNeighbors->GetNeighbors();
 
+	if (states.size() <= 1 || rules.size() == 0)
+	{
+		EndAlgorithm(false);
+		return;
+	}
+
 	n = 30;
 	rows = Sizes::N_ROWS;
 	cols = Sizes::N_COLS;
@@ -107,16 +135,22 @@ void AlgorithmOutput::RunAlgorithm()
 
 	srand(time(NULL));
 
+	UpdateTextEpoch(0);
+
 	vector<Chromosome> population = InitializePopulation();
 	EvaluatePopulation(population, states, rules, neighbors);
 
 	Chromosome bestChromosome = GetBestChromosome(population);
 	m_BestChromosome = bestChromosome;
 
+	UpdateTextLast(bestChromosome);
+	UpdateTextBest(bestChromosome);
+
 	int epochs = 0;
 	while (epochs++ < 100)
 	{
 		wxLogDebug("Epoch %i", epochs);
+		UpdateTextEpoch(epochs);
 
 		SelectPopulation(population);
 		DoCrossover(population);
@@ -126,12 +160,16 @@ void AlgorithmOutput::RunAlgorithm()
 		EvaluatePopulation(population, states, rules, neighbors);
 		
 		bestChromosome = GetBestChromosome(population);
-		if (bestChromosome > m_BestChromosome) m_BestChromosome = bestChromosome;
+		UpdateTextLast(bestChromosome);
+
+		if (bestChromosome > m_BestChromosome)
+		{
+			m_BestChromosome = bestChromosome;
+			UpdateTextBest(bestChromosome);
+		}
 	}
 
-	m_Start->Enable();
-	m_Stop->Disable();
-	m_Save->Enable();
+	EndAlgorithm();
 }
 
 vector<Chromosome> AlgorithmOutput::InitializePopulation()
@@ -171,7 +209,8 @@ vector<Chromosome> AlgorithmOutput::InitializePopulation()
 		chromosome.initialSize = initialSize;
 		chromosome.cells = cells;
 		chromosome.statePositions = statePositions;
-		chromosome.generation = 0;
+		chromosome.nOfGenerations = 0;
+		chromosome.avgPopulation = 0;
 		chromosome.fitness = 0.0;
 
 		wxLogDebug("Generated chromosome %i with size %i", chromosome.id, initialSize);
@@ -223,10 +262,18 @@ void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unorder
 			if (nOfGenerations == TARGET_GENERATIONS) break;
 		}
 		avgPopulation /= nOfGenerations;
+		population[i].nOfGenerations = nOfGenerations;
+		population[i].avgPopulation = ceil(avgPopulation);
 
 		//ShowChromosomePattern(population[i]);
 
-		double fitness = 0.0 * nOfGenerations + 1.0 * avgPopulation / (1.0 * population[i].initialSize);
+		double fitness = 0.0 * nOfGenerations + 1.0 * avgPopulation;
+		if (population[i].initialSize)
+		{
+			if (fitness) fitness /= (1.0 * population[i].initialSize);
+			else fitness = 1.0 * population[i].initialSize;
+		}
+
 		wxLogDebug("Fitness: %f", fitness);
 
 		population[i].fitness = fitness;
@@ -406,13 +453,16 @@ void AlgorithmOutput::Start()
 {
 	if (m_Running) return;
 
-	thread t(&AlgorithmOutput::RunAlgorithm, this);
-	t.detach();
-
 	m_Running = true;
 
 	m_Start->Disable();
 	m_Stop->Enable();
+
+	m_TimeElapsed = -1;
+	m_Timer->Start(1000);
+
+	thread t(&AlgorithmOutput::RunAlgorithm, this);
+	t.detach();
 }
 
 void AlgorithmOutput::Stop()
@@ -467,25 +517,36 @@ void AlgorithmOutput::Save()
 
 void AlgorithmOutput::UpdateTextEpoch(int epoch)
 {
-	m_TextEpoch->SetLabel(to_string(epoch));
-}
-
-void AlgorithmOutput::UpdateTextFitness(double fitness)
-{
-	m_TextEpoch->SetLabel(to_string(fitness));
+	m_TextEpoch->SetLabel(wxString::Format("Epoch: %i", epoch));
 }
 
 void AlgorithmOutput::UpdateTextElapsed(int elapsed)
 {
-	m_TextEpoch->SetLabel(to_string(elapsed));
+	int seconds = elapsed % 60;
+	int minutes = elapsed / 60;
+	int hours = elapsed / 360;
+
+	wxString textSeconds = (seconds < 10) ? wxString::Format("0%i", seconds) : wxString::Format("%i", seconds);
+	wxString textMinutes = (minutes < 10) ? wxString::Format("0%i", minutes) : wxString::Format("%i", minutes);
+	wxString textHours = (hours < 10) ? wxString::Format("0%i", hours) : wxString::Format("%i", hours);
+
+	m_TextElapsed->SetLabel(wxString::Format("Time Elapsed: %s:%s:%s", textHours, textMinutes, textSeconds));
 }
 
-void AlgorithmOutput::UpdateTextLast(Chromosome chromosome)
+void AlgorithmOutput::UpdateTextLast(Chromosome& chromosome)
 {
 	m_TextLastFitness->SetLabel(to_string(chromosome.fitness));
-	m_TextLastGeneration->SetLabel(to_string(chromosome.generation));
-	m_TextLastPopulation->SetLabel(to_string(chromosome.population));
-	m_TextLastInitial->SetLabel(to_string(chromosome.initialSize));
+	m_TextLastNofGeneration->SetLabel(to_string(chromosome.nOfGenerations));
+	m_TextLastAvgPopulation->SetLabel(to_string(chromosome.avgPopulation));
+	m_TextLastInitialSize->SetLabel(to_string(chromosome.initialSize));
+}
+
+void AlgorithmOutput::UpdateTextBest(Chromosome& chromosome)
+{
+	m_TextBestFitness->SetLabel(to_string(chromosome.fitness));
+	m_TextBestNofGeneration->SetLabel(to_string(chromosome.nOfGenerations));
+	m_TextBestAvgPopulation->SetLabel(to_string(chromosome.avgPopulation));
+	m_TextBestInitialSize->SetLabel(to_string(chromosome.initialSize));
 }
 
 pair<vector<pair<string, pair<int, int>>>, string> AlgorithmOutput::ParseAllRules(
@@ -1019,4 +1080,22 @@ void AlgorithmOutput::ShowChromosomePattern(Chromosome& chromosome)
 	}
 	
 	wxLogDebug("--- End Pattern ---");
+}
+
+void AlgorithmOutput::EndAlgorithm(bool save)
+{
+	m_Timer->Stop();
+
+	m_Start->Enable();
+	m_Stop->Disable();
+	if (save) m_Save->Enable();
+}
+
+void AlgorithmOutput::UpdateTimer(wxTimerEvent& evt)
+{
+	if (!m_Running) m_Timer->Stop();
+
+	m_TimeElapsed++;
+
+	UpdateTextElapsed(m_TimeElapsed);
 }

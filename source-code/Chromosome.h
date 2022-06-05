@@ -11,8 +11,8 @@ public:
 	vector<int> pattern;
 	vector<int> initialPattern;
 
-	int population;
-	int generation;
+	int avgPopulation;
+	int nOfGenerations;
 	int initialSize;
 
 	double fitness;

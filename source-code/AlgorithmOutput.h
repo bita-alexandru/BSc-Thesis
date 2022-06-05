@@ -19,21 +19,29 @@ public:
 	void SetInputNeighbors(InputNeighbors* inputNeighbors);
 private:
 	Grid* m_Grid = nullptr;
+	InputStates* m_InputStates = nullptr;
+	InputRules* m_InputRules = nullptr;
+	InputNeighbors* m_InputNeighbors = nullptr;
 
 	wxButton* m_Start = nullptr;
 	wxButton* m_Stop = nullptr;
 	wxButton* m_Save = nullptr;
 	wxStaticText* m_TextEpoch = nullptr;
-	wxStaticText* m_TextFitness = nullptr;
 	wxStaticText* m_TextElapsed = nullptr;
-	wxStaticText* m_TextLastPopulation = nullptr;
-	wxStaticText* m_TextLastGeneration = nullptr;
-	wxStaticText* m_TextLastInitial = nullptr;
-	wxStaticText* m_TextLastFitness = nullptr;
 
-	InputStates* m_InputStates = nullptr;
-	InputRules* m_InputRules = nullptr;
-	InputNeighbors* m_InputNeighbors = nullptr;
+	wxStaticText* m_TextLastAvgPopulation = nullptr;
+	wxStaticText* m_TextBestAvgPopulation = nullptr;
+
+	wxStaticText* m_TextLastNofGeneration = nullptr;
+	wxStaticText* m_TextBestNofGeneration = nullptr;
+
+	wxStaticText* m_TextLastInitialSize = nullptr;
+	wxStaticText* m_TextBestInitialSize = nullptr;
+
+	wxStaticText* m_TextLastFitness = nullptr;
+	wxStaticText* m_TextBestFitness = nullptr;
+
+	wxTimer* m_Timer = nullptr;
 
 	vector<string> m_States;
 	vector<string> m_Rules;
@@ -45,10 +53,14 @@ private:
 	int m_Epoch;
 	int m_TimeElapsed;
 
-	double m_LastPopulation;
-	double m_LastGeneration;
-	double m_LastInitial;
+	double m_LastAvgPopulation;
+	double m_LastNofGeneration;
+	double m_LastInitialSize;
 	double m_LastFitness;
+
+	double m_BestAvgPopulation;
+	double m_BestNofGeneration;
+	double m_BestInitialSize;
 	double m_BestFitness;
 
 	int n;
@@ -79,9 +91,9 @@ private:
 	void Save();
 
 	void UpdateTextEpoch(int epoch);
-	void UpdateTextFitness(double fitness);
 	void UpdateTextElapsed(int elapsed);
-	void UpdateTextLast(Chromosome chromosome);
+	void UpdateTextLast(Chromosome& chromosome);
+	void UpdateTextBest(Chromosome& chromosome);
 
 	pair<vector<pair<string, pair<int, int>>>, string> ParseAllRules(
 		unordered_map<int, string>& cells, unordered_map<string, unordered_set<int>>& statePositions,
@@ -99,4 +111,9 @@ private:
 
 	void UpdateChromosomesMaps(vector<Chromosome>& population);
 	void ShowChromosomePattern(Chromosome& chromosome);
+
+	void EndAlgorithm(bool save = true);
+
+	wxDECLARE_EVENT_TABLE();
+	void UpdateTimer(wxTimerEvent& evt);
 };
