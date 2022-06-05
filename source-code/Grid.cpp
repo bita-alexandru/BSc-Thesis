@@ -661,6 +661,16 @@ void Grid::WaitForPause()
 	PauseUniverse();
 }
 
+void Grid::DecrementGenerationCount()
+{
+	if (m_StatusCells->GetCountGeneration()) m_StatusCells->UpdateCountGeneration(-1);
+}
+
+void Grid::ResetGenerationCount()
+{
+	if (m_StatusCells->GetCountGeneration()) m_StatusCells->SetCountGeneration(0);
+}
+
 void Grid::RefreshUpdate()
 {
 	Refresh(false);
@@ -928,6 +938,8 @@ bool Grid::ModeDraw(int x, int y, char mode)
 				m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
 				m_PrevCells = m_Cells;
 				m_PrevStatePositions = m_StatePositions;
+
+				ResetGenerationCount();
 			}
 
 			m_IsDrawing = false;

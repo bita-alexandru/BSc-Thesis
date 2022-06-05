@@ -146,6 +146,7 @@ void ToolUndo::Undo(wxCommandEvent& evt)
 	if (m_UndoCells.empty()) m_Undo->Disable();
 
 	m_Grid->SetCells(cells, statePositions);
+	m_Grid->DecrementGenerationCount();
 	m_Grid->SetFocus();
 }
 

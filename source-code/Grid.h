@@ -83,6 +83,9 @@ public:
 
 	void ResetUniverse();
 	void WaitForPause();
+
+	void DecrementGenerationCount();
+	void ResetGenerationCount();
 private:
 	InputRules* m_InputRules = nullptr;
 	ToolZoom* m_ToolZoom = nullptr;
