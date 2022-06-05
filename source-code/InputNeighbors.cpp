@@ -3,6 +3,7 @@
 InputNeighbors::InputNeighbors(wxWindow* parent) : wxPanel(parent)
 {
 	BuildInterface();
+	SetNeighbors({ "N","NE","E","SE","S","SW","W","NW"});
 }
 
 InputNeighbors::~InputNeighbors()
