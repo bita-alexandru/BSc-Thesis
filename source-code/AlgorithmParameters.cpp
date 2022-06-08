@@ -1,7 +1,5 @@
 #include "AlgorithmParameters.h"
 
-#include "wx/spinctrl.h"
-
 AlgorithmParameters::AlgorithmParameters(wxWindow* parent) : wxPanel(parent)
 {
 	BuildInterface();
@@ -11,114 +9,171 @@ AlgorithmParameters::~AlgorithmParameters()
 {
 }
 
+int AlgorithmParameters::GetPopulationSize()
+{
+	return m_PopulationSize->GetValue();
+}
+
+double AlgorithmParameters::GetProbabilityMutation()
+{
+	return m_ProbabilityMutation->GetValue();
+}
+
+double AlgorithmParameters::GetProbabilityCrossover()
+{
+	return m_ProbabilityCrossover->GetValue();
+}
+
+int AlgorithmParameters::GetGenerationTarget()
+{
+	return m_GenerationTarget->GetValue();
+}
+
+int AlgorithmParameters::GetPopulationTarget()
+{
+	return m_PopulationTarget->GetValue();
+}
+
+int AlgorithmParameters::GetEpochsTarget()
+{
+	return m_EpochsTarget->GetValue();
+}
+
+double AlgorithmParameters::GetGenerationMultiplier()
+{
+	return m_GenerationMultiplier->GetValue();
+}
+
+double AlgorithmParameters::GetPopulationMultiplier()
+{
+	return m_PopulationMultiplier->GetValue();
+}
+
+double AlgorithmParameters::GetInitialSizeMultiplier()
+{
+	return m_InitialSizeMultiplier->GetValue();
+}
+
+wxString AlgorithmParameters::GetSelectionMethod()
+{
+	return m_SelectionMethod->GetValue();
+}
+
 void AlgorithmParameters::BuildInterface()
 {
 	// POP SIZE, PM, PC
-	wxStaticText* textPS = new wxStaticText(this, wxID_ANY, "Population Size");
-	textPS->SetToolTip("2 - 10");
-	wxSpinCtrl* spinPS = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
-	spinPS->SetRange(2, 10);
-	spinPS->SetValue(2);
+	wxStaticText* textPopulationSize = new wxStaticText(this, wxID_ANY, "Population Size");
+	textPopulationSize->SetToolTip("3 - 1000");
+	
+	m_PopulationSize = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
+	m_PopulationSize->SetRange(3, 1000);
+	m_PopulationSize->SetValue(30);
 
-	wxStaticText* textPM = new wxStaticText(this, wxID_ANY, "Mutation Probability");
-	textPM->SetToolTip("0.001 - 1.000");
-	wxSpinCtrlDouble* spinPM = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
-	spinPM->SetDigits(3);
-	spinPM->SetRange(0.001, 1.0);
-	spinPM->SetIncrement(0.05);
-	spinPM->SetValue(0.1);
+	wxStaticText* textProbabilityMutation = new wxStaticText(this, wxID_ANY, "Mutation Probability");
+	textProbabilityMutation->SetToolTip("0.000 - 1.000");
 
-	wxStaticText* textPC = new wxStaticText(this, wxID_ANY, "Crossover Probability");
-	textPC->SetToolTip("0.001 - 1.000");
-	wxSpinCtrlDouble* spinPC = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
-	spinPC->SetDigits(3);
-	spinPC->SetRange(0.001, 1.0);
-	spinPC->SetIncrement(0.05);
-	spinPC->SetValue(0.1);
+	m_ProbabilityMutation = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
+	m_ProbabilityMutation->SetDigits(3);
+	m_ProbabilityMutation->SetRange(0.0, 1.0);
+	m_ProbabilityMutation->SetIncrement(0.005);
+	m_ProbabilityMutation->SetValue(0.01);
+
+	wxStaticText* textProbabilityCrossover = new wxStaticText(this, wxID_ANY, "Crossover Probability");
+	textProbabilityCrossover->SetToolTip("0.000 - 1.000");
+	
+	m_ProbabilityCrossover = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
+	m_ProbabilityCrossover->SetDigits(3);
+	m_ProbabilityCrossover->SetRange(0.0, 1.0);
+	m_ProbabilityCrossover->SetIncrement(0.005);
+	m_ProbabilityCrossover->SetValue(0.25);
 
 	wxGridSizer* sizerP = new wxGridSizer(4, 3, 0, 6);
-	sizerP->Add(textPS, 0);
-	sizerP->Add(textPM, 0);
-	sizerP->Add(textPC, 0);
-	sizerP->Add(spinPS, 0, wxEXPAND);
-	sizerP->Add(spinPM, 0, wxEXPAND);
-	sizerP->Add(spinPC, 0, wxEXPAND);
+	sizerP->Add(textPopulationSize, 0);
+	sizerP->Add(textProbabilityMutation, 0);
+	sizerP->Add(textProbabilityCrossover, 0);
+	sizerP->Add(m_PopulationSize, 0, wxEXPAND);
+	sizerP->Add(m_ProbabilityMutation, 0, wxEXPAND);
+	sizerP->Add(m_ProbabilityCrossover, 0, wxEXPAND);
 
 	// FITNESS MULTIPLIERS
-	wxStaticText* textPFM = new wxStaticText(this, wxID_ANY, "Population Fitness Multiplier");
-	textPFM->SetToolTip("0.0 - 1.0");
-	wxSpinCtrlDouble* spinPFM = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
-	spinPFM->SetDigits(1);
-	spinPFM->SetRange(0.0, 1.0);
-	spinPFM->SetIncrement(0.1);
-	spinPFM->SetValue(1.0);
+	wxStaticText* textPopulationMultiplier = new wxStaticText(this, wxID_ANY, "Population Fitness Multiplier");
+	textPopulationMultiplier->SetToolTip("0.000 - 1.000");
+	
+	m_PopulationMultiplier = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
+	m_PopulationMultiplier->SetDigits(3);
+	m_PopulationMultiplier->SetRange(0.0, 1.0);
+	m_PopulationMultiplier->SetIncrement(0.005);
+	m_PopulationMultiplier->SetValue(1.0);
 
-	wxStaticText* textGFM = new wxStaticText(this, wxID_ANY, "Generation Fitness Multiplier");
-	textGFM->SetToolTip("0.0 - 1.0");
-	wxSpinCtrlDouble* spinGFM = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
-	spinGFM->SetDigits(1);
-	spinGFM->SetRange(0.0, 1.0);
-	spinGFM->SetIncrement(0.1);
-	spinGFM->SetValue(1.0);
+	wxStaticText* textGenerationMultiplier = new wxStaticText(this, wxID_ANY, "Generation Fitness Multiplier");
+	textGenerationMultiplier->SetToolTip("0.000 - 1.000");
+	
+	m_GenerationMultiplier = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
+	m_GenerationMultiplier->SetDigits(3);
+	m_GenerationMultiplier->SetRange(0.0, 1.0);
+	m_GenerationMultiplier->SetIncrement(0.005);
+	m_GenerationMultiplier->SetValue(1.0);
 
-	wxStaticText* textISFM = new wxStaticText(this, wxID_ANY, "Initial Size Fitness Multiplier");
-	textISFM->SetToolTip("0.0 - 1.0");
-	wxSpinCtrlDouble* spinISFM = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
-	spinISFM->SetDigits(1);
-	spinISFM->SetRange(0, 1.0);
-	spinISFM->SetIncrement(0.1);
-	spinISFM->SetValue(1.0);
+	wxStaticText* textInitialSizeMultiplier = new wxStaticText(this, wxID_ANY, "Initial Size Fitness Multiplier");
+	textInitialSizeMultiplier->SetToolTip("0.000 - 1.000");
+	
+	m_InitialSizeMultiplier = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
+	m_InitialSizeMultiplier->SetDigits(3);
+	m_InitialSizeMultiplier->SetRange(0, 1.0);
+	m_InitialSizeMultiplier->SetIncrement(0.005);
+	m_InitialSizeMultiplier->SetValue(0.0);
 
-	sizerP->Add(textPFM, 0);
-	sizerP->Add(textGFM, 0);
-	sizerP->Add(textISFM, 0);
-	sizerP->Add(spinPFM, 0, wxEXPAND);
-	sizerP->Add(spinGFM, 0, wxEXPAND);
-	sizerP->Add(spinISFM, 0, wxEXPAND);
+	sizerP->Add(textGenerationMultiplier, 0);
+	sizerP->Add(textPopulationMultiplier, 0);
+	sizerP->Add(textInitialSizeMultiplier, 0);
+	sizerP->Add(m_GenerationMultiplier, 0, wxEXPAND);
+	sizerP->Add(m_PopulationMultiplier, 0, wxEXPAND);
+	sizerP->Add(m_InitialSizeMultiplier, 0, wxEXPAND);
 
 	// SELECTION
 	wxStaticText* textSelection = new wxStaticText(this, wxID_ANY, "Selection Method");
-	wxComboBox* comboSelection = new wxComboBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, {}, wxCB_READONLY | wxCB_DROPDOWN);
-	comboSelection->Set({"Roulette Wheel Selection", "Rank Selection", "Steady State Selection", "Tournament Selection", "Elitism Selection", "Boltzmann Selection"});
-	comboSelection->SetValue("Roulette Wheel Selection");
+	m_SelectionMethod = new wxComboBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, {}, wxCB_READONLY | wxCB_DROPDOWN);
+	m_SelectionMethod->Set({"Roulette Wheel Selection", "Rank Selection", "Steady State Selection", "Tournament Selection", "Elitism Selection", "Boltzmann Selection"});
+	m_SelectionMethod->SetValue("Roulette Wheel Selection");
 
 	wxBoxSizer* sizerSelection = new wxBoxSizer(wxHORIZONTAL);
 	sizerSelection->Add(textSelection, 0, wxALIGN_CENTER_VERTICAL);
-	sizerSelection->Add(comboSelection, 0, wxEXPAND | wxLEFT, 8);
+	sizerSelection->Add(m_SelectionMethod, 0, wxEXPAND | wxLEFT, 8);
 
-	// PATTERN TARGETS
-	wxStaticText* textPT = new wxStaticText(this, wxID_ANY, "Population Target");
-	textPT->SetToolTip("0 - 1000");
-	wxSpinCtrl* spinPT = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
-	spinPT->SetRange(0, 1000);
-	spinPT->SetValue(0);
+	// PATTERN TARGET
+	wxStaticText* textGenerationTarget = new wxStaticText(this, wxID_ANY, "Generation Target");
+	textGenerationTarget->SetToolTip("0 - 10,000");
+	m_GenerationTarget = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
+	m_GenerationTarget->SetRange(0, 10000);
+	m_GenerationTarget->SetValue(100);
 
-	wxStaticText* textGT = new wxStaticText(this, wxID_ANY, "Generation Target");
-	textGT->SetToolTip("0 - 1000");
-	wxSpinCtrl* spinGT = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
-	spinGT->SetRange(0, 1000);
-	spinGT->SetValue(0);
+	wxStaticText* textPopulationTarget = new wxStaticText(this, wxID_ANY, "Population Target");
+	textPopulationTarget->SetToolTip("0 - 10,000");
+	m_PopulationTarget = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
+	m_PopulationTarget->SetRange(0, 10000);
+	m_PopulationTarget->SetValue(0);
 
-	wxStaticText* textET = new wxStaticText(this, wxID_ANY, "Epochs Target");
-	textET->SetToolTip("0 - 1000");
-	wxSpinCtrl* spinET = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
-	spinET->SetRange(0, 1000);
-	spinET->SetValue(0);
+	wxStaticText* textEpochsTarget = new wxStaticText(this, wxID_ANY, "Epochs Target");
+	textEpochsTarget->SetToolTip("0 - 10,000");
+	m_EpochsTarget = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
+	m_EpochsTarget->SetRange(0, 10000);
+	m_EpochsTarget->SetValue(10);
 
 	wxGridSizer* sizerTargets = new wxGridSizer(2, 3, 0, 6);
-	sizerTargets->Add(textPT, 0);
-	sizerTargets->Add(textGT, 0);
-	sizerTargets->Add(textET, 0);
-	sizerTargets->Add(spinPT, 0, wxEXPAND);
-	sizerTargets->Add(spinGT, 0, wxEXPAND);
-	sizerTargets->Add(spinET, 0, wxEXPAND);
+	sizerTargets->Add(textPopulationTarget, 0);
+	sizerTargets->Add(textGenerationTarget, 0);
+	sizerTargets->Add(textEpochsTarget, 0);
+	sizerTargets->Add(m_PopulationTarget, 0, wxEXPAND);
+	sizerTargets->Add(m_GenerationTarget, 0, wxEXPAND);
+	sizerTargets->Add(m_EpochsTarget, 0, wxEXPAND);
 
-	wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "Algorithm Parameters");
-	sizer->Add(sizerP, 0, wxTOP | wxLEFT, 8);
-	sizer->AddSpacer(16);
-	sizer->Add(sizerSelection, 0, wxLEFT, 8);
+	//wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "Algorithm Parameters");
+	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+	sizer->Add(sizerP, 0, wxLEFT, 8);
 	sizer->AddSpacer(16);
 	sizer->Add(sizerTargets, 0, wxLEFT, 8);
+	sizer->AddSpacer(16);
+	sizer->Add(sizerSelection, 0, wxLEFT, 8);
 
 	SetSizer(sizer);
 }

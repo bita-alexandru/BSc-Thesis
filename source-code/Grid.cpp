@@ -466,7 +466,9 @@ void Grid::Reset(bool refresh)
 void Grid::PlayUniverse()
 {
 	if (m_Finished) ResetUniverse();
+
 	m_Paused = false;
+	m_Finished = false;
 
 	while (!m_Finished && !m_Paused && !m_ForceClose)
 	{
@@ -518,12 +520,9 @@ void Grid::NextGeneration()
 
 	if (m_ForceClose) return;
 
-	//m_MutexStatus.lock();
-
 	UpdateGeneration(result.first);
 	UpdateCoordsHovered();
 
-	//m_MutexCells.lock();
 	if (m_Cells != m_PrevCells)
 	{
 		m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
@@ -531,10 +530,6 @@ void Grid::NextGeneration()
 		m_PrevStatePositions = m_StatePositions;
 		//m_ToolUndo->Reset();
 	}
-	//m_MutexCells.unlock();
-
-	m_StatusCells->UpdateCountGeneration(+1);
-	m_StatusCells->SetCountPopulation(m_Cells.size());
 
 	// universe has come to an end
 	if (result.first.empty())
@@ -545,12 +540,15 @@ void Grid::NextGeneration()
 		m_StatusControls->SetPlayButton(1);
 		m_StatusCells->SetGenerationMessage(" [OVER]");
 	}
+	else
+	{
+		m_StatusCells->UpdateCountGeneration(+1);
+		m_StatusCells->SetCountPopulation(m_Cells.size());
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(m_StatusDelay->GetDelay()));
+	}
 
 	m_Generating = false;
-
-	std::this_thread::sleep_for(std::chrono::milliseconds(m_StatusDelay->GetDelay()));
-
-	//m_MutexStatus.unlock();
 }
 
 void Grid::OnNextGeneration()
@@ -559,6 +557,7 @@ void Grid::OnNextGeneration()
 	{
 		if (m_Finished) ResetUniverse();
 		m_Generating = true;
+		m_Finished = false;
 
 		std::thread t(&Grid::NextGeneration, this);
 		t.detach();
@@ -1627,7 +1626,7 @@ void Grid::DrawStructure(int X, int Y, std::string state, wxColour color)
 
 		std::string neighborState = GetState(neighbor.first, neighbor.second);
 
-		//wxLogDebug("x,y=%i,%i state=%s", neighbor.first, neighbor.second,neighborState);
+		wxLogDebug("x,y=%i,%i state=%s", neighbor.first, neighbor.second,neighborState);
 
 		// only fill the different cells
 		if (neighborState == state) continue;
@@ -1810,7 +1809,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 		// iterate through all cells
 		if (rule.second.all || rule.second.condition.empty())
 		{
-			//wxLogDebug("FREE_ALL");
+			wxLogDebug("FREE_ALL");
 			int n = Sizes::N_ROWS * Sizes::N_COLS - m_Cells.size();
 			int sqrtn = sqrt(n);
 			int batchsize = n; // (sqrtn > BATCH_SIZE) ? BATCH_SIZE : sqrtn;
@@ -1837,7 +1836,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 				if (m_StatePositions.find(state) == m_StatePositions.end()) continue;
 				n2 += m_StatePositions[state].size();
 			}
-			//wxLogDebug("N1=%i N2=%i",n1,n2);
+			wxLogDebug("N1=%i N2=%i",n1,n2);
 
 			// faster to iterate through all cells
 			if (n1 <= n2 || rule.second.condition.empty())
@@ -1935,6 +1934,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 				if (m_StatePositions.find(state) == m_StatePositions.end()) continue;
 				n2 += m_StatePositions[state].size();
 			}
+			wxLogDebug("N1=%i N2=%i", n1, n2);
 
 			// faster to iterate through all cells
 			if (n1 <= n2 || rule.second.condition.empty())
@@ -2024,7 +2024,7 @@ std::pair<std::vector<std::pair<std::string, std::pair<int, int>>>, std::string>
 
 	for (auto& rule : rules)
 	{
-		//wxLogDebug("RULE=%s/%s:%s", rule.first, rule.second.state, rule.second.condition);
+		wxLogDebug("RULE=%s/%s:%s", rule.first, rule.second.state, rule.second.condition);
 		std::pair<std::vector<std::pair<int, int>>, std::string> result = ParseRule(rule);
 
 		// error
@@ -2067,7 +2067,7 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 {
 	std::unordered_map<std::string, std::string> neighborhood = GetNeighborhood({ x,y }, neighbors);
 
-	//wxLogDebug("[CELL_NEIGHBORHOOD]");
+	wxLogDebug("[CELL_NEIGHBORHOOD]");
 	//for (auto& it : neighborhood) wxLogDebug("<%s>=%s", it.first, it.second);
 
 	bool ruleValid = true;
@@ -2075,14 +2075,14 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 	for (auto& rulesOr : rule.orRules)
 	{
 		ruleValid = true;
-		//wxLogDebug("[RULES_OR]");
+		wxLogDebug("[RULES_OR]");
 
 		// iterate through the chain of "AND" rules
 		for (auto& rulesAnd : rulesOr)
 		{
-			//wxLogDebug("[RULES_AND]");
+			wxLogDebug("[RULES_AND]");
 			std::vector<std::string> ruleNeighborhood = rulesAnd.first;
-			//wxLogDebug("[RULE_NEIGHBORHOOD]");
+			wxLogDebug("[RULE_NEIGHBORHOOD]");
 			//for (auto& it : ruleNeighborhood)wxLogDebug("<%s>", it);
 
 			bool conditionValid = true;
@@ -2095,7 +2095,7 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 				for (auto& conditionsAnd : conditionsOr)
 				{
 					std::string conditionState = conditionsAnd.second;
-					//wxLogDebug("CONDITION_STATE=%s", conditionState);
+					wxLogDebug("CONDITION_STATE=%s", conditionState);
 
 					int occurences = 0;
 					if (ruleNeighborhood[0] == "ALL")
@@ -2111,12 +2111,12 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 						}
 					}
 
-					//wxLogDebug("OCCURENCES=%i", occurences);
+					wxLogDebug("OCCURENCES=%i", occurences);
 
 					int conditionNumber = conditionsAnd.first.first;
 					int conditionType = conditionsAnd.first.second;
 
-					//wxLogDebug("CONDITION_NUMBER=%i, CONDITION_TYPE=%i", conditionNumber, conditionType);
+					wxLogDebug("CONDITION_NUMBER=%i, CONDITION_TYPE=%i", conditionNumber, conditionType);
 
 					switch (conditionType)
 					{
@@ -2187,7 +2187,7 @@ void Grid::UpdateGeneration(std::vector<std::pair<std::string, std::pair<int, in
 	{
 		std::string state = change.first;
 
-		//wxLogDebug("STATE=%s", state);
+		wxLogDebug("STATE=%s", state);
 
 		state.pop_back();
 
@@ -2207,7 +2207,7 @@ void Grid::UpdateGeneration(std::vector<std::pair<std::string, std::pair<int, in
 			else currState.push_back(state[i]);
 		}
 
-		//wxLogDebug("PREV=<%s> CURR=<%s>", prevState, currState);
+		wxLogDebug("PREV=<%s> CURR=<%s>", prevState, currState);
 
 		// insert positions into the current state map and remove them from the previous one
 		auto position = change.second;

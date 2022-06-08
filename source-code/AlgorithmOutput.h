@@ -5,7 +5,10 @@
 #include "InputStates.h"
 #include "InputRules.h"
 #include "InputNeighbors.h"
+#include "AlgorithmParameters.h"
 #include "Chromosome.h"
+
+#include <random>
 
 class AlgorithmOutput : public wxPanel
 {
@@ -17,11 +20,13 @@ public:
 	void SetInputStates(InputStates* inputStates);
 	void SetInputRules(InputRules* inputRules);
 	void SetInputNeighbors(InputNeighbors* inputNeighbors);
+	void SetAlgorithmParameters(AlgorithmParameters* algorithmParameters);
 private:
 	Grid* m_Grid = nullptr;
 	InputStates* m_InputStates = nullptr;
 	InputRules* m_InputRules = nullptr;
 	InputNeighbors* m_InputNeighbors = nullptr;
+	AlgorithmParameters* m_AlgorithmParameters = nullptr;
 
 	wxButton* m_Start = nullptr;
 	wxButton* m_Stop = nullptr;
@@ -63,15 +68,26 @@ private:
 	double m_BestInitialSize;
 	double m_BestFitness;
 
-	int n;
+	int popSize;
 	int rows;
 	int cols;
 	double pc;
 	double pm;
+	double generationMultiplier;
+	double populationMultiplier;
+	double initialSizeMultiplier;
+	int epochsTarget;
+	int generationTarget;
+	int populationTarget;
+	default_random_engine generator;
+
+	wxString selectionMethod;
+
 	Chromosome m_BestChromosome;
 
 	void BuildInterface();
 	void RunAlgorithm();
+	void GetParameters();
 
 	vector<Chromosome> InitializePopulation();
 	void EvaluatePopulation(vector<Chromosome>& population, unordered_map<string, string>& states,
@@ -79,7 +95,7 @@ private:
 	vector<Chromosome> SelectPopulation(vector<Chromosome>& population);
 	void DoCrossover(vector<Chromosome>& population);
 	void DoMutatiton(vector<Chromosome>& population);
-	Chromosome GetBestChromosome(vector<Chromosome>& population);
+	Chromosome GetBestChromosome(vector<Chromosome>& population, int epoch);
 
 	void OnStart(wxCommandEvent& evt);
 	void OnStop(wxCommandEvent& evt);
@@ -101,6 +117,7 @@ private:
 	pair<vector<pair<int, int>>, string> ParseRule(pair<string, Transition>& rule,
 		unordered_map<int, string>& cells, unordered_map<string, unordered_set<int>>& statePositions,
 		unordered_map<string, string>& states, unordered_set<string>& neighbors);
+	string CheckValidAutomaton(unordered_map<string,string>& states, vector<pair<string, Transition>>& rules, unordered_set<string>& neighbors);
 
 	string GetState(int x, int y, unordered_map<int, string>& cells);
 	bool InBounds(int x, int y);

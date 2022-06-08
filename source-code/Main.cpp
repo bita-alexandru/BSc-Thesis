@@ -198,11 +198,13 @@ void Main::PrepareInput()
 	statusControls->SetGrid(grid);
 	statusDelay->SetGrid(grid);
 
+	AlgorithmParameters* algorithmParameters = m_PanelAlgorithm->GetAlgorithmParameters();
 	AlgorithmOutput* algorithmOutput = m_PanelAlgorithm->GetAlgorithmOutput();
 	algorithmOutput->SetGrid(grid);
 	algorithmOutput->SetInputStates(inputStates);
 	algorithmOutput->SetInputRules(inputRules);
 	algorithmOutput->SetInputNeighbors(inputNeighbors);
+	algorithmOutput->SetAlgorithmParameters(algorithmParameters);
 
 	//inputNeighbors->SetNeighbors({ "NW","N","NE","W","C","E","SW","S","SE"});
 	//inputStates->SetStates({ "FREE","LIVE" });
