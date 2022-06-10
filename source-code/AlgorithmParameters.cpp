@@ -133,7 +133,7 @@ void AlgorithmParameters::BuildInterface()
 	// SELECTION
 	wxStaticText* textSelection = new wxStaticText(this, wxID_ANY, "Selection Method");
 	m_SelectionMethod = new wxComboBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, {}, wxCB_READONLY | wxCB_DROPDOWN);
-	m_SelectionMethod->Set({"Roulette Wheel Selection", "Rank Selection", "Steady State Selection", "Tournament Selection", "Elitism Selection", "Boltzmann Selection"});
+	m_SelectionMethod->Set({"Roulette Wheel", "Rank", "Steady State", "Tournament", "Elitism", "Boltzmann"});
 	m_SelectionMethod->SetValue("Roulette Wheel Selection");
 
 	wxBoxSizer* sizerSelection = new wxBoxSizer(wxHORIZONTAL);

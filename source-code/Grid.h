@@ -67,6 +67,8 @@ public:
 	void UpdatePrev();
 	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> GetCells();
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> GetStatePositions();
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> GetPrevCells();
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> GetPrevStatePositions();
 	std::unordered_map<std::string, wxColour>& GetColors();
 
 	void Reset(bool refresh = true);

@@ -93,6 +93,7 @@ private:
 	void EvaluatePopulation(vector<Chromosome>& population, unordered_map<string, string>& states,
 		vector<pair<string, Transition>>& rules, unordered_set<string>& neighbors);
 	vector<Chromosome> SelectPopulation(vector<Chromosome>& population);
+	vector<Chromosome> RouletteWheelSelection(vector<Chromosome>& population);
 	void DoCrossover(vector<Chromosome>& population);
 	void DoMutatiton(vector<Chromosome>& population);
 	Chromosome GetBestChromosome(vector<Chromosome>& population, int epoch);

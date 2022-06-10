@@ -292,18 +292,20 @@ void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unorder
 
 			UpdateGeneration(result.first, population[i].pattern, population[i].cells, population[i].statePositions);
 
-			avgPopulation += population[i].cells.size();
-
 			if (result.first.empty())
 			{
 				//wxLogDebug("End of universe");
 				break;
 			}
 
-			if (nOfGenerations >= generationTarget) break;
-			if (population[i].cells.size() >= populationTarget) break;
+			avgPopulation += population[i].cells.size();
+
+			if (nOfGenerations && nOfGenerations - 1 >= generationTarget) break;
+			if (populationTarget && population[i].cells.size() >= populationTarget) break;
 		}
-		avgPopulation /= nOfGenerations;
+		nOfGenerations--;
+
+		if (nOfGenerations) avgPopulation /= nOfGenerations;
 		population[i].nOfGenerations = nOfGenerations;
 		population[i].avgPopulation = ceil(avgPopulation);
 
@@ -321,6 +323,13 @@ void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unorder
 }
 
 vector<Chromosome> AlgorithmOutput::SelectPopulation(vector<Chromosome>& population)
+{
+	if (selectionMethod == "Roulette Wheel") return RouletteWheelSelection(population);
+
+	return {};
+}
+
+vector<Chromosome> AlgorithmOutput::RouletteWheelSelection(vector<Chromosome>& population)
 {
 	wxLogDebug("Select pop [start]");
 
@@ -658,6 +667,7 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<string, Tra
 	unordered_map<string, string>& states, unordered_set<string>& neighbors)
 {
 	vector<pair<int, int>> applied;
+	unordered_set<int> visited;
 
 	// if state is "FREE", apply rule to all "FREE" cells
 	if (rule.first == "FREE")
@@ -730,11 +740,13 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<string, Tra
 						{
 							int x = i % rows;
 							int y = i / cols;
+							int k = i;
 
-							if (GetState(x, y, cells) == "FREE" && ApplyOnCell(x, y, rule.second, cells, neighbors))
+							if (visited.find(k) == visited.end() && GetState(x, y, cells) == "FREE" && ApplyOnCell(x, y, rule.second, cells, neighbors))
 							{
 								wxLogDebug("121");
 								applied.push_back({ x,y });
+								visited.insert(k);
 							}
 						}
 					}
@@ -757,11 +769,13 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<string, Tra
 							{
 								int nx = x + dx[d];
 								int ny = y + dy[d];
+								int k = ny * cols + nx;
 
-								if (InBounds(nx, ny) && GetState(nx, ny, cells) == rule.first && ApplyOnCell(nx, ny, rule.second, cells, neighbors))
+								if (visited.find(k) == visited.end() && InBounds(nx, ny) && GetState(nx, ny, cells) == rule.first && ApplyOnCell(nx, ny, rule.second, cells, neighbors))
 								{
 									//wxLogDebug("122");
 									applied.push_back({ nx,ny });
+									visited.insert(k);
 								}
 							}
 						}
@@ -838,7 +852,7 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<string, Tra
 
 					if (state == "FREE")
 					{
-						//wxLogDebug("FREE ALL");
+						//wxLogDebug("STATE ALL");
 						string state = rule.first;
 						for (auto i = statePositions.at(state).begin(); i != statePositions.at(state).end(); i++)
 						{
@@ -846,10 +860,11 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<string, Tra
 							int x = k % cols;
 							int y = k / cols;
 
-							if (ApplyOnCell(x, y, rule.second, cells, neighbors))
+							if (visited.find(k) == visited.end() && ApplyOnCell(x, y, rule.second, cells, neighbors))
 							{
 								//wxLogDebug("231");
 								applied.push_back({ x,y });
+								visited.insert(k);
 							}
 						}
 					}
@@ -872,11 +887,13 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<string, Tra
 							{
 								int nx = x + dx[d];
 								int ny = y + dy[d];
+								int k = ny * cols + nx;
 
-								if (InBounds(nx, ny) && GetState(nx, ny, cells) == rule.first && ApplyOnCell(nx, ny, rule.second, cells, neighbors))
+								if (visited.find(k) == visited.end() && InBounds(nx, ny) && GetState(nx, ny, cells) == rule.first && ApplyOnCell(nx, ny, rule.second, cells, neighbors))
 								{
 									//wxLogDebug("232");
 									applied.push_back({ nx,ny });
+									visited.insert(k);
 								}
 							}
 						}

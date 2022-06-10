@@ -30,9 +30,15 @@ void ToolUndo::PushBack(
 	for (auto& i : cells)
 	{
 		// new cell
-		if (prevCells.find(i.first) == prevCells.end()) cellChanges.push_back({ i.first,i.second });
+		if (prevCells.find(i.first) == prevCells.end())
+		{
+			cellChanges.push_back({ i.first,i.second });
+		}
 		// new state/color
-		else if (prevCells[i.first] != cells[i.first]) cellChanges.push_back({ i.first,i.second });
+		else if (prevCells[i.first] != cells[i.first])
+		{
+			cellChanges.push_back({ i.first,i.second });
+		}
 	}
 	for (auto& i : statePositions)
 	{
@@ -52,9 +58,15 @@ void ToolUndo::PushBack(
 	for (auto& i : prevCells)
 	{
 		// new cell
-		if (cells.find(i.first) == cells.end()) cellChanges.push_back({ i.first,i.second });
+		if (cells.find(i.first) == cells.end())
+		{
+			cellChanges.push_back({ i.first,i.second });
+		}
 		// new state/color
-		else if (cells[i.first] != prevCells[i.first]) cellChanges.push_back({ i.first,i.second });
+		else if (cells[i.first] != prevCells[i.first])
+		{
+			cellChanges.push_back({ i.first,i.second });
+		}
 	}
 	for (auto& i : prevStatePositions)
 	{
@@ -113,9 +125,15 @@ void ToolUndo::Undo(wxCommandEvent& evt)
 	for (auto& it : m_UndoCells.back())
 	{
 		// if i find a change in the current configuration -> delete it
-		if (cells.find(it.first) != cells.end()) cells.erase(it.first);
+		if (cells.find(it.first) != cells.end())
+		{
+			cells.erase(it.first);
+		}
 		// otherwise -> add it
-		else cells.insert(it);
+		else
+		{
+			cells.insert(it);
+		}
 	}
 	for (auto& it : m_UndoStatePositions.back())
 	{
@@ -159,15 +177,18 @@ void ToolUndo::Redo(wxCommandEvent& evt)
 	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions = m_Grid->GetStatePositions();
 
 	// iterate through the most recent changes
-	for (auto& it : m_RedoCells.back())
+	for (auto it = m_RedoCells.back().rbegin(); it != m_RedoCells.back().rend(); it++)
 	{
 		// if i find a change in the current configuration -> delete it
-		if (cells.find(it.first) != cells.end()) cells.erase(it.first);
+		if (cells.find(it->first) != cells.end() && cells[it->first] == it->second)
+		{
+			cells.erase(it->first);
+		}
 		// otherwise -> add it
 		else
 		{
-			it.second.second = m_Grid->GetColors()[it.second.first];
-			cells.insert(it);
+			it->second.second = m_Grid->GetColors()[it->second.first];
+			cells[it->first] = it->second;
 		}
 	}
 	for (auto& it : m_RedoStatePositions.back())
