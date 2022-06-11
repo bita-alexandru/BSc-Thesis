@@ -128,6 +128,12 @@ void AlgorithmOutput::RunAlgorithm()
 
 	if (states.size() <= 1 || rules.size() == 0)
 	{
+		wxRichMessageDialog dialog(
+			this, "No cellular automaton detected.", "Error",
+			wxOK | wxICON_INFORMATION
+		);
+		dialog.ShowModal();
+
 		EndAlgorithm(false);
 		return;
 	}
@@ -152,6 +158,10 @@ void AlgorithmOutput::RunAlgorithm()
 
 	UpdateTextEpoch(0);
 
+	m_BestChromosome = Chromosome();
+	UpdateTextLast(m_BestChromosome);
+	UpdateTextBest(m_BestChromosome);
+
 	vector<Chromosome> population = InitializePopulation();
 	EvaluatePopulation(population, states, rules, neighbors);
 
@@ -167,8 +177,10 @@ void AlgorithmOutput::RunAlgorithm()
 		wxLogDebug("Epoch %i", epochs);
 		UpdateTextEpoch(epochs);
 
+		if (selectionMethod == "Elitism") eliteLowerBound = GetEliteLowerBound(population);
+
 		population = SelectPopulation(population);
-		DoCrossover(population);
+		if (selectionMethod != "Steady State") DoCrossover(population);
 		DoMutatiton(population);
 
 		UpdateChromosomesMaps(population);
@@ -194,6 +206,7 @@ void AlgorithmOutput::GetParameters()
 	rows = Sizes::N_ROWS;
 	cols = Sizes::N_COLS;
 
+	eliteLowerBound = 0.0;
 	popSize = m_AlgorithmParameters->GetPopulationSize();
 	pc = m_AlgorithmParameters->GetProbabilityCrossover();
 	pm = m_AlgorithmParameters->GetProbabilityMutation();
@@ -318,7 +331,7 @@ void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unorder
 		fitness += 1.0;
 
 		/*wxLogDebug(
-			"No. Generations: %i\nAvg. Population: %f\nInitial Size: %i\nFitness: %f", 
+			"No. Generations: %i\nAvg. Population: %f\nInitial Size: %i\nFitness: %f",
 			nOfGenerations, avgPopulation, population[i].initialSize, fitness
 		);*/
 
@@ -334,6 +347,10 @@ vector<Chromosome> AlgorithmOutput::SelectPopulation(vector<Chromosome>& populat
 
 	if (selectionMethod == "Roulette Wheel") return RouletteWheelSelection(population);
 	if (selectionMethod == "Rank") return RankSelection(population);
+	if (selectionMethod == "Steady State") return SteadyStateSelection(population);
+	if (selectionMethod == "Tournament") return TournamentSelection(population);
+	if (selectionMethod == "Elitism") return ElitismSelection(population);
+	if (selectionMethod == "Random") return RandomSelection(population);
 
 	wxLogDebug("Select pop [end]");
 
@@ -361,6 +378,7 @@ vector<Chromosome> AlgorithmOutput::RouletteWheelSelection(vector<Chromosome>& p
 
 	vector<Chromosome> newPopulation;
 	int j = 0;
+
 	while (j != popSize && m_Running)
 	{
 		for (int i = 0; i < popSize && m_Running; i++)
@@ -439,6 +457,157 @@ vector<Chromosome> AlgorithmOutput::RankSelection(vector<Chromosome>& population
 	return newPopulation;
 }
 
+vector<Chromosome> AlgorithmOutput::SteadyStateSelection(vector<Chromosome>& population)
+{
+	vector<int> parents;
+	int parentsSize = 0;
+
+	uniform_real_distribution<double> r01(0, 1);
+
+	for (int i = 0; i < popSize && m_Running; i++)
+	{
+		double p = r01(generator);
+
+		//wxLogDebug("%i. Generated probability: %f", i, p);
+
+		if (p < pc)
+		{
+			//wxLogDebug("Selecting parent %i", population[i].id);
+			parents.push_back(i);
+			parentsSize++;
+		}
+	}
+
+	const int N = rows * cols;
+
+	uniform_int_distribution<int> i0n(0, N - 1);
+	uniform_int_distribution<int> i0popSize(0, popSize - 1);
+
+	for (int i = 0; i < parentsSize - 1 && m_Running; i += 2)
+	{
+		int xp1 = i0n(generator);
+		int xp2 = i0n(generator);
+
+		while (xp1 == xp2 && N > 1 && m_Running)
+		{
+			xp2 = i0n(generator);
+		}
+
+		if (xp1 > xp2) swap(xp1, xp2);
+
+		//wxLogDebug("Generated cutpoints: %i, %i", xp1, xp2);
+
+		int p1 = parents[i];
+		int p2 = parents[i + 1];
+
+		Chromosome offspring1 = population[p1];
+		Chromosome offspring2 = population[p2];
+
+		for (int j = xp1; j <= xp2 && m_Running; j++)
+		{
+			//wxLogDebug("Swapping {%i}[%i](=%i) with {%i}[%i](=%i)", population[p1].id, j,
+			//population[p1].initialPattern[j], population[p2].id, j, population[p2].initialPattern[j]);
+			swap(offspring1.initialPattern[j], offspring2.initialPattern[j]);
+		}
+
+		int k1 = i0popSize(generator);
+		offspring1.id = k1;
+		population[k1] = offspring1;
+		int k2 = i0popSize(generator);
+		offspring2.id = k2;
+		population[k2] = offspring2;
+	}
+
+	return population;
+}
+
+vector<Chromosome> AlgorithmOutput::TournamentSelection(vector<Chromosome>& population)
+{
+	uniform_int_distribution<int> i0popSize(0, popSize - 1);
+
+	vector<Chromosome> newPopulation;
+
+	vector<int> indexes(popSize);
+	for (int i = 0; i < popSize && m_Running; i++) indexes[i] = i;
+
+	int k = 3;
+	int j = 0;
+	while (j != popSize && m_Running)
+	{
+		unordered_set<int> tournamentIndexes;
+		int bestIndex = 0;
+		double bestFitness = -1.0;
+
+		while (tournamentIndexes.size() < 3 && m_Running)
+		{
+			int k = i0popSize(generator);
+
+			if (tournamentIndexes.find(k) == tournamentIndexes.end())
+			{
+				//wxLogDebug("Selected into tournament chromosome %i with fitness %f", population[k].id, population[k].fitness);
+
+				tournamentIndexes.insert(k);
+				if (population[k].fitness > bestFitness)
+				{
+					bestFitness = population[k].fitness;
+					bestIndex = k;
+				}
+			}
+		}
+
+		//wxLogDebug("Selected into new pop: %i", population[bestIndex].id);
+
+		j++;
+
+		Chromosome chromosome = population[bestIndex];
+		chromosome.id = j;
+
+		newPopulation.push_back(chromosome);
+
+		if (j == popSize) break;
+	}
+
+	return newPopulation;
+}
+
+vector<Chromosome> AlgorithmOutput::ElitismSelection(vector<Chromosome>& population)
+{
+	return population;
+}
+
+vector<Chromosome> AlgorithmOutput::RandomSelection(vector<Chromosome>& population)
+{
+	uniform_real_distribution<double> r01(0, 1);
+
+	vector<Chromosome> newPopulation;
+	int j = 0;
+	while (j != popSize && m_Running)
+	{
+		for (int i = 0; i < popSize && m_Running; i++)
+		{
+			double p = r01(generator);
+			//wxLogDebug("%i. Generated probability: %f", i, p);
+			//wxLogDebug("%i/%i. %.17g < %.17g <= %.17g = %i", i, j, q[j], p, q[j + 1], (p > q[j] && p <= q[j + 1]));
+
+			if (p > 0.5)
+			{
+				//wxLogDebug("Selected into new pop: %i", population[i].id);
+
+				j++;
+
+				Chromosome chromosome = population[i];
+				chromosome.id = j;
+
+				newPopulation.push_back(chromosome);
+
+				if (j == popSize) break;
+			}
+		}
+	}
+
+	return newPopulation;
+}
+
 void AlgorithmOutput::DoCrossover(vector<Chromosome>& population)
 {
 	wxLogDebug("Cross-over [start]");
@@ -477,16 +646,24 @@ void AlgorithmOutput::DoCrossover(vector<Chromosome>& population)
 
 		if (xp1 > xp2) swap(xp1, xp2);
 
+		int p1 = parents[i];
+		int p2 = parents[i + 1];
+
+		if (eliteLowerBound && population[p1].fitness >= eliteLowerBound && population[p2].fitness >= eliteLowerBound) continue;
+
 		//wxLogDebug("Generated cutpoints: %i, %i", xp1, xp2);
 
 		for (int j = xp1; j <= xp2 && m_Running; j++)
 		{
-			int p1 = parents[i];
-			int p2 = parents[i + 1];
-
 			//wxLogDebug("Swapping {%i}[%i](=%i) with {%i}[%i](=%i)", population[p1].id, j,
 			//population[p1].initialPattern[j], population[p2].id, j, population[p2].initialPattern[j]);
-			swap(population[p1].initialPattern[j], population[p2].initialPattern[j]);
+
+			if (!eliteLowerBound)
+				swap(population[p1].initialPattern[j], population[p2].initialPattern[j]);
+			else if (population[p1].fitness >= eliteLowerBound)
+				population[p2].initialPattern[j] = population[p1].initialPattern[j];
+			else if (population[p2].fitness >= eliteLowerBound)
+				population[p1].initialPattern[j] = population[p2].initialPattern[j];
 		}
 	}
 
@@ -505,6 +682,8 @@ void AlgorithmOutput::DoMutatiton(vector<Chromosome>& population)
 	for (int i = 0; i < popSize && m_Running; i++)
 	{
 		//wxLogDebug("%i. Chromosome %i", i, population[i].id);
+		if (eliteLowerBound && population[i].fitness >= eliteLowerBound) continue;
+
 		for (int j = 0; j < N && m_Running; j++)
 		{
 			double p = r01(generator);
@@ -542,6 +721,30 @@ Chromosome AlgorithmOutput::GetBestChromosome(vector<Chromosome>& population, in
 	wxLogDebug("Get best [end]");
 
 	return chromosome;
+}
+
+double AlgorithmOutput::GetEliteLowerBound(vector<Chromosome> population)
+{
+	//int k = floor(sqrt(popSize));
+	int k = 2;
+
+	sort(population.begin(), population.end());
+
+	return population[popSize - k].fitness;
+}
+
+void AlgorithmOutput::InsertElite(vector<Chromosome>& population, vector<Chromosome>& newPopulation, int& j)
+{
+	if (eliteLowerBound == 0.0) return;
+
+	for (int i = 0; i < popSize && m_Running; i++)
+		if (population[i].fitness >= eliteLowerBound)
+		{
+			Chromosome chromosome = population[i];
+			chromosome.id = j++;
+
+			newPopulation.push_back(chromosome);
+		}
 }
 
 void AlgorithmOutput::OnStart(wxCommandEvent& evt)
@@ -597,7 +800,7 @@ void AlgorithmOutput::Save()
 {
 	unsigned int now = time(0);
 	wxString fileName = wxString::Format("%u", now);
-	
+
 	wxFileDialog dialogFile(this, "Export Pattern", "", fileName, "TXT files (*.txt)|*.txt", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
 	if (dialogFile.ShowModal() == wxID_CANCEL) return;

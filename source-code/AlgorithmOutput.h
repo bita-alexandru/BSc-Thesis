@@ -68,6 +68,7 @@ private:
 	double m_BestInitialSize;
 	double m_BestFitness;
 
+	double eliteLowerBound;
 	int popSize;
 	int rows;
 	int cols;
@@ -98,11 +99,12 @@ private:
 	vector<Chromosome> SteadyStateSelection(vector<Chromosome>& population);
 	vector<Chromosome> TournamentSelection(vector<Chromosome>& population);
 	vector<Chromosome> ElitismSelection(vector<Chromosome>& population);
-	vector<Chromosome> BoltzmannSelection(vector<Chromosome>& population);
 	vector<Chromosome> RandomSelection(vector<Chromosome>& population);
 	void DoCrossover(vector<Chromosome>& population);
 	void DoMutatiton(vector<Chromosome>& population);
 	Chromosome GetBestChromosome(vector<Chromosome>& population, int epoch);
+	double GetEliteLowerBound(vector<Chromosome> population);
+	void InsertElite(vector<Chromosome>& population, vector<Chromosome>& newPopulation, int& j);
 
 	void OnStart(wxCommandEvent& evt);
 	void OnStop(wxCommandEvent& evt);
