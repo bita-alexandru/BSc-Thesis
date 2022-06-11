@@ -50,7 +50,7 @@ void Main::BuildInterface()
 	m_SplitterGridAlgorithm->SetSizer(sizerGridAlgorithm);
 	m_SplitterGridAlgorithm->SplitHorizontally(m_PanelGrid, m_PanelAlgorithm);
 	m_SplitterGridAlgorithm->SetMinimumPaneSize(1);
-	m_SplitterGridAlgorithm->SetSashGravity(0.75);
+	m_SplitterGridAlgorithm->SetSashGravity(0.68);
 
 	m_SplitterInputGrid->SplitVertically(m_PanelInput, m_SplitterGridAlgorithm);
 	//m_SplitterInputGrid->SplitVertically(m_PanelInput, m_PanelGrid);
@@ -58,7 +58,7 @@ void Main::BuildInterface()
 	m_SplitterInputGrid->SetSashGravity(0.2);
 
 	m_SplitterInputGrid->SetSashPosition(GetClientSize().GetX() * 0.2);
-	m_SplitterGridAlgorithm->SetSashPosition(GetClientSize().GetY() * 0.75);
+	m_SplitterGridAlgorithm->SetSashPosition(GetClientSize().GetY() * 0.68);
 
 	m_EditorStates = new EditorStates(this);
 	m_EditorRules = new EditorRules(this);

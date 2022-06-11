@@ -96,6 +96,15 @@ void AlgorithmParameters::BuildInterface()
 	sizerP->Add(m_ProbabilityCrossover, 0, wxEXPAND);
 
 	// FITNESS MULTIPLIERS
+	wxStaticText* textGenerationMultiplier = new wxStaticText(this, wxID_ANY, "Generation Fitness Multiplier");
+	textGenerationMultiplier->SetToolTip("0.000 - 1.000");
+
+	m_GenerationMultiplier = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
+	m_GenerationMultiplier->SetDigits(3);
+	m_GenerationMultiplier->SetRange(0.0, 1.0);
+	m_GenerationMultiplier->SetIncrement(0.005);
+	m_GenerationMultiplier->SetValue(1.0);
+
 	wxStaticText* textPopulationMultiplier = new wxStaticText(this, wxID_ANY, "Population Fitness Multiplier");
 	textPopulationMultiplier->SetToolTip("0.000 - 1.000");
 	
@@ -104,15 +113,6 @@ void AlgorithmParameters::BuildInterface()
 	m_PopulationMultiplier->SetRange(0.0, 1.0);
 	m_PopulationMultiplier->SetIncrement(0.005);
 	m_PopulationMultiplier->SetValue(1.0);
-
-	wxStaticText* textGenerationMultiplier = new wxStaticText(this, wxID_ANY, "Generation Fitness Multiplier");
-	textGenerationMultiplier->SetToolTip("0.000 - 1.000");
-	
-	m_GenerationMultiplier = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
-	m_GenerationMultiplier->SetDigits(3);
-	m_GenerationMultiplier->SetRange(0.0, 1.0);
-	m_GenerationMultiplier->SetIncrement(0.005);
-	m_GenerationMultiplier->SetValue(1.0);
 
 	wxStaticText* textInitialSizeMultiplier = new wxStaticText(this, wxID_ANY, "Initial Size Fitness Multiplier");
 	textInitialSizeMultiplier->SetToolTip("0.000 - 1.000");
@@ -130,28 +130,18 @@ void AlgorithmParameters::BuildInterface()
 	sizerP->Add(m_PopulationMultiplier, 0, wxEXPAND);
 	sizerP->Add(m_InitialSizeMultiplier, 0, wxEXPAND);
 
-	// SELECTION
-	wxStaticText* textSelection = new wxStaticText(this, wxID_ANY, "Selection Method");
-	m_SelectionMethod = new wxComboBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, {}, wxCB_READONLY | wxCB_DROPDOWN);
-	m_SelectionMethod->Set({"Roulette Wheel", "Rank", "Steady State", "Tournament", "Elitism", "Boltzmann"});
-	m_SelectionMethod->SetValue("Roulette Wheel");
-
-	wxBoxSizer* sizerSelection = new wxBoxSizer(wxHORIZONTAL);
-	sizerSelection->Add(textSelection, 0, wxALIGN_CENTER_VERTICAL);
-	sizerSelection->Add(m_SelectionMethod, 0, wxEXPAND | wxLEFT, 8);
-
 	// PATTERN TARGET
-	wxStaticText* textGenerationTarget = new wxStaticText(this, wxID_ANY, "Generation Target");
-	textGenerationTarget->SetToolTip("0 - 10,000");
-	m_GenerationTarget = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
-	m_GenerationTarget->SetRange(0, 10000);
-	m_GenerationTarget->SetValue(100);
-
 	wxStaticText* textPopulationTarget = new wxStaticText(this, wxID_ANY, "Population Target");
 	textPopulationTarget->SetToolTip("0 - 10,000");
 	m_PopulationTarget = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
 	m_PopulationTarget->SetRange(0, 10000);
 	m_PopulationTarget->SetValue(0);
+
+	wxStaticText* textGenerationTarget = new wxStaticText(this, wxID_ANY, "Generation Target");
+	textGenerationTarget->SetToolTip("0 - 10,000");
+	m_GenerationTarget = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
+	m_GenerationTarget->SetRange(0, 10000);
+	m_GenerationTarget->SetValue(100);
 
 	wxStaticText* textEpochsTarget = new wxStaticText(this, wxID_ANY, "Epochs Target");
 	textEpochsTarget->SetToolTip("0 - 10,000");
@@ -166,6 +156,16 @@ void AlgorithmParameters::BuildInterface()
 	sizerTargets->Add(m_PopulationTarget, 0, wxEXPAND);
 	sizerTargets->Add(m_GenerationTarget, 0, wxEXPAND);
 	sizerTargets->Add(m_EpochsTarget, 0, wxEXPAND);
+
+	// SELECTION
+	wxStaticText* textSelection = new wxStaticText(this, wxID_ANY, "Selection Method");
+	m_SelectionMethod = new wxComboBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, {}, wxCB_READONLY | wxCB_DROPDOWN);
+	m_SelectionMethod->Set({ "Roulette Wheel", "Rank", "Steady State", "Tournament", "Elitism", "Boltzmann", "Random" });
+	m_SelectionMethod->SetValue("Roulette Wheel");
+
+	wxBoxSizer* sizerSelection = new wxBoxSizer(wxHORIZONTAL);
+	sizerSelection->Add(textSelection, 0, wxALIGN_CENTER_VERTICAL);
+	sizerSelection->Add(m_SelectionMethod, 0, wxEXPAND | wxLEFT, 8);
 
 	//wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "Algorithm Parameters");
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
