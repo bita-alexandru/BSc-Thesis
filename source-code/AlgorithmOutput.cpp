@@ -5,6 +5,7 @@
 #include <thread>
 #include <fstream>
 #include <chrono>
+#include <ctime>
 
 using Clock = chrono::high_resolution_clock;
 
@@ -67,17 +68,17 @@ void AlgorithmOutput::BuildInterface()
 	sizerButtons->Add(m_Stop, 0, wxLEFT | wxRIGHT, 0);
 	sizerButtons->Add(m_Save, 0);
 
-	m_TextEpoch = new wxStaticText(this, wxID_ANY, "Epoch: -");
+	m_TextEpoch = new wxStaticText(this, wxID_ANY, "Epoch: 0");
 
-	m_TextLastNofGeneration = new wxStaticText(this, wxID_ANY, "-");
-	m_TextLastAvgPopulation = new wxStaticText(this, wxID_ANY, "-");
-	m_TextLastInitialSize = new wxStaticText(this, wxID_ANY, "-");
-	m_TextLastFitness = new wxStaticText(this, wxID_ANY, "-");
+	m_TextLastNofGeneration = new wxStaticText(this, wxID_ANY, "0");
+	m_TextLastAvgPopulation = new wxStaticText(this, wxID_ANY, "0");
+	m_TextLastInitialSize = new wxStaticText(this, wxID_ANY, "0");
+	m_TextLastFitness = new wxStaticText(this, wxID_ANY, "0");
 
-	m_TextBestNofGeneration = new wxStaticText(this, wxID_ANY, "-");
-	m_TextBestAvgPopulation = new wxStaticText(this, wxID_ANY, "-");
-	m_TextBestInitialSize = new wxStaticText(this, wxID_ANY, "-");
-	m_TextBestFitness = new wxStaticText(this, wxID_ANY, "-");
+	m_TextBestNofGeneration = new wxStaticText(this, wxID_ANY, "0");
+	m_TextBestAvgPopulation = new wxStaticText(this, wxID_ANY, "0");
+	m_TextBestInitialSize = new wxStaticText(this, wxID_ANY, "0");
+	m_TextBestFitness = new wxStaticText(this, wxID_ANY, "0");
 
 	wxFlexGridSizer* sizerLast = new wxFlexGridSizer(2, 4, wxSize(24, 0));
 	sizerLast->Add(new wxStaticText(this, wxID_ANY, "Last No. Generations"), 0, wxALIGN_RIGHT);
@@ -99,7 +100,7 @@ void AlgorithmOutput::BuildInterface()
 	sizerBest->Add(m_TextBestInitialSize, 0, wxALIGN_RIGHT);
 	sizerBest->Add(m_TextBestFitness, 0, wxALIGN_RIGHT);
 
-	m_TextElapsed = new wxStaticText(this, wxID_ANY, "Time Elapsed: -");
+	m_TextElapsed = new wxStaticText(this, wxID_ANY, "Time Elapsed: 00:00:00");
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 	sizer->Add(sizerButtons, 0);
@@ -326,7 +327,7 @@ vector<Chromosome> AlgorithmOutput::SelectPopulation(vector<Chromosome>& populat
 {
 	if (selectionMethod == "Roulette Wheel") return RouletteWheelSelection(population);
 
-	return {};
+	return population;
 }
 
 vector<Chromosome> AlgorithmOutput::RouletteWheelSelection(vector<Chromosome>& population)
@@ -536,7 +537,10 @@ void AlgorithmOutput::Stop()
 
 void AlgorithmOutput::Save()
 {
-	wxFileDialog dialogFile(this, "Export Pattern", "", "", "TXT files (*.txt)|*.txt", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+	unsigned int now = time(0);
+	wxString fileName = wxString::Format("%u", now);
+	wxLogDebug("time=<%s>", fileName);
+	wxFileDialog dialogFile(this, "Export Pattern", "", fileName, "TXT files (*.txt)|*.txt", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
 	if (dialogFile.ShowModal() == wxID_CANCEL) return;
 
