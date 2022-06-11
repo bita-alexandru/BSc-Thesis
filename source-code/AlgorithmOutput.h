@@ -94,6 +94,12 @@ private:
 		vector<pair<string, Transition>>& rules, unordered_set<string>& neighbors);
 	vector<Chromosome> SelectPopulation(vector<Chromosome>& population);
 	vector<Chromosome> RouletteWheelSelection(vector<Chromosome>& population);
+	vector<Chromosome> RankSelection(vector<Chromosome>& population);
+	vector<Chromosome> SteadyStateSelection(vector<Chromosome>& population);
+	vector<Chromosome> TournamentSelection(vector<Chromosome>& population);
+	vector<Chromosome> ElitismSelection(vector<Chromosome>& population);
+	vector<Chromosome> BoltzmannSelection(vector<Chromosome>& population);
+	vector<Chromosome> RandomSelection(vector<Chromosome>& population);
 	void DoCrossover(vector<Chromosome>& population);
 	void DoMutatiton(vector<Chromosome>& population);
 	Chromosome GetBestChromosome(vector<Chromosome>& population, int epoch);

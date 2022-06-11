@@ -312,10 +312,15 @@ void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unorder
 
 		//ShowChromosomePattern(population[i]);
 
-		double fitness = 1.0 + generationMultiplier * nOfGenerations + populationMultiplier * avgPopulation;
-		if (population[i].initialSize && initialSizeMultiplier) fitness /= (initialSizeMultiplier * population[i].initialSize);
+		double fitness = generationMultiplier * nOfGenerations + populationMultiplier * avgPopulation;
+		if (population[i].initialSize && initialSizeMultiplier)
+			fitness = fitness - fitness * (initialSizeMultiplier * population[i].initialSize / (rows * cols));
+		fitness += 1.0;
 
-		wxLogDebug("No. Generations: %i\nAvg. Population: %f\nFitness: %f", nOfGenerations, avgPopulation, fitness);
+		/*wxLogDebug(
+			"No. Generations: %i\nAvg. Population: %f\nInitial Size: %i\nFitness: %f", 
+			nOfGenerations, avgPopulation, population[i].initialSize, fitness
+		);*/
 
 		population[i].fitness = fitness;
 	}
@@ -325,15 +330,18 @@ void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unorder
 
 vector<Chromosome> AlgorithmOutput::SelectPopulation(vector<Chromosome>& population)
 {
+	wxLogDebug("Select pop [start]");
+
 	if (selectionMethod == "Roulette Wheel") return RouletteWheelSelection(population);
+	if (selectionMethod == "Rank") return RankSelection(population);
+
+	wxLogDebug("Select pop [end]");
 
 	return population;
 }
 
 vector<Chromosome> AlgorithmOutput::RouletteWheelSelection(vector<Chromosome>& population)
 {
-	wxLogDebug("Select pop [start]");
-
 	double totalFitness = 0.0;
 	for (int i = 0; i < popSize; i++) totalFitness += population[i].fitness;
 
@@ -361,7 +369,7 @@ vector<Chromosome> AlgorithmOutput::RouletteWheelSelection(vector<Chromosome>& p
 			//wxLogDebug("%i. Generated probability: %f", i, p);
 			//wxLogDebug("%i/%i. %.17g < %.17g <= %.17g = %i", i, j, q[j], p, q[j + 1], (p > q[j] && p <= q[j + 1]));
 
-			if (p >= q[j] && p <= q[j + 1])
+			if (q[j] < p && p <= q[j + 1])
 			{
 				//wxLogDebug("Selected into new pop: %i", population[i].id);
 
@@ -377,7 +385,57 @@ vector<Chromosome> AlgorithmOutput::RouletteWheelSelection(vector<Chromosome>& p
 		}
 	}
 
-	wxLogDebug("Select pop [end]");
+	return newPopulation;
+}
+
+vector<Chromosome> AlgorithmOutput::RankSelection(vector<Chromosome>& population)
+{
+	sort(population.begin(), population.end());
+
+	double totalFitness = (popSize + 1.0) * popSize / 2;
+	//wxLogDebug("Total fitness: %f", totalFitness);
+
+	//for (int i = 0; i < popSize && m_Running; i++) wxLogDebug("%f", population[i].fitness);
+
+	vector<double> q(popSize + 1);
+	for (int i = 0; i < popSize && m_Running; i++)
+	{
+		//wxLogDebug("%i. Chromosome %i: %f", i, population[i].id, population[i].fitness);
+		double p = 1.0 * (i + 1) / totalFitness;
+		q[i + 1] = q[i] + p;
+
+		//wxLogDebug("p=%f q=%f", p, q[i + 1]);
+	}
+
+	uniform_real_distribution<double> r01(0, 1);
+
+	vector<Chromosome> newPopulation;
+	int j = 0;
+	while (j != popSize && m_Running)
+	{
+		for (int i = 0; i < popSize && m_Running; i++)
+		{
+			double p = r01(generator);
+			//wxLogDebug("%i. Generated probability: %f", i, p);
+			//wxLogDebug("%i/%i. %.17g < %.17g <= %.17g = %i", i, j, q[j], p, q[j + 1], (p > q[j] && p <= q[j + 1]));
+
+			if (q[j] < p && p <= q[j + 1])
+			{
+				//wxLogDebug("Selected into new pop: %i", population[i].id);
+
+				j++;
+
+				Chromosome chromosome = population[i];
+				chromosome.id = j;
+
+				newPopulation.push_back(chromosome);
+
+				if (j == popSize) break;
+			}
+		}
+	}
+
+
 	return newPopulation;
 }
 
@@ -470,7 +528,7 @@ Chromosome AlgorithmOutput::GetBestChromosome(vector<Chromosome>& population, in
 	wxLogDebug("Get best [start]");
 	Chromosome chromosome = population[0];
 
-	for (int i = 1; i < popSize; i++)
+	for (int i = 1; i < popSize && m_Running; i++)
 	{
 		if (population[i] > chromosome)
 		{
@@ -539,7 +597,7 @@ void AlgorithmOutput::Save()
 {
 	unsigned int now = time(0);
 	wxString fileName = wxString::Format("%u", now);
-	wxLogDebug("time=<%s>", fileName);
+	
 	wxFileDialog dialogFile(this, "Export Pattern", "", fileName, "TXT files (*.txt)|*.txt", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
 	if (dialogFile.ShowModal() == wxID_CANCEL) return;
@@ -548,8 +606,13 @@ void AlgorithmOutput::Save()
 
 	out << "[ALGORITHM SETTINGS]\n";
 	out << wxString::Format(
-		"%s\n%s\n\nPopulation Size: %i\nProbability of Mutation: %f\nProbability of Crossover: %f\nSelection Method: %s\n\n%s",
-		m_TextElapsed->GetLabel(), m_TextEpoch->GetLabel(), popSize, pm, pc, selectionMethod,
+		"%s\n%s\n\n%s\n\nSelection Method: %s\nPopulation Size: %i\nProbability of Mutation: %f\nProbability of Crossover: %f\n\n%s",
+		m_TextElapsed->GetLabel(), m_TextEpoch->GetLabel(),
+		wxString::Format(
+			"Reached generation: %i\nReached avg. population: %i\nInitial size: %i\nFitness: %f",
+			m_BestChromosome.nOfGenerations, m_BestChromosome.avgPopulation, m_BestChromosome.initialSize, m_BestChromosome.fitness
+		),
+		selectionMethod, popSize, pm, pc,
 		wxString::Format(
 			"Generation Multiplier: %f\nPopullation Multiplier: %f\nInitial Size Multiplier: %f\n\n%s",
 			generationMultiplier, populationMultiplier, initialSizeMultiplier,
