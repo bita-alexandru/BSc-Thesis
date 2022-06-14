@@ -252,7 +252,7 @@ void EditorRules::BuildMenuBar()
 	menuEdit->AppendSeparator();
 	menuEdit->Append(Ids::ID_FORMAT_RULES, "Forma&t\tCtrl+T");
 
-	menuHelp->Append(Ids::ID_HELP_RULES, "&How to Use\tF1");
+	menuHelp->Append(Ids::ID_HELP_RULES, "&Defining Rules\tF1");
 
 	m_MenuBar = new wxMenuBar();
 	m_MenuBar->Append(menuFile, "&File");
@@ -651,6 +651,9 @@ void EditorRules::OnExport(wxCommandEvent& evt)
 
 void EditorRules::OnHelp(wxCommandEvent& evt)
 {
+	m_HelpWindow->SetPage("defining-rules.html");
+	m_HelpWindow->Show();
+	m_HelpWindow->SetFocus();
 }
 
 void EditorRules::CloseEditor(bool save)

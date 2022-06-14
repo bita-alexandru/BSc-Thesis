@@ -556,6 +556,7 @@ void Main::MenuExport(wxCommandEvent& evt)
 
 void Main::MenuHelp(wxCommandEvent& evt)
 {
+	m_HelpWindow->SetPage("index.html");
 	m_HelpWindow->Show();
 	m_HelpWindow->SetFocus();
 }

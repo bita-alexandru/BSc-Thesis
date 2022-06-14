@@ -4,7 +4,7 @@
 #include "wx/wxhtml.h"
 
 #include <string>
-#include <deque>
+#include <stack>
 
 class HelpWindow : public wxFrame
 {
@@ -12,12 +12,14 @@ public:
 	HelpWindow(wxWindow* parent);
 	~HelpWindow();
 
-	void SetPage(std::string);
+	void SetPage(wxString page);
 private:
 	wxHtmlWindow* m_Html = nullptr;
+	wxButton* m_Prev = nullptr;
+	wxButton* m_Next = nullptr;
 
-	std::deque<wxString> m_Undo;
-	std::deque<wxString> m_Redo;
+	std::stack<wxString> m_Undo;
+	std::stack<wxString> m_Redo;
 
 	void BuildInterface();
 	void SetShortcuts();

@@ -313,7 +313,7 @@ void EditorStates::BuildMenuBar()
 	menuEdit->AppendSeparator();
 	menuEdit->Append(Ids::ID_FORMAT_STATES, "Forma&t\tCtrl+T");
 
-	menuHelp->Append(Ids::ID_HELP_STATES, "&How to Use\tF1");
+	menuHelp->Append(Ids::ID_HELP_STATES, "&Defining States\tF1");
 
 	m_MenuBar = new wxMenuBar();
 	m_MenuBar->Append(menuFile, "&File");
@@ -721,6 +721,9 @@ void EditorStates::OnExport(wxCommandEvent& evt)
 
 void EditorStates::OnHelp(wxCommandEvent& evt)
 {
+	m_HelpWindow->SetPage("defining-states.html");
+	m_HelpWindow->Show();
+	m_HelpWindow->SetFocus();
 }
 
 void EditorStates::UpdateLineColMouse(wxMouseEvent& evt)
