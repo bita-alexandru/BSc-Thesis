@@ -54,6 +54,7 @@ void StatusControls::BuildInterface()
     generation->Bind(wxEVT_BUTTON, &StatusControls::NextGeneration, this);
 
     m_SpinPopulate = new wxSpinCtrlDouble(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_WRAP | wxSP_ARROW_KEYS);
+    m_SpinPopulate->SetToolTip("Population factor (0.1 - 1.0)");
     m_SpinPopulate->SetDigits(1);
     m_SpinPopulate->SetRange(0.1, 1.0);
     m_SpinPopulate->SetIncrement(0.1);
