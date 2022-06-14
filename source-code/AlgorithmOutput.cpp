@@ -325,10 +325,7 @@ void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unorder
 
 		//ShowChromosomePattern(population[i]);
 
-		double fitness = generationMultiplier * nOfGenerations + populationMultiplier * avgPopulation;
-		if (population[i].initialSize && initialSizeMultiplier)
-			fitness = fitness - fitness * (initialSizeMultiplier * population[i].initialSize / (rows * cols));
-		fitness += 1.0;
+		double fitness = (generationMultiplier * nOfGenerations + populationMultiplier * avgPopulation) * (1 - initialSizeMultiplier * population[i].initialSize / (rows * cols)) + 1.0;
 
 		/*wxLogDebug(
 			"No. Generations: %i\nAvg. Population: %f\nInitial Size: %i\nFitness: %f",
