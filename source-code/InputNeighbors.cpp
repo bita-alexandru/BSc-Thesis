@@ -90,7 +90,7 @@ void InputNeighbors::BuildInterface()
 	m_W->SetToolTip("West"); m_C->SetToolTip("Center (The Cell Itself)"); m_E->SetToolTip("East");
 	m_SW->SetToolTip("South-West"); m_S->SetToolTip("South"); m_SE->SetToolTip("South-East");
 
-	wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "Neighbors");
+	wxStaticBoxSizer* sizer = new wxStaticBoxSizer(wxVERTICAL, this, "Neighbours");
 	sizer->Add(row1, 1, wxEXPAND);
 	sizer->Add(row2, 1, wxEXPAND);
 	sizer->Add(row3, 1, wxEXPAND);
