@@ -26,7 +26,7 @@ public:
 	static const int RULES_MAX = 256*255;
 
 	static const int CHARS_STATE_MIN = 1;
-	static const int CHARS_STATE_MAX = 16;
+	static const int CHARS_STATE_MAX = 64;
 	static const int CHARS_RULE_MIN = 4;
 	static const int CHARS_RULE_MAX = 65536;
 };
