@@ -1109,7 +1109,7 @@ void Grid::OnDraw(wxDC& dc)
 	pen.SetColour(wxColour(200, 200, 200));
 
 	dc.SetPen(pen);
-	if (m_Size <= Sizes::CELL_SIZE_MIN * 2) dc.SetPen(*wxTRANSPARENT_PEN);
+	if (m_Size <= Sizes::CELL_SIZE_BORDER) dc.SetPen(*wxTRANSPARENT_PEN);
 
 	wxPosition visibleBegin = GetVisibleBegin();
 	wxPosition visibleEnd = GetVisibleEnd();
