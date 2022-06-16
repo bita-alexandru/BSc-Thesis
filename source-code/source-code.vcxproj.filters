@@ -159,9 +159,6 @@
     <ClInclude Include="DialogDimensions.h">
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
-    <ClInclude Include="RuleApplyFunctor.h">
-      <Filter>Header Files\Misc</Filter>
-    </ClInclude>
     <ClInclude Include="HelpWindow.h">
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
@@ -171,11 +168,11 @@
     <ClInclude Include="AlgorithmOutput.h">
       <Filter>Header Files\Algorithms</Filter>
     </ClInclude>
-    <ClInclude Include="AlgorithmPattern.h">
-      <Filter>Header Files\Algorithms</Filter>
-    </ClInclude>
     <ClInclude Include="Chromosome.h">
       <Filter>Header Files\Algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="Colors.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -254,16 +251,10 @@
     <ClCompile Include="DialogDimensions.cpp">
       <Filter>Source Files\Misc</Filter>
     </ClCompile>
-    <ClCompile Include="RuleApplyFunctor.cpp">
-      <Filter>Source Files\Misc</Filter>
-    </ClCompile>
     <ClCompile Include="HelpWindow.cpp">
       <Filter>Source Files\Misc</Filter>
     </ClCompile>
     <ClCompile Include="AlgorithmOutput.cpp">
-      <Filter>Source Files\Algorithms</Filter>
-    </ClCompile>
-    <ClCompile Include="AlgorithmPattern.cpp">
       <Filter>Source Files\Algorithms</Filter>
     </ClCompile>
     <ClCompile Include="AlgorithmParameters.cpp">
