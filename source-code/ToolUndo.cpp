@@ -34,8 +34,8 @@ void ToolUndo::PushBack(
 		{
 			cellChanges.push_back({ i.first,i.second });
 		}
-		// new state/color
-		else if (prevCells[i.first] != cells[i.first])
+		// new state
+		else if (prevCells[i.first].first != cells[i.first].first)
 		{
 			cellChanges.push_back({ i.first,i.second });
 		}
@@ -62,8 +62,8 @@ void ToolUndo::PushBack(
 		{
 			cellChanges.push_back({ i.first,i.second });
 		}
-		// new state/color
-		else if (cells[i.first] != prevCells[i.first])
+		// new state
+		else if (cells[i.first].first != prevCells[i.first].first)
 		{
 			cellChanges.push_back({ i.first,i.second });
 		}

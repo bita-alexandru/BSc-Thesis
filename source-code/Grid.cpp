@@ -144,7 +144,11 @@ void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::strin
 		}
 	}
 
-	m_Cells = cells;
+	std::unordered_map<std::string, wxColor> colors = GetColors();
+
+	m_Cells = std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt>();
+	for (auto& cell : cells) m_Cells.insert({ cell.first, {cell.second.first, colors[cell.second.first]} });
+
 	m_StatePositions = statePositions;
 	m_PrevCells = m_Cells;
 	m_PrevStatePositions = m_StatePositions;
