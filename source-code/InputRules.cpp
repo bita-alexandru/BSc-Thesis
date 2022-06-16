@@ -52,40 +52,7 @@ void InputRules::SetInputNeighbors(InputNeighbors* inputNeighbors)
 
 void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
 {
-    // rules appear in our vector but not in the given list -> they got recently deleted
-    for (auto it = m_Rules.begin(); it != m_Rules.end();)
-    {
-        bool present = false;
-        for (int i = 0; i < rules.size(); i++)
-        {
-            if (it->first == rules[i].first && it->second.state == rules[i].second.state && it->second.condition == rules[i].second.condition)
-            {
-                present = true;
-                break;
-            }
-        }
-
-        if (!present) it = m_Rules.erase(it);
-        else it++;
-    }
-
-    // rules appear in the given list but not in our map -> they got recently introduced
-    for (int i = 0; i < rules.size(); i++)
-    {
-        //wxLogDebug("imported-rule=<%s>", rules[i].first+"/"+rules[i].second.state+":"+rules[i].second.condition);
-        bool present = false;
-        for (auto it = m_Rules.begin(); it != m_Rules.end(); it++)
-        {
-            //wxLogDebug("present-rule=<%s>", it->first + "/" + it->second.state + ":" + it->second.condition);
-            if (it->first == rules[i].first && it->second.state == rules[i].second.state && it->second.condition == rules[i].second.condition)
-            {
-                present = true;
-                break;
-            }
-        }
-        //wxLogDebug("present? %i", present);
-        if (!present) m_Rules.push_back(rules[i]);
-    }
+    m_Rules = rules;
 
     m_States = m_InputStates->GetStates();
 

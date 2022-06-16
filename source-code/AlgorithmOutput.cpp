@@ -895,6 +895,7 @@ pair<vector<pair<string, pair<int, int>>>, string> AlgorithmOutput::ParseAllRule
 )
 {
 	vector<pair<string, pair<int, int>>> changes;
+	unordered_set<int> visited;
 
 	for (int i = 0; i < rules.size(); i++)
 	{
@@ -902,7 +903,7 @@ pair<vector<pair<string, pair<int, int>>>, string> AlgorithmOutput::ParseAllRule
 
 		//wxLogDebug("RULE=%s/%s:%s", rule.first, rule.second.state, rule.second.condition);
 
-		pair<vector<pair<int, int>>, string> result = ParseRule(rules[i], cells, statePositions, states, neighbors);
+		pair<vector<pair<int, int>>, string> result = ParseRule(rules[i], cells, statePositions, states, neighbors, visited);
 
 		// error
 		if (result.second.size())
@@ -931,10 +932,10 @@ pair<vector<pair<string, pair<int, int>>>, string> AlgorithmOutput::ParseAllRule
 
 pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<string, Transition>& rule,
 	unordered_map<int, string>& cells, unordered_map<string, unordered_set<int>>& statePositions,
-	unordered_map<string, string>& states, unordered_set<string>& neighbors)
+	unordered_map<string, string>& states, unordered_set<string>& neighbors,
+	unordered_set<int>& visited)
 {
 	vector<pair<int, int>> applied;
-	unordered_set<int> visited;
 
 	// if state is "FREE", apply rule to all "FREE" cells
 	if (rule.first == "FREE")
@@ -950,10 +951,11 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<string, Tra
 				int x = i % rows;
 				int y = i / cols;
 
-				if (GetState(x, y, cells) == "FREE" && ApplyOnCell(x, y, rule.second, cells, neighbors))
+				if (GetState(x, y, cells) == "FREE" && visited.find(i) == visited.end() && ApplyOnCell(x, y, rule.second, cells, neighbors))
 				{
 					//wxLogDebug("111");
 					applied.push_back({ x,y });
+					visited.insert(i);
 				}
 			}
 		}
@@ -983,10 +985,11 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<string, Tra
 					int x = i % rows;
 					int y = i / cols;
 
-					if (GetState(x, y, cells) == "FREE" && ApplyOnCell(x, y, rule.second, cells, neighbors))
+					if (GetState(x, y, cells) == "FREE" && visited.find(i) == visited.end() && ApplyOnCell(x, y, rule.second, cells, neighbors))
 					{
 						//wxLogDebug("112");
 						applied.push_back({ x,y });
+						visited.insert(i);
 					}
 				}
 			}
@@ -1069,10 +1072,11 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<string, Tra
 				int x = k % cols;
 				int y = k / cols;
 
-				if (ApplyOnCell(x, y, rule.second, cells, neighbors))
+				if (visited.find(k) == visited.end() && ApplyOnCell(x, y, rule.second, cells, neighbors))
 				{
 					//wxLogDebug("211");
 					applied.push_back({ x,y });
+					visited.insert(k);
 				}
 			}
 		}
@@ -1103,10 +1107,11 @@ pair<vector<pair<int, int>>, string> AlgorithmOutput::ParseRule(pair<string, Tra
 					int x = k % cols;
 					int y = k / cols;
 
-					if (ApplyOnCell(x, y, rule.second, cells, neighbors))
+					if (visited.find(k) == visited.end() && ApplyOnCell(x, y, rule.second, cells, neighbors))
 					{
 						//wxLogDebug("221");
 						applied.push_back({ x,y });
+						visited.insert(k);
 					}
 				}
 			}

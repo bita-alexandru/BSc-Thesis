@@ -125,7 +125,8 @@ private:
 		unordered_map<string, string>& states, vector<pair<string, Transition>>& rules, unordered_set<string>& neighbors);
 	pair<vector<pair<int, int>>, string> ParseRule(pair<string, Transition>& rule,
 		unordered_map<int, string>& cells, unordered_map<string, unordered_set<int>>& statePositions,
-		unordered_map<string, string>& states, unordered_set<string>& neighbors);
+		unordered_map<string, string>& states, unordered_set<string>& neighbors,
+		unordered_set<int>& visited);
 	string CheckValidAutomaton(unordered_map<string,string>& states, vector<pair<string, Transition>>& rules, unordered_set<string>& neighbors);
 
 	string GetState(int x, int y, unordered_map<int, string>& cells);

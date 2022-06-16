@@ -1782,7 +1782,10 @@ bool Grid::InVisibleBounds(int x, int y)
 		);
 }
 
-std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pair<std::string, Transition>& rule)
+std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(
+	std::pair<std::string, Transition>& rule,
+	std::unordered_set<int>& visited
+)
 {
 	if (m_ForceClose)
 	{
@@ -1806,8 +1809,6 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 		if (neighbors.find(direction) == neighbors.end()) return { {}, "<INVALID NEIGHBORHOOD>" };
 	}
 
-	unordered_set<int> visited;
-
 	// if state is "FREE", apply rule to all "FREE" cells
 	if (rule.first == "FREE")
 	{
@@ -1821,10 +1822,12 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 			{
 				int x = i % Sizes::N_COLS;
 				int y = i / Sizes::N_COLS;
+				int k = y * Sizes::N_COLS + x;
 
-				if (GetState(x, y) == "FREE" && ApplyOnCell(x, y, rule.second, neighbors))
+				if (GetState(x, y) == "FREE" && visited.find(k) == visited.end() && ApplyOnCell(x, y, rule.second, neighbors))
 				{
 					applied.push_back({ x,y });
+					visited.insert(k);
 					//wxLogDebug("111");
 				}
 			}
@@ -1846,16 +1849,18 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 			if (n1 <= n2 || rule.second.condition.empty())
 			{
 				//wxLogDebug("3. FREE ALL");
-				const int N = n1;
+				const int N = Sizes::N_COLS * Sizes::N_ROWS;
 
 				for (int i = 0; i < N; i++)
 				{
 					int x = i % Sizes::N_COLS;
 					int y = i / Sizes::N_COLS;
+					int k = y * Sizes::N_COLS + x;
 
-					if (GetState(x, y) == "FREE" && ApplyOnCell(x, y, rule.second, neighbors))
+					if (GetState(x, y) == "FREE" && visited.find(k) == visited.end() && ApplyOnCell(x, y, rule.second, neighbors))
 					{
 						applied.push_back({ x,y });
+						visited.insert(k);
 						//wxLogDebug("222");
 					}
 				}
@@ -1877,11 +1882,11 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 							int y = i / Sizes::N_COLS;
 							int k = y * Sizes::N_COLS + x;
 
-							if (visited.find(k) == visited.end() && GetState(x, y) == "FREE" && ApplyOnCell(x, y, rule.second, neighbors))
+							if (GetState(x, y) == "FREE" && visited.find(k) == visited.end() && ApplyOnCell(x, y, rule.second, neighbors))
 							{
 								applied.push_back({ x,y });
 								visited.insert(k);
-								//wxLogDebug("333");
+								wxLogDebug("333");
 							}
 						}
 					}
@@ -1903,7 +1908,7 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 								int ny = y + dy[d];
 								int k = ny * Sizes::N_COLS + nx;
 
-								if (visited.find(k) == visited.end() && InBounds(nx, ny) && GetState(nx, ny) == rule.first && ApplyOnCell(nx, ny, rule.second, neighbors))
+								if (InBounds(nx, ny) && GetState(nx, ny) == rule.first && visited.find(k) == visited.end() && ApplyOnCell(nx, ny, rule.second, neighbors))
 								{
 									applied.push_back({ nx,ny });
 									visited.insert(k);
@@ -1930,9 +1935,11 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 			{
 				int x = i->first;
 				int y = i->second;
+				int k = y * Sizes::N_COLS + x;
 
-				if (ApplyOnCell(x, y, rule.second, neighbors))
+				if (visited.find(k) == visited.end() && ApplyOnCell(x, y, rule.second, neighbors))
 				{
+					visited.insert(k);
 					applied.push_back({ x,y });
 					//wxLogDebug("444");
 				}
@@ -1960,9 +1967,11 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(std::pa
 				{
 					int x = i->first;
 					int y = i->second;
+					int k = y * Sizes::N_COLS + x;
 
-					if (ApplyOnCell(x, y, rule.second, neighbors))
+					if (visited.find(k) == visited.end() && ApplyOnCell(x, y, rule.second, neighbors))
 					{
+						visited.insert(k);
 						applied.push_back({ x,y });
 						//wxLogDebug("555");
 					}
@@ -2030,11 +2039,12 @@ std::pair<std::vector<std::pair<std::string, std::pair<int, int>>>, std::string>
 {
 	std::vector<std::pair<std::string, Transition>> rules = m_InputRules->GetRules();
 	std::vector<std::pair<std::string, std::pair<int, int>>> changes;
+	std::unordered_set<int> visited;
 
 	for (auto& rule : rules)
 	{
 		//wxLogDebug("RULE=%s/%s:%s", rule.first, rule.second.state, rule.second.condition);
-		std::pair<std::vector<std::pair<int, int>>, std::string> result = ParseRule(rule);
+		std::pair<std::vector<std::pair<int, int>>, std::string> result = ParseRule(rule, visited);
 
 		// error
 		if (result.second.size())
