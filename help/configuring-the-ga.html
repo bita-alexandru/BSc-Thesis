@@ -10,45 +10,45 @@
 			
 			<p>The Genetic Algorithm can be configured by tweaking the following values:</p>
 			<ul>
-				<li><i>Population Size</i></li>
+				<li><b>Population Size</b></li>
 				The number of chromosomes that will make up the algorithm. The more, the better but at the cost of time performance.
-				<li><i>Mutation Probability</i></li>
+				<li><b>Mutation Probability</b></li>
 				The probability that a chromosome's gene will be modified. Usually set on a very small value.
-				<li><i>Crossover Probability</i></li>
+				<li><b>Crossover Probability</b></li>
 				The probability that a chromosome will get selected for crossover (as in exchanging information with another chromosome).
 			</ul>
 			<ul>
-				<li><i>Generation Fitness Multiplier</i></li>
+				<li><b>Generation Fitness Multiplier</b></li>
 				The multiplier to the generation count reached by a chromosome. The higher, the more important this is to the fitness function.
-				<li><i>Population Fitness Multiplier</i></li>
+				<li><b>Population Fitness Multiplier</b></li>
 				The multiplier to the average population count reached by a chromosome. The higher, the more important this is to the fitness function.
-				<li><i>Initial Size Fitness Multiplier</i></li>
+				<li><b>Initial Size Fitness Multiplier</b></li>
 				The multiplier to the initial population size of a chromosome. The higher, the more important this is to the fitness function.
 			</ul>
 			<ul>
-				<li><i>Population Target</i></li>
+				<li><b>Population Target</b></li>
 				The population size that a chromosome is supposed to stop running the algorithm once it reaches this value.
-				<li><i>Generation Target</i></li>
+				<li><b>Generation Target</b></li>
 				The generation count that a chromosome is supposed to stop running the algorithm once it reaches this value.
-				<li><i>Epochs Target</i></li>
+				<li><b>Epochs Target</b></li>
 				The epoch count that the algorithm is supposed to stop running once it reaches this value.
 			</ul>
 			<ul>
-				<li><i>Selection Method</i></li>
+				<li><b>Selection Method</b></li>
 				The method of selecting the chromosomes for the following generation (as in the survival of the fittest).<br/>
 				There are 6 selection methods to choose from:
 				<ol>
-					<li><i>Roulette Wheel Selection</i></li>
+					<li><b>Roulette Wheel Selection</b></li>
 					A stochastic selection method, where the selection probability of a chromosome is proportional to its fitness.
-					<li><i>Rank Selection</i></li>
+					<li><b>Rank Selection</b></li>
 					Ranks each chromosome by their fitness and makes the selection based on that rank, and not on their fitness.
-					<li><i>Steady State Selection</i></li>
+					<li><b>Steady State Selection</b></li>
 					As opposed to replacing the parents with their off-springs, this selection method replaces random chromosomes with the said off-springs.
-					<li><i>Tournament Selection</i>, (using 3-way tournaments)</li>
+					<li><b>Tournament Selection</b>, (using 3-way tournaments)</li>
 					Groups of 3 randomly chosen chromosomes are made and the most fit chromosomes get selected for the next generation.
-					<li><i>Elitism Selection</i>, (using 2 elites)</li>
+					<li><b>Elitism Selection</b>, (using 2 elites)</li>
 					At the end of a generation, the 2 most fit chromosomes are being kept and will not suffer any changes from mutations or crossovers.
-					<li><i>Random Selection</i></li>
+					<li><b>Random Selection</b></li>
 					Randomly selects chromosomes for the next generation.
 				</ol>
 			</ul>
