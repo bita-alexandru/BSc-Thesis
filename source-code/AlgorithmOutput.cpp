@@ -335,7 +335,7 @@ void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unorder
 			avgPopulation += population[i].cells.size();
 
 			// any targets reached?
-			if (nOfGenerations && nOfGenerations - 1 >= generationTarget) break;
+			if (generationTarget && nOfGenerations - 1 >= generationTarget) break;
 			if (populationTarget && population[i].cells.size() >= populationTarget) break;
 		}
 		nOfGenerations--;
