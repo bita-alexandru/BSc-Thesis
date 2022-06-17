@@ -13,5 +13,7 @@ public:
 private:
 	wxSpinCtrl* m_SpinRows = nullptr;
 	wxSpinCtrl* m_SpinCols = nullptr;
+
+	void BuildInterface();
 };
 

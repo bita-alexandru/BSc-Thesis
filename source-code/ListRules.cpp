@@ -74,8 +74,9 @@ std::vector<std::string> ListRules::GetRules()
 
 	for (int i = 0; i < items.size(); i++)
 	{
-		std::string rule = std::get<1>(items[i]) + "/" + std::get<2>(items[i])
-			+ (std::get<3>(items[i]).size() ? ":" + std::get<3>(items[i]) + ";" : ";");
+		// build the whole rule phrase
+		std::string rule = std::get<1>(items[i]) + " / " + std::get<2>(items[i])
+			+ (std::get<3>(items[i]).size() ? " : " + std::get<3>(items[i]) + ";" : ";");
 
 		rules.push_back(rule);
 	}
@@ -103,6 +104,7 @@ void ListRules::PushBack(std::tuple<int, std::string, std::string, std::string> 
 {
 	items.push_back(item);
 
+	// if background is black -> font should be white and viceversa - inequation found on stackoverflow
 	wxColour txtcolorA = (colorA.Red() * 0.299 + colorA.Green() * 0.587 + colorA.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
 	wxColour txtcolorB = (colorB.Red() * 0.299 + colorB.Green() * 0.587 + colorB.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
 

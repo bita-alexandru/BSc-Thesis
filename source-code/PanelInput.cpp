@@ -1,20 +1,11 @@
 #include "PanelInput.h"
+#include "Colors.h"
 
 PanelInput::PanelInput(wxWindow* parent) : wxScrolledWindow(parent)
 {
-    SetBackgroundColour(wxColor(220, 220, 220));
+	SetBackgroundColour(wxColor(Colors::COLOR_MAIN_R, Colors::COLOR_MAIN_G, Colors::COLOR_MAIN_B));
 
-	m_InputStates = new InputStates(this);
-	m_InputNeighbors = new InputNeighbors(this);
-	m_InputRules = new InputRules(this);
-
-	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-	sizer->Add(m_InputStates, 1, wxEXPAND | wxALL, 6);
-	sizer->Add(m_InputNeighbors, 1, wxEXPAND | wxLEFT | wxRIGHT, 6);
-	sizer->Add(m_InputRules, 1, wxEXPAND | wxALL, 6);
-
-	SetSizer(sizer);
-	SetScrollRate(1, 1);
+	BuildInterface();
 }
 
 PanelInput::~PanelInput()
@@ -37,4 +28,19 @@ InputNeighbors* PanelInput::GetInputNeighbors()
 InputRules* PanelInput::GetInputRules()
 {
 	return m_InputRules;
+}
+
+void PanelInput::BuildInterface()
+{
+	m_InputStates = new InputStates(this);
+	m_InputNeighbors = new InputNeighbors(this);
+	m_InputRules = new InputRules(this);
+
+	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+	sizer->Add(m_InputStates, 1, wxEXPAND | wxALL, 6);
+	sizer->Add(m_InputNeighbors, 1, wxEXPAND | wxLEFT | wxRIGHT, 6);
+	sizer->Add(m_InputRules, 1, wxEXPAND | wxALL, 6);
+
+	SetSizer(sizer);
+	SetScrollRate(1, 1);
 }

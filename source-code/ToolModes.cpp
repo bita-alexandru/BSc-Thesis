@@ -4,8 +4,6 @@
 
 ToolModes::ToolModes(wxWindow* parent) : wxPanel(parent)
 {
-    //SetBackgroundColour(wxColour(242, 204, 143));
-
 	BuildInterface();
 }
 
@@ -20,6 +18,8 @@ char ToolModes::GetMode()
 
 void ToolModes::SetMode(char mode)
 {
+	// set grid manipulation mode (Draw, Pick, Move)
+
 	switch (mode)
 	{
 	case 'D':
@@ -104,15 +104,13 @@ void ToolModes::UpdateTextMode()
 		}
 	}
 
-	std::string label ="Mode=" + mode;
+	wxString label = wxString::Format("Mode=%s", mode);
 	m_TextMode->SetLabel(label);
-
-	//Layout();
-	//Update();
 }
 
 void ToolModes::OnMode(wxCommandEvent& evt)
 {
+	// get the letter corresponding to the selected mode
 	char mode = (evt.GetId() - Ids::ID_MODE_DRAW)["DPM"];
 
 	SetMode(mode);

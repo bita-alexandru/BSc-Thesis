@@ -13,6 +13,7 @@ private:
 public:
 	struct PairInt {
 		inline size_t operator() (const pair<int, int>& p) const {
+			// return the 1d index of a 2d point
 			return p.second * Sizes::N_COLS + p.first;
 		}
 	};

@@ -119,6 +119,7 @@ void ListStates::SetItemColor(int index, wxColour color)
 	{
 		attrs[index]->SetBackgroundColour(color);
 
+		// if background is black -> font should be white and viceversa - inequation found on stackoverflow
 		wxColour blackwhite = (color.Red() * 0.299 + color.Green() * 0.587 + color.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
 		attrs[index]->SetTextColour(blackwhite);
 	}

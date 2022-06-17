@@ -18,5 +18,7 @@ private:
 	StatusDelay* m_StatusDelay = nullptr;
 	StatusControls* m_StatusControls = nullptr;
 	StatusCells* m_StatusCells = nullptr;
+
+	void BuildInterface();
 };
 

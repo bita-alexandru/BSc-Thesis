@@ -2,8 +2,6 @@
 
 ToolCoords::ToolCoords(wxWindow* parent) : wxPanel(parent)
 {
-    //SetBackgroundColour(wxColour(242, 204, 143));
-
 	BuildInterface();
 }
 
@@ -13,14 +11,11 @@ ToolCoords::~ToolCoords()
 
 void ToolCoords::SetCoords(int x, int y, std::string state)
 {
-	std::string coords = "(X,Y)=(" + std::to_string(x) + "," + std::to_string(y) + ")";
-	std::string name = "State=" + state;
+	wxString coords = wxString::Format("(X,Y)=(%i,%i)", x, y);
+	wxString name = wxString::Format("State=%s", state);
 
 	m_Coords->SetLabel(coords);
 	m_State->SetLabel(name);
-	
-	//Layout();
-	//Update();
 }
 
 wxString ToolCoords::GetState()
@@ -32,9 +27,6 @@ void ToolCoords::Reset()
 {
 	m_Coords->SetLabel("(X,Y)=");
 	m_State->SetLabel("State=");
-
-	//Layout();
-	//Update();
 }
 
 void ToolCoords::BuildInterface()

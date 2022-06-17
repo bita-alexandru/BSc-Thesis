@@ -3,8 +3,6 @@
 
 ToolStates::ToolStates(wxWindow* parent) : wxPanel(parent)
 {
-    //SetBackgroundColour(wxColour(242, 204, 143));
-
     BuildInterface();
 }
 
@@ -39,10 +37,12 @@ void ToolStates::SetIndex(int index)
 
 void ToolStates::SetStates(std::vector<std::pair<std::string, wxColour>> states)
 {
+	// update states and colors
 	m_States = states;
 	m_Colors.clear();
 	for (auto& it : states) m_Colors[it.first] = it.second;
 
+	// update index
 	int size = states.size() - 1;
 	if (m_Index > size)
 	{
@@ -96,12 +96,14 @@ void ToolStates::SelectPrevState()
 	UpdateTextIndex();
 	UpdateState();
 
+	// unhighlight currently selected state items from list
 	int selection = m_ListStates->GetFirstSelected();
 	while (selection != -1)
 	{
 		m_ListStates->Select(selection, false);
 		selection = m_ListStates->GetNextSelected(selection);
 	}
+	// highlight on the list the selected state
 	m_ListStates->Select(m_Index);
 	m_ListStates->EnsureVisible(m_Index);
 }
@@ -113,12 +115,14 @@ void ToolStates::SelectNextState()
 	UpdateTextIndex();
 	UpdateState();
 
+	// unhighlight currently selected state items from list
 	int selection = m_ListStates->GetFirstSelected();
 	while (selection != -1)
 	{
 		m_ListStates->Select(selection, false);
 		selection = m_ListStates->GetNextSelected(selection);
 	}
+	// highlight on the list the selected state
 	m_ListStates->Select(m_Index);
 	m_ListStates->EnsureVisible(m_Index);
 }
@@ -154,11 +158,8 @@ void ToolStates::BuildInterface()
 
 void ToolStates::UpdateTextIndex()
 {
-	std::string label = std::to_string(m_Index) + " / " + std::to_string(m_MaximumIndex);
+	wxString label = wxString::Format("%i / %i", m_Index, m_MaximumIndex);
 	m_TextIndex->SetLabel(label);
-	
-	//Layout();
-	//Update();
 }
 
 void ToolStates::UpdateState()
@@ -182,12 +183,14 @@ void ToolStates::OnNext(wxCommandEvent& evt)
 
 void ToolStates::OnPanelClick(wxMouseEvent& evt)
 {
+	// unhighlight currently selected state items from list
 	int selection = m_ListStates->GetFirstSelected();
 	while (selection != -1)
 	{
 		m_ListStates->Select(selection, false);
 		selection = m_ListStates->GetNextSelected(selection);
 	}
+	// highlight on the list the currently selected state
 	m_ListStates->Select(m_Index);
 	m_ListStates->EnsureVisible(m_Index);
 

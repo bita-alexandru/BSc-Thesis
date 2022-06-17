@@ -1,12 +1,34 @@
 #include "DialogDimensions.h"
 #include "Sizes.h"
+#include "Colors.h"
 
 #include "wx/wx.h"
 
 DialogDimensions::DialogDimensions(wxWindow* parent) : wxDialog(parent, wxID_ANY, "Change Grid Dimensions")
 {
+	SetBackgroundColour(wxColor(Colors::COLOR_MAIN_R, Colors::COLOR_MAIN_G, Colors::COLOR_MAIN_B));
+
 	Centre();
 
+	BuildInterface();
+}
+
+DialogDimensions::~DialogDimensions()
+{
+}
+
+int DialogDimensions::GetRows()
+{
+	return m_SpinRows->GetValue();
+}
+
+int DialogDimensions::GetCols()
+{
+	return m_SpinCols->GetValue();
+}
+
+void DialogDimensions::BuildInterface()
+{
 	wxBoxSizer* sizerRows = new wxBoxSizer(wxHORIZONTAL);
 
 	wxStaticText* textRows = new wxStaticText(this, wxID_ANY, wxString::Format("Rows (%i-%i):", 1, Sizes::MAX_ROWS));
@@ -30,18 +52,4 @@ DialogDimensions::DialogDimensions(wxWindow* parent) : wxDialog(parent, wxID_ANY
 	m_SpinRows->SetFocus();
 
 	SetSizerAndFit(sizer);
-}
-
-DialogDimensions::~DialogDimensions()
-{
-}
-
-int DialogDimensions::GetRows()
-{
-	return m_SpinRows->GetValue();
-}
-
-int DialogDimensions::GetCols()
-{
-	return m_SpinCols->GetValue();
 }

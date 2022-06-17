@@ -3,6 +3,7 @@
 InputNeighbors::InputNeighbors(wxWindow* parent) : wxPanel(parent)
 {
 	BuildInterface();
+
 	SetNeighbors({ "N","NE","E","SE","S","SW","W","NW"});
 }
 
@@ -36,6 +37,7 @@ void InputNeighbors::SetNeighbors(std::vector<std::string> neighbors)
 {
 	for (auto& it : m_Buttons)
 	{
+		// neighbour found -> disable it
 		if (m_Neighbors.find(it.first) != m_Neighbors.end())
 		{
 			it.second->SetValue(0);
@@ -45,6 +47,7 @@ void InputNeighbors::SetNeighbors(std::vector<std::string> neighbors)
 
 	for (int i = 0; i < neighbors.size(); i++)
 	{
+		// new neighbour -> enable it
 		if (m_Neighbors.find(neighbors[i]) == m_Neighbors.end())
 		{
 			m_Neighbors.insert(neighbors[i]);

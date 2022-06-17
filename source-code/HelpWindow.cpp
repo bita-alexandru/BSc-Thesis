@@ -13,6 +13,8 @@ HelpWindow::HelpWindow(wxWindow* parent) : wxFrame(parent, wxID_ANY, "CellyGen::
 	Center();
 
 	BuildInterface();
+
+	SetShortcuts();
 }
 
 HelpWindow::~HelpWindow()
@@ -130,12 +132,14 @@ void HelpWindow::OnLinkClick(wxHtmlLinkEvent& evt)
 {
 	wxString link = evt.GetLinkInfo().GetHref();
 
+	// currently on this link already -> do nothing
 	if (m_Undo.size() && m_Html->GetOpenedPage() == link)
 	{
 		evt.Skip();
 		return;
 	}
 
+	// push the current link to the stack so that we mantain a history of links
 	m_Undo.push(m_Html->GetOpenedPage());
 	m_Prev->Enable();
 

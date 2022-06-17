@@ -19,8 +19,6 @@ EditorRules::EditorRules(wxFrame* parent) : wxFrame(parent, wxID_ANY, "CellyGen:
 
 	Center();
 
-    //SetBackgroundColour(wxColour(255, 232, 214));
-
 	BuildMenuBar();
 
 	BuildInterface();
@@ -44,6 +42,8 @@ void EditorRules::SetHelpWindow(HelpWindow* helpWindow)
 
 std::pair<std::vector<std::pair<std::string, Transition>>, std::vector<std::pair<int, std::string>>> EditorRules::Process(wxString text)
 {
+	// parse input text and return the processed rules
+
 	text.MakeUpper();
 	std::string rules = text.ToStdString();
 
@@ -61,12 +61,14 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 	std::vector<std::pair<std::string, Transition>> transitions = data.first;
 	std::vector<std::pair<int, std::string>> invalidPositions = data.second;
 
+	// no errors
 	if (invalidPositions.empty())
 	{
 		m_InvalidInput = false;
 		return transitions;
 	}
 
+	// too many rules
 	if (invalidPositions[0].first == -1)
 	{
 		wxMessageDialog dialog(
@@ -88,10 +90,8 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 		wxYES_NO | wxCANCEL | wxICON_EXCLAMATION
 	);
 	dialog.SetYesNoLabels("Mark && Resolve", "Ignore");
-	/*dialog.SetExtendedMessage(
-		"Make sure you don't have any duplicates and that you're respecting the naming conventions."
-	);*/
 
+	// write the errors log
 	std::string extendedMessage = "";
 	for (auto& it : invalidPositions)
 	{
@@ -106,19 +106,14 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 		{
 			// count linefeed whitespace
 			wxString line = m_TextCtrl->GetLine(i);
-			/*int lf = (line.size() > 0 && line[line.size() - 1] == '\n') ? 1 : 0;
-			int cr = (line.size() > 1 && line[line.size() - 2] == '\r') ? 1 : 0;
-			int ws = lf + cr;*/
 
-			int ws = 0; // nvm, i dont need it
-
-			cnt += (line.size() - ws);
+			cnt += line.size();
 
 			//wxLogDebug("LINE=%i SIZE=%i WS=%i CNT=%i", i, line.size(), ws, cnt);
 			if (cnt >= ncol)
 			{
 				nline = i;
-				ncol = (line.size() - ws) - (cnt - ncol);
+				ncol = line.size() - (cnt - ncol);
 				break;
 			}
 		}
@@ -129,7 +124,6 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 		std::string col = std::to_string(ncol);
 
 		extendedMessage += it.second + " at line " + line + ", after column " + col + "\n";
-		//extendedMessage += it.second + " Line=" + line + ", Column=" + col + "\n";
 
 		it.first = nline;
 	}
@@ -169,6 +163,8 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 
 void EditorRules::GoTo(std::string rule)
 {
+	// attempt to higlight the queried rule
+
 	std::pair<int, int> position = FindRule(rule);
 
 	// not found
@@ -201,11 +197,9 @@ void EditorRules::DeleteRule(std::string rule)
 	if (position.first != -1)
 	{
 		m_TextCtrl->ShowPosition(position.first);
-		//m_TextCtrl->SetSelection(position.first, position.second);
 		if (position.first > 0)position.first--;
 		m_TextCtrl->Remove(position.first, position.second);
 
-		//m_TextCtrl->DeleteBack();
 		m_PrevText = m_TextCtrl->GetText();
 	}
 }
@@ -213,8 +207,6 @@ void EditorRules::DeleteRule(std::string rule)
 void EditorRules::ForceClose()
 {
 	m_ForceClose = true;
-
-	//Close();
 }
 
 void EditorRules::SetText(std::string text)
@@ -282,7 +274,6 @@ void EditorRules::BuildInterface()
 	m_TextCtrl = new wxStyledTextCtrl(this);
 	m_TextCtrl->SetMarginWidth(wxSTC_MARGIN_NUMBER, 80);
 	m_TextCtrl->SetMarginType(wxSTC_MARGINOPTION_SUBLINESELECT, wxSTC_MARGIN_NUMBER);
-	//m_TextCtrl->SetScrollWidth(1);
 	m_TextCtrl->MarkerSetBackground(wxSTC_MARK_CIRCLE, wxColour("red"));
 
 	m_TextCtrl->Bind(wxEVT_KEY_UP, &EditorRules::UpdateLineColKey, this);
@@ -291,23 +282,12 @@ void EditorRules::BuildInterface()
 	wxFont font = wxFont(16, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false);
 	m_TextCtrl->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
 
-	/*wxButton* save = new wxButton(this, Ids::ID_SAVE_RULES, wxString("Save"));
-	wxButton* saveClose = new wxButton(this, Ids::ID_SAVE_CLOSE_RULES, wxString("Save && Close"));
-
-	save->Bind(wxEVT_BUTTON, &EditorRules::OnSave, this);
-	saveClose->Bind(wxEVT_BUTTON, &EditorRules::OnSaveClose, this);
-
-	wxGridSizer* sizerButtons = new wxGridSizer(2);
-	sizerButtons->Add(save, 0, wxLEFT, 6);
-	sizerButtons->Add(saveClose, 0);*/
-
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 	sizer->Add(m_TextCtrl, 1, wxEXPAND);
-	//sizer->Add(sizerButtons, 0, wxALIGN_RIGHT | wxALL, 6);
 
 	CreateStatusBar(); GetStatusBar()->SetStatusText("Line=1\tColumn=1");
 
-	this->SetSizer(sizer);
+	SetSizer(sizer);
 }
 
 void EditorRules::BuildDialogFind(std::string title, long style)
@@ -430,6 +410,8 @@ void EditorRules::OnMenuReplace(wxCommandEvent& evt)
 
 void EditorRules::OnFind(wxFindDialogEvent& evt)
 {
+	// attempt to highlight queried input
+
 	wxString find = m_FindData->GetFindString();
 
 	int flags = m_FindData->GetFlags();
@@ -456,6 +438,8 @@ void EditorRules::OnFind(wxFindDialogEvent& evt)
 
 void EditorRules::OnFindNext(wxFindDialogEvent& evt)
 {
+	// attempt to highlight next occurence of queried input
+
 	wxString find = m_FindData->GetFindString();
 
 	int flags = m_FindData->GetFlags();
@@ -485,6 +469,8 @@ void EditorRules::OnFindNext(wxFindDialogEvent& evt)
 
 void EditorRules::OnReplace(wxFindDialogEvent& evt)
 {
+	// attempt to replace queried input with another input
+
 	wxString replace = m_FindData->GetReplaceString();
 	wxString find = m_FindData->GetFindString();
 
@@ -495,6 +481,8 @@ void EditorRules::OnReplace(wxFindDialogEvent& evt)
 
 void EditorRules::OnReplaceAll(wxFindDialogEvent& evt)
 {
+	// attempt to replace next occurence of queried input with another input
+
 	wxString find = m_FindData->GetFindString();
 	wxString replace = m_FindData->GetReplaceString();
 
@@ -538,6 +526,8 @@ void EditorRules::OnFormat(wxCommandEvent& evt)
 
 void EditorRules::OnPrevMark(wxCommandEvent& evt)
 {
+	// go to the previously marked line
+
 	int line = m_TextCtrl->MarkerPrevious(--m_MarkLine, 1);
 
 	if (line == -1) line = m_TextCtrl->MarkerPrevious(m_TextCtrl->GetLineCount(), 1);
@@ -553,6 +543,8 @@ void EditorRules::OnPrevMark(wxCommandEvent& evt)
 
 void EditorRules::OnNextMark(wxCommandEvent& evt)
 {
+	// go to the next marked line
+
 	int line = m_TextCtrl->MarkerNext(++m_MarkLine, 1);
 
 	if (line == -1) line = m_TextCtrl->MarkerNext(0, 1);
@@ -581,7 +573,7 @@ void EditorRules::OnImport(wxCommandEvent& evt)
 	std::ifstream in(dialogFile.GetPath().ToStdString());
 	std::stringstream ss; ss << in.rdbuf();
 
-	// read everything and ignore until "[STATES]"
+	// read everything and ignore until "[RULES]"
 	std::string text;
 	bool valid = false;
 	while (true)
@@ -629,7 +621,6 @@ void EditorRules::OnImport(wxCommandEvent& evt)
 			SetText(text);
 			m_InputRules->SetRules(rules);
 		}
-		//else m_InputRules->SetRules(std::vector<std::pair<std::string, Transition>>());
 
 		if (errors.size())
 		{
@@ -696,8 +687,6 @@ void EditorRules::UpdateLineColMouse(wxMouseEvent& evt)
 	long col = 0;
 	long pos = m_TextCtrl->GetInsertionPoint();
 
-	//if (pos == m_TextCtrl->GetLastPosition()) pos = (pos - 1 > 1) ? pos - 1 : 1;
-
 	if (!m_TextCtrl->PositionToXY(pos, &col, &line))
 	{
 		line = m_TextCtrl->GetLineCount() - 1;
@@ -716,8 +705,6 @@ void EditorRules::UpdateLineColKey(wxKeyEvent& evt)
 	long line = 0;
 	long col = 0;
 	int pos = m_TextCtrl->GetInsertionPoint();
-
-	//if (pos == m_TextCtrl->GetLastPosition()) pos = (pos - 1 > 1) ? pos - 1 : 1;
 
 	if (!m_TextCtrl->PositionToXY(pos, &col, &line))
 	{
@@ -754,6 +741,7 @@ std::pair<int, int> EditorRules::FindRule(std::string rule)
 		}
 		rules.MakeUpper();
 
+		// compose full rule and check if it matches the query
 		for (int j = 0; j < rules.size(); j++)
 		{
 			char c = rules[j];
@@ -790,4 +778,3 @@ std::pair<int, int> EditorRules::FindRule(std::string rule)
 
 	return { -1,-1 };
 }
-

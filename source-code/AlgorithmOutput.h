@@ -104,7 +104,6 @@ private:
 	void DoMutatiton(vector<Chromosome>& population);
 	Chromosome GetBestChromosome(vector<Chromosome>& population, int epoch);
 	double GetEliteLowerBound(vector<Chromosome> population);
-	void InsertElite(vector<Chromosome>& population, vector<Chromosome>& newPopulation, int& j);
 
 	void OnStart(wxCommandEvent& evt);
 	void OnStop(wxCommandEvent& evt);

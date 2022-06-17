@@ -16,8 +16,6 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "CellyGen", wxDefaultPosition, wxSize(
 
 	Center();
 
-    //SetBackgroundColour(wxColour(255, 255, 255));
-
 	BuildMenuBar();
 
 	BuildInterface();
@@ -33,14 +31,16 @@ Main::~Main()
 
 void Main::BuildInterface()
 {
+	// setup default grid size
 	Sizes::N_COLS = 11; Sizes::N_ROWS = 11;
 
+	// create splitter separating left-side panel (input) from right-side panels (grid + GA panel)
 	m_SplitterInputGrid = new wxSplitterWindow(this, wxID_ANY);
 	m_PanelInput = new PanelInput(m_SplitterInputGrid);
 
+	// create splitter separating top-side panel (grid) from bottom-side panel (GA panel)
 	m_SplitterGridAlgorithm = new wxSplitterWindow(m_SplitterInputGrid, wxID_ANY);
 	m_PanelGrid = new PanelGrid(m_SplitterGridAlgorithm);
-	//m_PanelGrid = new PanelGrid(m_SplitterInputGrid);
 	m_PanelAlgorithm = new PanelAlgorithm(m_SplitterGridAlgorithm);
 
 	wxBoxSizer* sizerGridAlgorithm = new wxBoxSizer(wxVERTICAL);
@@ -53,13 +53,13 @@ void Main::BuildInterface()
 	m_SplitterGridAlgorithm->SetSashGravity(0.68);
 
 	m_SplitterInputGrid->SplitVertically(m_PanelInput, m_SplitterGridAlgorithm);
-	//m_SplitterInputGrid->SplitVertically(m_PanelInput, m_PanelGrid);
 	m_SplitterInputGrid->SetMinimumPaneSize(1);
 	m_SplitterInputGrid->SetSashGravity(0.2);
 
 	m_SplitterInputGrid->SetSashPosition(GetClientSize().GetX() * 0.2);
 	m_SplitterGridAlgorithm->SetSashPosition(GetClientSize().GetY() * 0.68);
 
+	// launch sub-windows in background
 	m_EditorStates = new EditorStates(this);
 	m_EditorRules = new EditorRules(this);
 	m_HelpWindow = new HelpWindow(this);
@@ -123,9 +123,7 @@ void Main::SetShortcuts()
 	// ToolStates
 	entries[7].Set(wxACCEL_CTRL, WXK_LEFT, Ids::ID_BUTTON_PREV);
 	entries[8].Set(wxACCEL_CTRL, WXK_RIGHT, Ids::ID_BUTTON_NEXT);
-	// Editors and their Searchbars
-	//entries[9].Set(wxACCEL_CTRL, (int)'1', Ids::ID_EDIT_STATES);
-	//entries[10].Set(wxACCEL_CTRL, (int)'2', Ids::ID_EDIT_RULES);
+	// List Searchbars
 	entries[9].Set(wxACCEL_ALT, (int)'1', Ids::ID_SEARCH_STATES);
 	entries[10].Set(wxACCEL_ALT, (int)'2', Ids::ID_SEARCH_RULES);
 	// GridStatus
@@ -142,6 +140,8 @@ void Main::SetShortcuts()
 
 void Main::PrepareInput()
 {
+	// setup the necessary references for all the entities that require them
+
 	InputStates* inputStates = m_PanelInput->GetInputStates();
 	InputNeighbors* inputNeighbors = m_PanelInput->GetInputNeighbors();
 	InputRules* inputRules = m_PanelInput->GetInputRules();
@@ -205,9 +205,6 @@ void Main::PrepareInput()
 	algorithmOutput->SetInputRules(inputRules);
 	algorithmOutput->SetInputNeighbors(inputNeighbors);
 	algorithmOutput->SetAlgorithmParameters(algorithmParameters);
-
-	//inputNeighbors->SetNeighbors({ "NW","N","NE","W","C","E","SW","S","SE"});
-	//inputStates->SetStates({ "FREE","LIVE" });
 }
 
 void Main::MenuExit(wxCommandEvent& evt)
@@ -217,26 +214,18 @@ void Main::MenuExit(wxCommandEvent& evt)
 
 void Main::MenuPerspectiveDefault(wxCommandEvent& evt)
 {
+	// rearrange layout to default
+
 	m_SplitterInputGrid->SetSashPosition(GetClientSize().GetX() * 0.2);
 	m_SplitterGridAlgorithm->SetSashPosition(GetClientSize().GetY() * 0.75);
 }
 
-void Main::MenuPerspectiveInput(wxCommandEvent& evt)
-{
-	m_SplitterInputGrid->SetSashPosition(9999);
-	m_SplitterGridAlgorithm->SetSashPosition(-9999);
-}
-
 void Main::MenuPerspectiveGrid(wxCommandEvent& evt)
 {
+	// rearrange the layout to focus the Grid
+
 	m_SplitterInputGrid->SetSashPosition(-9999);
 	m_SplitterGridAlgorithm->SetSashPosition(9999);
-}
-
-void Main::MenuPerspectiveAlgorithm(wxCommandEvent& evt)
-{
-	//m_SplitterGridAlgorithm->SetSashPosition(-9999);
-	//m_SplitterInputGrid->SetSashPosition(-9999);
 }
 
 void Main::MenuEditorStates(wxCommandEvent& evt)
@@ -272,6 +261,18 @@ void Main::MenuFullScreen(wxCommandEvent& evt)
 
 void Main::MenuImport(wxCommandEvent& evt)
 {
+	// import a CA configuration file
+	// this includes the "states", "rules", "grid dimensions" and the "initial pattern"
+	// 
+	// the file follows the structure:
+	// 
+	// [<section>]
+	// <body>
+	// 
+	// where <section> is: STATES, RULES, NEIGHBORS, SIZE, CELLS
+	// and <body> is: the list of states, the list of rules, the list of neighbors, the grid dimensions and, respectively, the list of cells (denoted by their position and state name)
+	
+
 	if (m_PanelGrid->GetGrid()->GetGenerating() || !m_PanelGrid->GetGrid()->GetPaused())
 	{
 		wxMessageBox("Can't import while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
@@ -303,6 +304,7 @@ void Main::MenuImport(wxCommandEvent& evt)
 
 		mark.insert({ symbol, "" });
 
+		// read and store all content until another line mark is detected
 		while (true)
 		{
 			s = "";
@@ -437,6 +439,7 @@ void Main::MenuImport(wxCommandEvent& evt)
 		std::string s;
 		std::unordered_map<std::string, std::string> states = m_PanelInput->GetInputStates()->GetStates();
 
+		// cells should follow the structure: <x> <y> <STATE_NAME>;
 		while (std::getline(ss, s, ';'))
 		{
 			std::string x;
@@ -474,6 +477,8 @@ void Main::MenuImport(wxCommandEvent& evt)
 				}
 				else
 				{
+					// map imported coordinates to the actual grid coordinates
+
 					x = signx + x;
 					y = signy + y;
 
@@ -518,6 +523,9 @@ void Main::MenuImport(wxCommandEvent& evt)
 
 void Main::MenuExport(wxCommandEvent& evt)
 {
+	// export a CA configuration file
+	// same structure as presented in the Import function
+
 	wxFileDialog dialogFile(this, "Export Pattern", "", "", "TXT files (*.txt)|*.txt", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
 	if (dialogFile.ShowModal() == wxID_CANCEL) return;

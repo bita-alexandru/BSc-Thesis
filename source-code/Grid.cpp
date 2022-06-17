@@ -1,5 +1,4 @@
 #include "Grid.h"
-#include "RuleApplyFunctor.h"
 
 #include "wx/richmsgdlg.h"
 
@@ -40,6 +39,8 @@ int Grid::GetSize()
 
 void Grid::SetSize(int size, bool center)
 {
+	// resize the grid cells and center view on the middle cell (if center=true)
+
 	m_Size = size;
 
 	// still drawing
@@ -47,6 +48,8 @@ void Grid::SetSize(int size, bool center)
 	{
 		m_IsDrawing = false;
 		m_IsErasing = false;
+
+
 
 		if (m_Cells != m_PrevCells)
 		{
@@ -87,13 +90,15 @@ void Grid::ScrollToCenter(int x, int y)
 	int row = y;
 	int column = x;
 
+	// calculate the middle cell's position
 	row = row - (visibleEnd.GetRow() - visibleBegin.GetRow()) / 2;
 	column = column - (visibleEnd.GetCol() - visibleBegin.GetCol()) / 2;
 
+	// make sure it doesn't go past the borders
 	row = std::max(0, row); row = std::min(Sizes::N_ROWS - 1, row);
 	column = std::max(0, column); column = std::min(Sizes::N_COLS - 1, column);
 
-	// even length, current positions differ by one unit -> don't reposition
+	// even length, current positions differ by one unit -> don't reposition (avoid flickering)
 	if ((visibleEnd.GetCol() - visibleBegin.GetCol()) % 2 == 0)
 	{
 		if (std::abs(column - visibleBegin.GetCol()) == 1) column = visibleBegin.GetCol();
@@ -111,6 +116,7 @@ void Grid::ScrollToCenter(int x, int y)
 void Grid::SetDimensions(int rows, int cols)
 {
 	if (rows == Sizes::N_ROWS && cols == Sizes::N_COLS) return;
+
 	if (m_Generating || !m_Paused)
 	{
 		wxMessageBox("Can't change grid dimensions while the simulation is playing. Try pausing it first.", "Error", wxICON_WARNING);
@@ -131,8 +137,12 @@ void Grid::SetDimensions(int rows, int cols)
 	ScrollToCenter();
 }
 
-void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells, std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions)
+void Grid::SetCells(
+	std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt> cells,
+	std::unordered_map<std::string, std::unordered_set<std::pair<int, int>, Hashes::PairInt>> statePositions
+)
 {
+	// which cells should be erased?
 	for (auto& it : m_PrevCells)
 	{
 		m_RedrawAll = false;
@@ -146,6 +156,7 @@ void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::strin
 
 	std::unordered_map<std::string, wxColor> colors = GetColors();
 
+	// update color of cells (if modified before an undo/redo operation)
 	m_Cells = std::unordered_map<std::pair<int, int>, std::pair<std::string, wxColour>, Hashes::PairInt>();
 	for (auto& cell : cells) m_Cells.insert({ cell.first, {cell.second.first, colors[cell.second.first]} });
 
@@ -153,6 +164,7 @@ void Grid::SetCells(std::unordered_map<std::pair<int, int>, std::pair<std::strin
 	m_PrevCells = m_Cells;
 	m_PrevStatePositions = m_StatePositions;
 
+	// which cells should be redrawn?
 	for (auto& it : m_Cells)
 	{
 		m_RedrawAll = false;
@@ -226,6 +238,7 @@ bool Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 		{
 			// same state -> don't do anything
 			if (m_Cells[{x, y}].first == state) return false;
+
 			EraseCell(x, y);
 
 			m_Cells[{x, y}] = { state, color };
@@ -233,6 +246,8 @@ bool Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 
 			if (multiple)
 			{
+				// draw the cells at the same time when finished
+
 				m_RedrawAll = false;
 
 				if (InVisibleBounds(x, y))
@@ -262,7 +277,10 @@ bool Grid::InsertCell(int x, int y, std::string state, wxColour color, bool mult
 
 		if (multiple)
 		{
+			// draw the cells at the same time when finished
+
 			m_RedrawAll = false;
+
 			if (InVisibleBounds(x, y))
 			{
 				m_RedrawXYs.push_back({ x,y });
@@ -293,6 +311,8 @@ bool Grid::RemoveCell(int x, int y, std::string state, wxColour color, bool mult
 	{
 		EraseCell(x, y, multiple);
 
+		// do we want to update the grid now or update it manually after
+		// all operations of this type are completed?
 		if (!multiple)
 		{
 			m_StatusCells->UpdateCountPopulation(-1);
@@ -326,8 +346,8 @@ void Grid::RemoveState(std::string state, bool update)
 			}
 		}
 
-		;//ResetUniverse();
-
+		// do we want to update the grid now or update it manually after
+		// all operations of this type are completed?
 		if (update)
 		{
 			Refresh(false);
@@ -352,13 +372,14 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 	// cells of this state need their names & colors updated
 	if (m_StatePositions.find(oldState) != m_StatePositions.end())
 	{
-		// same state but a new color
+		// same state but a new color -> update it
 		if (oldState == newState)
 		{
 			for (auto& it : m_StatePositions[oldState])
 			{
 				m_Cells[it].second = newColor;
 
+				// do they need to be redrawn now?
 				m_RedrawAll = false;
 				if (InVisibleBounds(it.first, it.second))
 				{
@@ -370,7 +391,7 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 			Refresh(false);
 			Update();
 		}
-		// same color but a new state
+		// same color but a new state -> update it
 		else if (oldColor == newColor)
 		{
 			for (auto& it : m_StatePositions[oldState])
@@ -378,8 +399,6 @@ void Grid::UpdateState(std::string oldState, wxColour oldColor, std::string newS
 				m_Cells[it].first = newState;
 				m_StatePositions[newState].insert(it);
 			}
-
-			;//ResetUniverse();
 
 			m_StatePositions.erase(oldState);
 
@@ -408,6 +427,8 @@ bool Grid::EraseCell(int x, int y, bool multiple)
 
 	if (multiple)
 	{
+		// erase these cells at the same time when finished
+
 		if (InVisibleBounds(x, y))
 		{
 			m_RedrawXYs.push_back({ x,y });
@@ -458,6 +479,7 @@ void Grid::Reset(bool refresh)
 
 	ResetUniverse();
 
+	// update the grid display now?
 	if (refresh)
 	{
 		Refresh(false);
@@ -489,7 +511,6 @@ void Grid::NextGeneration()
 {
 	if (m_ForceClose) return;
 
-	// to do: come back here for finished
 	if (m_Finished)
 	{
 		m_Generating = false;
@@ -541,6 +562,7 @@ void Grid::NextGeneration()
 		m_StatusControls->SetPlayButton(1);
 		m_StatusCells->SetGenerationMessage(" [OVER]");
 	}
+	// continue with the next generation
 	else
 	{
 		m_StatusCells->UpdateCountGeneration(+1);
@@ -557,6 +579,7 @@ void Grid::OnNextGeneration()
 	if (!m_Generating)
 	{
 		if (m_Finished) ResetUniverse();
+
 		m_Generating = true;
 		m_Finished = false;
 
@@ -573,6 +596,8 @@ void Grid::OnPlayUniverse()
 
 void Grid::OnPopulate(double probability)
 {
+	// randomly populate the grid
+
 	if (!m_Generating)
 	{
 		Reset();
@@ -593,6 +618,7 @@ void Grid::OnPopulate(double probability)
 
 			srand(time(NULL));
 
+			// iterate through all of the cells of the grid
 			for (int i = 0; i < n; i++)
 			{
 				for (int j = 0; j < m; j++)
@@ -601,6 +627,8 @@ void Grid::OnPopulate(double probability)
 
 					if (p <= probability)
 					{
+						// assign a random state at this position
+
 						int k = rand() % statesSize;
 
 						population.push_back({ {i,j}, states[k] });
@@ -610,10 +638,13 @@ void Grid::OnPopulate(double probability)
 
 			if (population.size())
 			{
+				// update the grid
+
 				for (auto& cell : population)
 				{
 					int y = cell.first.first;
 					int x = cell.first.second;
+
 					string state = cell.second.first;
 					wxColour color = cell.second.second;
 
@@ -716,8 +747,10 @@ void Grid::UpdateCoordsHovered()
 {
 	if (m_ForceClose) return;
 
+	// is the cursor inside the grid?
 	if (!wxWindow::GetScreenRect().Contains(wxGetMousePosition())) return;
 
+	// update cursor's position relative to the grid
 	wxPoint xy = ScreenToClient(wxGetMouseState().GetPosition()) / m_Size;
 
 	// out of grid bounds
@@ -727,6 +760,7 @@ void Grid::UpdateCoordsHovered()
 	xy.x = GetVisibleColumnsBegin() + xy.x;
 	xy.y = GetVisibleRowsBegin() + xy.y;
 
+	// same cell as the previously hover cell
 	if (xy.x != m_LastHovered.first || xy.y != m_LastHovered.second) return;
 
 	ControlUpdateCoords(xy.x, xy.y);
@@ -745,14 +779,13 @@ wxCoord Grid::OnGetColumnWidth(size_t row) const
 void Grid::OnPaint(wxPaintEvent& evt)
 {
 	wxAutoBufferedPaintDC dc(this);
+
 	PrepareDC(dc);
 	OnDraw(dc);
 }
 
 void Grid::BuildInterface()
 {
-	//SetBackgroundColour(wxColor("white"));
-
 	SetRowColumnCount(Sizes::N_ROWS, Sizes::N_COLS);
 
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
@@ -760,6 +793,7 @@ void Grid::BuildInterface()
 
 void Grid::InitializeTimers()
 {
+	// timer for updating the selected state when using Shift+Click
 	m_TimerSelection = new wxTimer(this, Ids::ID_TIMER_SELECTION);
 }
 
@@ -779,6 +813,7 @@ std::pair<int, int> Grid::GetHoveredCell(int X, int Y)
 bool Grid::ControlSelectState()
 {
 	wxMouseState mouse = wxGetMouseState();
+
 	// shortcut for alternating between states: Shift + L/R Click
 	if ((mouse.LeftIsDown() || mouse.RightIsDown()) && wxGetKeyState(WXK_SHIFT))
 	{
@@ -812,6 +847,8 @@ bool Grid::ControlZoom(int x, int y, int rotation)
 		return true;
 	}
 
+	// scroll horizontally
+
 	if (rotation && wxGetKeyState(WXK_ALT))
 	{
 		int sign = (rotation > 0) ? 1 : -1;
@@ -836,10 +873,12 @@ bool Grid::ControlZoom(int x, int y, int rotation)
 std::string Grid::ControlUpdateCoords(int x, int y)
 {
 	// update coordinates displayed on screen
+
 	std::string state = GetState(x, y);
 
 	if (m_ToolCoords->GetState() == state) return state;
 
+	// map to grid coordinates
 	m_ToolCoords->SetCoords(x - m_OffsetX, y - m_OffsetY, state);
 
 	return state;
@@ -866,6 +905,8 @@ bool Grid::ModeDraw(int x, int y, char mode)
 			std::pair<std::string, wxColour> state = m_ToolStates->GetState();
 
 			bool structure = false;
+
+			// fill the whole area with cells of this state
 			if (wxGetKeyState(WXK_ALT))
 			{
 				DrawStructure(x, y, state.first, state.second);
@@ -889,7 +930,7 @@ bool Grid::ModeDraw(int x, int y, char mode)
 			else
 			{
 				// mouse was dragged so fast that it didn't register
-				// some of the cells meant to be drawn
+				// some of the cells meant to be drawn -> apply fix
 				if (!structure) DrawLine(x, y, state.first, state.second);
 			}
 		}
@@ -913,9 +954,13 @@ bool Grid::ModeDraw(int x, int y, char mode)
 			std::pair<std::string, wxColour> state = m_Cells[{x, y}];
 
 			bool structure = false;
+
+			// delete the whole area
 			if (wxGetKeyState(WXK_CONTROL))
 			{
+				// delete the cells with the same state as the selected cell
 				if (wxGetKeyState(WXK_ALT)) DeleteStructure(x, y, "");
+				// delete cells of any state
 				else DeleteStructure(x, y, state.first);
 
 				structure = true;
@@ -930,17 +975,18 @@ bool Grid::ModeDraw(int x, int y, char mode)
 
 				if (!structure)
 				{
-					if (RemoveCell(x, y, state.first, state.second));// ResetUniverse();
+					if (RemoveCell(x, y, state.first, state.second));
 				}
 			}
 			// holding click
 			else
 			{
 				// mouse was dragged so fast that it didn't register
-				// some of the cells meant to be drawn
+				// some of the cells meant to be drawn -> apply fix
 				if (!structure) DrawLine(x, y, "FREE", wxColour("white"), true);
 			}
 		}
+		// not doing any drawing operation anymore
 		else if (m_IsDrawing || m_IsErasing)
 		{
 			if (m_Cells != m_PrevCells)
@@ -967,7 +1013,7 @@ bool Grid::ModePick(int x, int y, char mode, std::string state)
 	// "pick" mode
 	if (mode == 'P')
 	{
-		// still drawing
+		// still drawing -> save progress and disable drawing
 		if (m_IsDrawing || m_IsErasing)
 		{
 			m_IsDrawing = false;
@@ -980,15 +1026,19 @@ bool Grid::ModePick(int x, int y, char mode, std::string state)
 				m_PrevStatePositions = m_StatePositions;
 			}
 		}
+
+		// still moving -> disable moving
 		if (m_IsMoving) m_IsMoving = false;
 
 		wxMouseState mouse = wxGetMouseState();
 
+		// select state and switch to drawing
 		if (mouse.LeftIsDown())
 		{
 			m_ToolStates->SetState(state);
 			m_ToolModes->SetMode('D');
 		}
+		// cancel selection and switch to drawing
 		else if (mouse.RightIsDown())
 		{
 			m_ToolModes->SetMode('D');
@@ -1006,7 +1056,7 @@ bool Grid::ModeMove(int x, int y, char mode)
 
 	if ((mode == 'M' && mouse.LeftIsDown()) || mouse.MiddleIsDown())
 	{
-		// still drawing
+		// still drawing -> save progress and disable it
 		if (m_IsDrawing || m_IsErasing)
 		{
 			m_IsDrawing = false;
@@ -1031,6 +1081,7 @@ bool Grid::ModeMove(int x, int y, char mode)
 		}
 		else
 		{
+			// pan around the previous cell reference
 			if (m_PrevCell.first != x || m_PrevCell.second != y)
 			{
 				int deltaX = m_PrevCell.first - x;
@@ -1088,6 +1139,7 @@ bool Grid::ModeMove(int x, int y, char mode)
 			return true;
 		}
 	}
+	// cancel panning around and switch to drawing
 	else if (mode == 'M' && mouse.RightIsDown())
 	{
 		m_IsMoving = false;
@@ -1095,6 +1147,7 @@ bool Grid::ModeMove(int x, int y, char mode)
 		m_ToolModes->SetMode('D');
 		return true;
 	}
+	// no more panning around detected
 	else m_IsMoving = false;
 
 	return false;
@@ -1108,17 +1161,22 @@ void Grid::OnDraw(wxDC& dc)
 	pen.SetStyle(wxPENSTYLE_SOLID);
 	pen.SetColour(wxColour(200, 200, 200));
 
+	// draw borders around the cell if the size is big enough
 	dc.SetPen(pen);
+
+	// don't draw borders if the size is too small
 	if (m_Size <= Sizes::CELL_SIZE_BORDER) dc.SetPen(*wxTRANSPARENT_PEN);
 
 	wxPosition visibleBegin = GetVisibleBegin();
 	wxPosition visibleEnd = GetVisibleEnd();
 
+	// changed the size of the cells -> redraw completely
 	if (m_JustResized)
 	{
 		m_JustResized = false;
 		m_RedrawAll = true;
 	}
+	// scrolled a bit -> redraw only affected cells
 	else if (m_JustScrolled != std::make_pair(0, 0))
 	{
 		std::unordered_set<std::pair<int, int>, Hashes::PairInt> alreadyDrawn;
@@ -1135,23 +1193,23 @@ void Grid::OnDraw(wxDC& dc)
 			for (auto& it : sp.second)
 			{
 				// the cell state before scrolling
-				// to do: bug when playing and moving, maybe mutex
 				int x = it.first;
 				int y = it.second;
 
 				// visible
-				if ((x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow()))
+				if (InVisibleBounds(x, y))
 				{
 					alreadyDrawn.insert({ x,y });
 
 					dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
 				}
 
+				// the cell after scrolling
 				x += m_JustScrolled.first;
 				y += m_JustScrolled.second;
 
 				// visible
-				if ((x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow()))
+				if (InVisibleBounds(x, y))
 				{
 					beforeScrolling.push_back({ x,y });
 				}
@@ -1159,6 +1217,7 @@ void Grid::OnDraw(wxDC& dc)
 		}
 		m_MutexCells.unlock();
 
+		// should only redraw updated cells
 		if (!m_RedrawAll)
 		{
 			if (m_RedrawXYs.size())
@@ -1168,8 +1227,6 @@ void Grid::OnDraw(wxDC& dc)
 					int x = m_RedrawXYs[i].first;
 					int y = m_RedrawXYs[i].second;
 
-					/*if ((x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow())
-						&& alreadyDrawn.find({ x,y }) == alreadyDrawn.end())*/
 					if (alreadyDrawn.find({ x,y }) == alreadyDrawn.end())
 					{
 						alreadyDrawn.insert({ x,y });
@@ -1183,7 +1240,7 @@ void Grid::OnDraw(wxDC& dc)
 					y += m_JustScrolled.second;
 
 					// visible
-					if ((x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow()))
+					if (InVisibleBounds(x, y))
 					{
 						beforeScrolling.push_back({ x,y });
 					}
@@ -1197,8 +1254,7 @@ void Grid::OnDraw(wxDC& dc)
 				int x = m_RedrawXY.first;
 				int y = m_RedrawXY.second;
 
-				if ((x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow())
-					&& alreadyDrawn.find({ x,y }) == alreadyDrawn.end())
+				if (InVisibleBounds(x, y) && alreadyDrawn.find({ x,y }) == alreadyDrawn.end())
 				{
 					alreadyDrawn.insert({ x,y });
 
@@ -1211,7 +1267,7 @@ void Grid::OnDraw(wxDC& dc)
 				y += m_JustScrolled.second;
 
 				// visible
-				if ((x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow()))
+				if (InVisibleBounds(x, y))
 				{
 					beforeScrolling.push_back({ x,y });
 				}
@@ -1313,6 +1369,8 @@ void Grid::OnDraw(wxDC& dc)
 
 		return;
 	}
+
+	// should redraw only updated cells
 	if (!m_RedrawAll)
 	{
 		m_RedrawAll = true;
@@ -1324,9 +1382,6 @@ void Grid::OnDraw(wxDC& dc)
 			{
 				int x = m_RedrawXYs[i].first;
 				int y = m_RedrawXYs[i].second;
-
-				// is in visible bounds?
-				//if (!(x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow())) continue;
 
 				brush.SetColour(m_RedrawColors[i]);
 				dc.SetBrush(brush);
@@ -1344,7 +1399,7 @@ void Grid::OnDraw(wxDC& dc)
 		int y = m_RedrawXY.second;
 
 		// is in visible bounds?
-		if (!(x >= visibleBegin.GetCol() && x < visibleEnd.GetCol() && y >= visibleBegin.GetRow() && y < visibleEnd.GetRow())) return;
+		if (!InVisibleBounds(x, y)) return;
 
 		brush.SetColour(m_RedrawColor);
 		dc.SetBrush(brush);
@@ -1352,6 +1407,8 @@ void Grid::OnDraw(wxDC& dc)
 		dc.DrawRectangle(x * m_Size, y * m_Size, m_Size, m_Size);
 		return;
 	}
+
+	// redraw everything
 
 	dc.Clear();
 
@@ -1389,11 +1446,14 @@ void Grid::OnDraw(wxDC& dc)
 
 void Grid::OnMouse(wxMouseEvent& evt)
 {
+	// handle all mouse events
+
+	// mouse leaving grid area
 	if (evt.Leaving())
 	{
 		m_ToolCoords->Reset();
 
-		// still drawing
+		// still drawing -> save progress and disable drawing
 		if (m_IsDrawing || m_IsErasing)
 		{
 			m_IsDrawing = false;
@@ -1406,11 +1466,11 @@ void Grid::OnMouse(wxMouseEvent& evt)
 				m_PrevStatePositions = m_StatePositions;
 			}
 		}
-		//m_JustScrolled = { 0,0 };
 
 		return;
 	}
 
+	// selecting states with Shift+Click ?
 	if (ControlSelectState()) return;
 
 	std::pair<int, int> hoveredCell = GetHoveredCell(evt.GetX(), evt.GetY());
@@ -1419,8 +1479,10 @@ void Grid::OnMouse(wxMouseEvent& evt)
 
 	if (evt.Entering()) m_LastDrawn = { x,y };
 
+	// zooming
 	if (ControlZoom(x, y, evt.GetWheelRotation())) return;
 
+	// out of grid borders?
 	if (!InBounds(x, y))
 	{
 		m_ToolCoords->Reset();
@@ -1431,25 +1493,15 @@ void Grid::OnMouse(wxMouseEvent& evt)
 
 	char mode = m_ToolModes->GetMode();
 
-	if (ModeMove(x, y, mode))
-	{
-		//evt.Skip();
-		return;
-	}
-	if (ModeDraw(x, y, mode))
-	{
-		//evt.Skip();
-		return;
-	}
-	if (ModePick(x, y, mode, state))
-	{
-		//evt.Skip();
-		return;
-	}
+	if (ModeMove(x, y, mode)) return;
+	if (ModeDraw(x, y, mode)) return;
+	if (ModePick(x, y, mode, state)) return;
 }
 
 void Grid::OnTimerSelection(wxTimerEvent& evt)
 {
+	// update state selection while the shortcut is being actioned
+
 	wxMouseState mouseState = wxGetMouseState();
 	if (!wxGetKeyState(WXK_SHIFT) || (!mouseState.LeftIsDown() && !mouseState.RightIsDown()))
 	{
@@ -1463,6 +1515,8 @@ void Grid::OnTimerSelection(wxTimerEvent& evt)
 
 void Grid::OnKeyDown(wxKeyEvent& evt)
 {
+	// register the keys used for moving on the grid
+
 	int key = evt.GetKeyCode();
 
 	switch (key)
@@ -1484,6 +1538,8 @@ void Grid::OnKeyDown(wxKeyEvent& evt)
 
 void Grid::OnKeyUp(wxKeyEvent& evt)
 {
+	// unregister the keys used for moving on the map
+
 	int key = evt.GetKeyCode();
 
 	switch (key)
@@ -1504,6 +1560,8 @@ void Grid::OnKeyUp(wxKeyEvent& evt)
 
 void Grid::ProcessKeys()
 {
+	// move on the grid based on which keys are being actioned
+
 	int deltaX = 0;
 	int deltaY = 0;
 
@@ -1533,6 +1591,7 @@ void Grid::ProcessKeys()
 	// don't scroll beyond the minimum limit
 	if (deltaY < 0) deltaY = std::max(-GetScrollPos(wxVERTICAL), deltaY);
 	if (deltaX < 0) deltaX = std::max(-GetScrollPos(wxHORIZONTAL), deltaX);
+
 	// don't scroll beyond the maximum limit
 	if (deltaX > 0) deltaX = std::min(Sizes::N_COLS - GetScrollPos(wxHORIZONTAL) - GetScrollThumb(wxHORIZONTAL), deltaX);
 	if (deltaY > 0) deltaY = std::min(Sizes::N_ROWS - GetScrollPos(wxVERTICAL) - GetScrollThumb(wxVERTICAL), deltaY);
@@ -1545,6 +1604,8 @@ void Grid::ProcessKeys()
 		ScrollColumns(deltaX);
 		ScrollRows(deltaY);
 	}
+
+	// handle mouse events while moving with the keyboard
 
 	wxMouseState mouseState = wxGetMouseState();
 	wxPoint XY = mouseState.GetPosition();
@@ -1563,10 +1624,13 @@ void Grid::ProcessKeys()
 
 void Grid::OnEraseBackground(wxEraseEvent& evt)
 {
+	// this needs to be an empty function (old wxwidgets issue)
 }
 
 void Grid::DeleteStructure(int X, int Y, std::string state)
 {
+	// erase all the cells from the selected area
+
 	int dx[8] = { 0, 1, 1, 1, 0, -1, -1 ,-1 };
 	int dy[8] = { -1, -1, 0, 1, 1, 1, 0, -1 };
 
@@ -1603,8 +1667,6 @@ void Grid::DeleteStructure(int X, int Y, std::string state)
 
 	if (changes)
 	{
-		;//ResetUniverse();
-
 		m_StatusCells->SetCountPopulation(m_Cells.size());
 
 		Refresh(false);
@@ -1614,6 +1676,8 @@ void Grid::DeleteStructure(int X, int Y, std::string state)
 
 void Grid::DrawStructure(int X, int Y, std::string state, wxColour color)
 {
+	// fill the selected area with cells of the currently selected state
+
 	int dx[4] = { 0, 1, 0, -1 };
 	int dy[4] = { -1, 0, 1, 0 };
 
@@ -1636,8 +1700,6 @@ void Grid::DrawStructure(int X, int Y, std::string state, wxColour color)
 		visited.insert(neighbor);
 
 		std::string neighborState = GetState(neighbor.first, neighbor.second);
-
-		//wxLogDebug("x,y=%i,%i state=%s", neighbor.first, neighbor.second,neighborState);
 
 		// only fill the different cells
 		if (neighborState == state) continue;
@@ -1662,8 +1724,6 @@ void Grid::DrawStructure(int X, int Y, std::string state, wxColour color)
 
 	if (changes)
 	{
-		;//ResetUniverse();
-
 		m_StatusCells->SetCountPopulation(m_Cells.size());
 
 		Refresh(false);
@@ -1673,6 +1733,8 @@ void Grid::DrawStructure(int X, int Y, std::string state, wxColour color)
 
 void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove)
 {
+	// algorithm found on old wxwidgets version repository
+
 	if (m_LastDrawn != std::make_pair(x, y))
 	{
 		// apply the following algorithm to draw a line
@@ -1765,8 +1827,6 @@ void Grid::DrawLine(int x, int y, std::string state, wxColour color, bool remove
 
 		if (changes > 0)
 		{
-			;//ResetUniverse();
-
 			Refresh(false);
 			Update();
 		}
@@ -2217,6 +2277,7 @@ void Grid::UpdateGeneration(std::vector<std::pair<std::string, std::pair<int, in
 		std::string prevState = "";
 		std::string currState = "";
 		bool separator = false;
+
 		// regain information of previous and current state
 		for (int i = 0; i < state.size(); i++)
 		{

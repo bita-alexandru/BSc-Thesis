@@ -2,8 +2,6 @@
 
 ToolUndo::ToolUndo(wxWindow* parent) : wxPanel(parent)
 {
-	//SetBackgroundColour(wxColour(242, 204, 143));
-
 	BuildInterface();
 }
 
@@ -96,8 +94,6 @@ void ToolUndo::PushBack(
 	m_RedoStatePositions = std::deque<std::vector<std::pair<std::string, std::pair<int, int>>>>();
 	m_Redo->Disable();
 
-	//SetFocus();
-
 	if (m_UndoCells.size()) m_Undo->Enable();
 }
 
@@ -137,10 +133,10 @@ void ToolUndo::Undo(wxCommandEvent& evt)
 	}
 	for (auto& it : m_UndoStatePositions.back())
 	{
-		// if i find a change in the current configuration -> update/insert it
+		// if i find a change in the current configuration -> delete/insert it
 		if (statePositions.find(it.first) != statePositions.end())
 		{
-			// delete
+			// cell is unaffected -> delete
 			if (statePositions[it.first].find(it.second) != statePositions[it.first].end()) statePositions[it.first].erase(it.second);
 			// insert
 			else statePositions[it.first].insert(it.second);
@@ -196,7 +192,7 @@ void ToolUndo::Redo(wxCommandEvent& evt)
 		// if i find a change in the current configuration -> update/insert it
 		if (statePositions.find(it.first) != statePositions.end())
 		{
-			// delete
+			// cell is unaffected -> delete
 			if (statePositions[it.first].find(it.second) != statePositions[it.first].end()) statePositions[it.first].erase(it.second);
 			// insert
 			else statePositions[it.first].insert(it.second);

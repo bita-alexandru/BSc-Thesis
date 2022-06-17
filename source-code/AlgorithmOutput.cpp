@@ -118,10 +118,12 @@ void AlgorithmOutput::BuildInterface()
 
 void AlgorithmOutput::RunAlgorithm()
 {
+	// get CA configuration -> as simple vectors
 	m_States = m_InputStates->GetList()->GetStates();
 	m_Rules = m_InputRules->GetList()->GetRules();
 	m_Neighbors = m_InputNeighbors->GetNeighborsAsVector();
 
+	// get CA configuration -> as used in playing the simulations
 	unordered_map<string, string> states = m_InputStates->GetStates();
 	vector<pair<string, Transition>> rules = m_InputRules->GetRules();
 	unordered_set<string> neighbors = m_InputNeighbors->GetNeighbors();
@@ -162,6 +164,7 @@ void AlgorithmOutput::RunAlgorithm()
 	UpdateTextLast(m_BestChromosome);
 	UpdateTextBest(m_BestChromosome);
 
+	// I. create an initial population of chromosomes
 	vector<Chromosome> population = InitializePopulation();
 	EvaluatePopulation(population, states, rules, neighbors);
 
@@ -171,24 +174,34 @@ void AlgorithmOutput::RunAlgorithm()
 	UpdateTextLast(bestChromosome);
 	UpdateTextBest(bestChromosome);
 
+	// run the algorithm until the desired epoch target is hit
+	// or until explicitely stopped
 	int epochs = 0;
 	while (++epochs && m_Running)
 	{
 		wxLogDebug("Epoch %i", epochs);
 		UpdateTextEpoch(epochs);
 
+		// save the worst fitness of the best chromosomes
 		if (selectionMethod == "Elitism") eliteLowerBound = GetEliteLowerBound(population);
 
+		// II. select which chromosomes will make up the next population
 		population = SelectPopulation(population);
+
+		// III. apply genetic operators on the new population
+		// don't do crossover on SteadyState - it has its own version
 		if (selectionMethod != "Steady State") DoCrossover(population);
 		DoMutatiton(population);
 
 		UpdateChromosomesMaps(population);
+
+		// IV. evaluate and save the best chromosome of this generation
 		EvaluatePopulation(population, states, rules, neighbors);
 
 		bestChromosome = GetBestChromosome(population, epochs);
 		UpdateTextLast(bestChromosome);
 
+		// update best chromosome of all generations
 		if (bestChromosome > m_BestChromosome)
 		{
 			m_BestChromosome = bestChromosome;
@@ -219,12 +232,13 @@ void AlgorithmOutput::GetParameters()
 	generationTarget = m_AlgorithmParameters->GetGenerationTarget();
 	populationTarget = m_AlgorithmParameters->GetPopulationTarget();
 	epochsTarget = m_AlgorithmParameters->GetEpochsTarget();
-
-	wxLogDebug("%i\n%f %f\n%s\n%i %i %i", popSize, pc, pm, selectionMethod, generationTarget, populationTarget, epochsTarget);
 }
 
 vector<Chromosome> AlgorithmOutput::InitializePopulation()
 {
+	// a chromosome is denoted by a vector of states (expressed as numbers)
+	// return a list of randomly created chromosomes of the desired population size
+
 	wxLogDebug("Init pop [start]");
 	vector<Chromosome> population;
 
@@ -240,12 +254,14 @@ vector<Chromosome> AlgorithmOutput::InitializePopulation()
 		unordered_map<string, unordered_set<int>> statePositions;
 		int initialSize = 0;
 
+		// create random genes for the current chromosome
 		for (int j = 0; j < rows * cols && m_Running; j++)
 		{
 			double p = r01(generator);
 
 			if (p <= cellProbability)
 			{
+				// assign a random state for this gene
 				int cellType = i1n(generator);
 
 				pattern[j] = cellType;
@@ -278,8 +294,11 @@ vector<Chromosome> AlgorithmOutput::InitializePopulation()
 void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unordered_map<string, string>& states,
 	vector<pair<string, Transition>>& rules, unordered_set<string>& neighbors)
 {
+	// calculate and store the fitness for every chromosome
+	// to get the fitness, play out the simulation for each chromosome
 	wxLogDebug("Evaluate pop [start]");
 
+	// iterate through the chromosomes
 	for (int i = 0; i < popSize && m_Running; i++)
 	{
 		wxLogDebug("Chromosome %i", population[i].id);
@@ -287,6 +306,7 @@ void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unorder
 		population[i].pattern = population[i].initialPattern;
 		//ShowChromosomePattern(population[i]);
 
+		// run the simulation for the current chromosome and store the results
 		int nOfGenerations = 0;
 		double avgPopulation = 0;
 		while (++nOfGenerations && m_Running)
@@ -314,6 +334,7 @@ void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unorder
 
 			avgPopulation += population[i].cells.size();
 
+			// any targets reached?
 			if (nOfGenerations && nOfGenerations - 1 >= generationTarget) break;
 			if (populationTarget && population[i].cells.size() >= populationTarget) break;
 		}
@@ -325,6 +346,7 @@ void AlgorithmOutput::EvaluatePopulation(vector<Chromosome>& population, unorder
 
 		//ShowChromosomePattern(population[i]);
 
+		// calculate fitness
 		double fitness = (generationMultiplier * nOfGenerations + populationMultiplier * avgPopulation) * (1 - initialSizeMultiplier * population[i].initialSize / (rows * cols)) + 1.0;
 
 		/*wxLogDebug(
@@ -361,13 +383,15 @@ vector<Chromosome> AlgorithmOutput::RouletteWheelSelection(vector<Chromosome>& p
 
 	wxLogDebug("Total fitness: %f", totalFitness);
 
+	// calculate selection probability and cumulative selection probability
+	// the probability of selection is proportionate to the fitness
 	vector<double> q(popSize + 1);
 	for (int i = 0; i < popSize && m_Running; i++)
 	{
 		//wxLogDebug("%i. Chromosome %i", i, population[i].id);
+
 		double p = population[i].fitness / totalFitness;
 		q[i + 1] = q[i] + p;
-
 		//wxLogDebug("p=%f q=%f", p, q[i + 1]);
 	}
 
@@ -376,14 +400,17 @@ vector<Chromosome> AlgorithmOutput::RouletteWheelSelection(vector<Chromosome>& p
 	vector<Chromosome> newPopulation;
 	int j = 0;
 
+	// "spin" the wheel until the desired population is hit
 	while (j != popSize && m_Running)
 	{
+		// iterate through each chromosome
 		for (int i = 0; i < popSize && m_Running; i++)
 		{
 			double p = r01(generator);
 			//wxLogDebug("%i. Generated probability: %f", i, p);
 			//wxLogDebug("%i/%i. %.17g < %.17g <= %.17g = %i", i, j, q[j], p, q[j + 1], (p > q[j] && p <= q[j + 1]));
 
+			// select for the next generation
 			if (q[j] < p && p <= q[j + 1])
 			{
 				//wxLogDebug("Selected into new pop: %i", population[i].id);
@@ -405,13 +432,17 @@ vector<Chromosome> AlgorithmOutput::RouletteWheelSelection(vector<Chromosome>& p
 
 vector<Chromosome> AlgorithmOutput::RankSelection(vector<Chromosome>& population)
 {
+	// sort by fitness, worst to best
+	// now each chromosome is ranked accordingly, from 1 (the worst) to N (the best)
 	sort(population.begin(), population.end());
 
-	double totalFitness = (popSize + 1.0) * popSize / 2;
+	double totalFitness = (popSize + 1.0) * popSize / 2; // 1 + 2 + ... + N
 	//wxLogDebug("Total fitness: %f", totalFitness);
 
 	//for (int i = 0; i < popSize && m_Running; i++) wxLogDebug("%f", population[i].fitness);
 
+	// calculate selection probability and cumulative selection probability
+	// the probability of selection is proportionate to the rank
 	vector<double> q(popSize + 1);
 	for (int i = 0; i < popSize && m_Running; i++)
 	{
@@ -424,6 +455,7 @@ vector<Chromosome> AlgorithmOutput::RankSelection(vector<Chromosome>& population
 
 	uniform_real_distribution<double> r01(0, 1);
 
+	// apply this selection method until the desired population size is hit
 	vector<Chromosome> newPopulation;
 	int j = 0;
 	while (j != popSize && m_Running)
@@ -434,6 +466,7 @@ vector<Chromosome> AlgorithmOutput::RankSelection(vector<Chromosome>& population
 			//wxLogDebug("%i. Generated probability: %f", i, p);
 			//wxLogDebug("%i/%i. %.17g < %.17g <= %.17g = %i", i, j, q[j], p, q[j + 1], (p > q[j] && p <= q[j + 1]));
 
+			// select for next generation
 			if (q[j] < p && p <= q[j + 1])
 			{
 				//wxLogDebug("Selected into new pop: %i", population[i].id);
@@ -456,6 +489,9 @@ vector<Chromosome> AlgorithmOutput::RankSelection(vector<Chromosome>& population
 
 vector<Chromosome> AlgorithmOutput::SteadyStateSelection(vector<Chromosome>& population)
 {
+	// similar to the crossover function but instead of modifying the parents
+	// the off-springs replace random individuals (that can include one or both of their parents)
+
 	vector<int> parents;
 	int parentsSize = 0;
 
@@ -520,6 +556,8 @@ vector<Chromosome> AlgorithmOutput::SteadyStateSelection(vector<Chromosome>& pop
 
 vector<Chromosome> AlgorithmOutput::TournamentSelection(vector<Chromosome>& population)
 {
+	// randomly create a group of 3 chromosomes and select the fittest one for next generation
+
 	uniform_int_distribution<int> i0popSize(0, popSize - 1);
 
 	vector<Chromosome> newPopulation;
@@ -527,6 +565,7 @@ vector<Chromosome> AlgorithmOutput::TournamentSelection(vector<Chromosome>& popu
 	vector<int> indexes(popSize);
 	for (int i = 0; i < popSize && m_Running; i++) indexes[i] = i;
 
+	// apply this method until the desired population size is hit
 	int k = 3;
 	int j = 0;
 	while (j != popSize && m_Running)
@@ -535,6 +574,7 @@ vector<Chromosome> AlgorithmOutput::TournamentSelection(vector<Chromosome>& popu
 		int bestIndex = 0;
 		double bestFitness = -1.0;
 
+		// create a tournament with 3 distinct randomly chosen chromosomes
 		while (tournamentIndexes.size() < 3 && m_Running)
 		{
 			int k = i0popSize(generator);
@@ -544,6 +584,7 @@ vector<Chromosome> AlgorithmOutput::TournamentSelection(vector<Chromosome>& popu
 				//wxLogDebug("Selected into tournament chromosome %i with fitness %f", population[k].id, population[k].fitness);
 
 				tournamentIndexes.insert(k);
+				// save the best one
 				if (population[k].fitness > bestFitness)
 				{
 					bestFitness = population[k].fitness;
@@ -569,11 +610,15 @@ vector<Chromosome> AlgorithmOutput::TournamentSelection(vector<Chromosome>& popu
 
 vector<Chromosome> AlgorithmOutput::ElitismSelection(vector<Chromosome>& population)
 {
+	// don't filter the population
+
 	return population;
 }
 
 vector<Chromosome> AlgorithmOutput::RandomSelection(vector<Chromosome>& population)
 {
+	// iterate through the chromosomes and choose some at random
+
 	uniform_real_distribution<double> r01(0, 1);
 
 	vector<Chromosome> newPopulation;
@@ -607,12 +652,16 @@ vector<Chromosome> AlgorithmOutput::RandomSelection(vector<Chromosome>& populati
 
 void AlgorithmOutput::DoCrossover(vector<Chromosome>& population)
 {
+	// select chromosomes for crossover
+	// 2 parents will create 2 other chromosomes (off-springs) that will inherit genes from both parents
+
 	wxLogDebug("Cross-over [start]");
 	vector<int> parents;
 	int parentsSize = 0;
 
 	uniform_real_distribution<double> r01(0, 1);
 
+	// iterate through the genes and select for crossover
 	for (int i = 0; i < popSize && m_Running; i++)
 	{
 		double p = r01(generator);
@@ -631,8 +680,10 @@ void AlgorithmOutput::DoCrossover(vector<Chromosome>& population)
 
 	uniform_int_distribution<int> i0n(0, N - 1);
 
+	// couple the resulted parents (p1, p2), (p3, p4) etc.
 	for (int i = 0; i < parentsSize - 1 && m_Running; i += 2)
 	{
+		// generate cut-points
 		int xp1 = i0n(generator);
 		int xp2 = i0n(generator);
 
@@ -646,19 +697,24 @@ void AlgorithmOutput::DoCrossover(vector<Chromosome>& population)
 		int p1 = parents[i];
 		int p2 = parents[i + 1];
 
+		// if both parents are elites -> do nothing
 		if (eliteLowerBound && population[p1].fitness >= eliteLowerBound && population[p2].fitness >= eliteLowerBound) continue;
 
 		//wxLogDebug("Generated cutpoints: %i, %i", xp1, xp2);
 
+		// iterate through the genes located between the cut-points
 		for (int j = xp1; j <= xp2 && m_Running; j++)
 		{
 			//wxLogDebug("Swapping {%i}[%i](=%i) with {%i}[%i](=%i)", population[p1].id, j,
 			//population[p1].initialPattern[j], population[p2].id, j, population[p2].initialPattern[j]);
 
+			// if there are no elites -> make the crossover
 			if (!eliteLowerBound)
 				swap(population[p1].initialPattern[j], population[p2].initialPattern[j]);
+			// 1st parent is an elite -> only apply changes to the 2nd
 			else if (population[p1].fitness >= eliteLowerBound)
 				population[p2].initialPattern[j] = population[p1].initialPattern[j];
+			// 2nd parents an elite -> only apply changes to the 1st
 			else if (population[p2].fitness >= eliteLowerBound)
 				population[p1].initialPattern[j] = population[p2].initialPattern[j];
 		}
@@ -669,6 +725,8 @@ void AlgorithmOutput::DoCrossover(vector<Chromosome>& population)
 
 void AlgorithmOutput::DoMutatiton(vector<Chromosome>& population)
 {
+	// select and alter genes to increase variety
+
 	wxLogDebug("Mutation [start]");
 
 	const int N = rows * cols;
@@ -679,8 +737,11 @@ void AlgorithmOutput::DoMutatiton(vector<Chromosome>& population)
 	for (int i = 0; i < popSize && m_Running; i++)
 	{
 		//wxLogDebug("%i. Chromosome %i", i, population[i].id);
+		
+		// ignore chromosome if it's one of the elites
 		if (eliteLowerBound && population[i].fitness >= eliteLowerBound) continue;
 
+		// iterate through the chromosome's genes
 		for (int j = 0; j < N && m_Running; j++)
 		{
 			double p = r01(generator);
@@ -688,6 +749,8 @@ void AlgorithmOutput::DoMutatiton(vector<Chromosome>& population)
 
 			if (p <= pm)
 			{
+				// modify this gene
+
 				int cellType = i0n(generator);
 
 				//wxLogDebug("Changing [%i](=%i) with %i", j, population[i].initialPattern[j], cellType);
@@ -722,26 +785,13 @@ Chromosome AlgorithmOutput::GetBestChromosome(vector<Chromosome>& population, in
 
 double AlgorithmOutput::GetEliteLowerBound(vector<Chromosome> population)
 {
-	//int k = floor(sqrt(popSize));
+	// return the 2nd best fitness
+
 	int k = 2;
 
 	sort(population.begin(), population.end());
 
 	return population[popSize - k].fitness;
-}
-
-void AlgorithmOutput::InsertElite(vector<Chromosome>& population, vector<Chromosome>& newPopulation, int& j)
-{
-	if (eliteLowerBound == 0.0) return;
-
-	for (int i = 0; i < popSize && m_Running; i++)
-		if (population[i].fitness >= eliteLowerBound)
-		{
-			Chromosome chromosome = population[i];
-			chromosome.id = j++;
-
-			newPopulation.push_back(chromosome);
-		}
 }
 
 void AlgorithmOutput::OnStart(wxCommandEvent& evt)

@@ -14,6 +14,7 @@ App::~App()
 
 bool App::OnInit()
 {
+	// add required support for handling png files
 	wxImage::AddHandler(new wxPNGHandler);
 
 	m_Main = new Main();

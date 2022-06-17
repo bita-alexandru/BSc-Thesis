@@ -4,8 +4,6 @@
 
 StatusDelay::StatusDelay(wxWindow* parent) : wxPanel(parent)
 {
-    //SetBackgroundColour(wxColour(242, 204, 143));
-
     BuildInterface();
 }
 
@@ -34,7 +32,6 @@ void StatusDelay::BuildInterface()
     faster->Bind(wxEVT_BUTTON, &StatusDelay::IncreaseDelay, this);
 
     std::string delay = "0.10";
-    //delay.erase(delay.find_last_not_of('0') + 1, std::string::npos);
     delay += "s";
 
     std::string label = "Delay=" + delay;
@@ -57,9 +54,6 @@ void StatusDelay::UpdateTextDelay()
     delay += "s";
 
     m_TextDelay->SetLabel("Delay=" + delay);
-
-    // Layout();
-    // Update();
 }
 
 void StatusDelay::IncreaseDelay(wxCommandEvent& evt)

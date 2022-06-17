@@ -75,6 +75,7 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
         wxColour color2 = wxColour("white");
         if (m_States.find(state2) != m_States.end()) color2 = wxColour(m_States[state2]);
 
+        // new items -> push them to the list
         if (i > nOfItems - 1)
         {
             wxColour bgColorA("white"), bgColorB("white");
@@ -83,6 +84,7 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
             if (m_States.find(state1) != m_States.end() && m_States.find(state2) != m_States.end())
             {
                 bgColorA = wxColour(m_States[state1]); bgColorB = wxColour(m_States[state2]);
+                // if background is black -> font should be white and viceversa - inequation found on stackoverflow
                 txtColorA = (bgColorA.Red() * 0.299 + bgColorA.Green() * 0.587 + bgColorA.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
                 txtColorB = (bgColorB.Red() * 0.299 + bgColorB.Green() * 0.587 + bgColorB.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
             }
@@ -91,6 +93,8 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
 
             continue;
         }
+
+        // updated items -> detect changes and update the list as well
 
         wxString itmId = m_List->GetItemText(i, 0);
         wxString itmState1 = m_List->GetState1(i);
@@ -109,6 +113,7 @@ void InputRules::SetRules(std::vector<std::pair<std::string, Transition>> rules)
         alreadyUpdated.insert(state1 + "/" + state2 + ":" + condition);
     }
 
+    // deleted items -> delete them from the list as well
     while (i < nOfItems--)
     {
         std::string state1 = m_List->GetState1(i);
@@ -191,6 +196,7 @@ void InputRules::Search(wxCommandEvent& evt)
 
     if (query.size() < 1) return;
 
+    // select found queries
     for (int i = 0; i < m_List->GetItemCount(); i++)
     {
         std::string state1 = m_List->GetState1(i);
@@ -340,7 +346,7 @@ void InputRules::RuleDelete()
     }
 
     std::unordered_set<std::string> toBeDeleted;
-
+    // delete selected rules
     while (selection != -1)
     {
         std::string state1 = m_List->GetState1(selection);
@@ -358,6 +364,7 @@ void InputRules::RuleDelete()
         m_EditorRules->DeleteRule(rule);
     }
 
+    // update list
     std::string rules = "";
     for (int i = 0; i < m_List->GetItemCount(); i++)
     {

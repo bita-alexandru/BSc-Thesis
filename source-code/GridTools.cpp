@@ -1,23 +1,11 @@
 #include "GridTools.h"
+#include "Colors.h"
 
 GridTools::GridTools(wxWindow* parent): wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE)
 {
-    SetBackgroundColour(wxColor(211, 211, 211));
+    SetBackgroundColour(wxColor(Colors::COLOR_SECONDARY_R, Colors::COLOR_SECONDARY_G, Colors::COLOR_SECONDARY_B));
 
-    m_ToolZoom = new ToolZoom(this);
-    m_ToolUndo = new ToolUndo(this);
-    m_ToolModes = new ToolModes(this);
-    m_ToolStates = new ToolStates(this);
-    m_ToolCoords = new ToolCoords(this);
-
-    wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
-    sizer->Add(m_ToolZoom, 0, wxEXPAND);
-    sizer->Add(m_ToolUndo, 0, wxEXPAND);
-    sizer->Add(m_ToolModes, 0, wxEXPAND);
-    sizer->Add(m_ToolStates, 0, wxEXPAND);
-    sizer->Add(m_ToolCoords, 0, wxEXPAND | wxTOP | wxBOTTOM, 4);
-
-    SetSizer(sizer);
+    BuildInterface();
 }
 
 GridTools::~GridTools()
@@ -52,4 +40,22 @@ ToolStates* GridTools::GetToolStates()
 ToolCoords* GridTools::GetToolCoords()
 {
     return m_ToolCoords;
+}
+
+void GridTools::BuildInterface()
+{
+    m_ToolZoom = new ToolZoom(this);
+    m_ToolUndo = new ToolUndo(this);
+    m_ToolModes = new ToolModes(this);
+    m_ToolStates = new ToolStates(this);
+    m_ToolCoords = new ToolCoords(this);
+
+    wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+    sizer->Add(m_ToolZoom, 0, wxEXPAND);
+    sizer->Add(m_ToolUndo, 0, wxEXPAND);
+    sizer->Add(m_ToolModes, 0, wxEXPAND);
+    sizer->Add(m_ToolStates, 0, wxEXPAND);
+    sizer->Add(m_ToolCoords, 0, wxEXPAND | wxTOP | wxBOTTOM, 4);
+
+    SetSizer(sizer);
 }

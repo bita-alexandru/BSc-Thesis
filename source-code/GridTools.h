@@ -25,5 +25,7 @@ private:
 	ToolModes* m_ToolModes = nullptr;
 	ToolStates* m_ToolStates = nullptr;
 	ToolCoords* m_ToolCoords = nullptr;
+
+	void BuildInterface();
 };
 

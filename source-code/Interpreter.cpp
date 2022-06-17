@@ -269,9 +269,6 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 										{
 											if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, symbol,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
-											// check if neighborhood is within the size limit
-											//if (valid && neighbors.size() > m_Neighbors.size()) MarkInvalid(valid, invalid, symbol,  "<INVALID NEIGHBORHOOD SIZE>", cursor);
-
 											// assign to transition
 											if (valid) transition.andRules.back().first = neighbors;
 
@@ -511,19 +508,19 @@ bool Interpreter::FindWord(int& cursor, string &rules, string& s, bool comment)
 		// not a whole word
 		else if (pos > 0 && !iswspace(rules[pos - 1]))
 		{
-			pos = pos + 1;// + s.size();
+			pos = pos + 1;
 			ret = false;
 		}
 		// not a whole word
 		else if (pos + s.size() < rules.size() && !iswspace(rules[pos + s.size()]))
 		{
-			pos = pos + 1;// + s.size();
+			pos = pos + 1;
 			ret = false;
 		}
 		// whole word -> place cursor at the start of word
 		else
 		{
-			pos = pos + 1;// +s.size();
+			pos = pos + 1;
 		}
 	}
 
@@ -537,7 +534,7 @@ bool Interpreter::FindWord(int& cursor, string &rules, string& s, bool comment)
 			if (BOTH_SPACED.find(c) != BOTH_SPACED.npos) spaces += 2;
 		}
 	}
-	////wxLogDebug("token=%s spaces=%i", s, spaces);
+	//wxLogDebug("token=%s spaces=%i", s, spaces);
 
 	cursor = pos;
 
@@ -559,8 +556,7 @@ bool Interpreter::NextTransition(int& cursor, string& rules, stringstream& ss)
 
 bool Interpreter::CheckState(string& state)
 {
-	return state.size() >= Sizes::CHARS_STATE_MIN
-		&& state.size() <= Sizes::CHARS_STATE_MAX;
+	return state.size() >= Sizes::CHARS_STATE_MIN && state.size() <= Sizes::CHARS_STATE_MAX;
 }
 
 bool Interpreter::UpdateChars(int& chars, string& s)
@@ -579,22 +575,13 @@ bool Interpreter::UpdateSize(int& size)
 
 void Interpreter::MarkInvalid(bool& valid, vector<pair<int, string>>& invalid, string& s, string reason, int& cursor)
 {
-	// mark it in our list if it doesn't overlap with another error at this position
-	bool overlap = false;
-	/*for (auto& it : invalid)
-		if (it.first == cursor - spaces)
-		{
-			overlap = true;
-			break;
-		}*/
-
 	int spaced = 0;
 	
 	if (s.size() && BOTH_SPACED.find(s) != BOTH_SPACED.npos) spaced = 1;
 
 	int pos = (!isComment) ? cursor : cursorBeforeComment;
 
-	if (!overlap) invalid.push_back({ pos - spaces + spaced, reason });
+	invalid.push_back({ pos - spaces + spaced, reason });
 
 	valid = false;
 }

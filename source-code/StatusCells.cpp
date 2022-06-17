@@ -2,8 +2,6 @@
 
 StatusCells::StatusCells(wxWindow* parent) : wxPanel(parent)
 {
-    //SetBackgroundColour(wxColour(242, 204, 143));
-
 	BuildInterface();
 }
 
@@ -51,28 +49,22 @@ void StatusCells::UpdateCountPopulation(int n)
 
 void StatusCells::SetGenerationMessage(std::string message)
 {
-	std::string label = "Generation=" + std::to_string(m_CountGeneration) + message;
+	wxString label = wxString::Format("Generation=%i%s", m_CountGeneration, message);
 
 	m_TextCountGeneration->SetLabel(label);
-
-	//Layout();
-	//Update();
 }
 
 void StatusCells::SetPopulationMessage(std::string message)
 {
-	std::string label = "Population=" + std::to_string(m_CountPopulation) + message;
+	wxString label = wxString::Format("Population=%i%s", m_CountPopulation, message);
 
 	m_TextCountPopulation->SetLabel(label);
-
-	//Layout();
-	//Update();
 }
 
 void StatusCells::BuildInterface()
 {
-	m_TextCountGeneration = new wxStaticText(this, wxID_ANY, "Generation: 0");
-	m_TextCountPopulation = new wxStaticText(this, wxID_ANY, "Population: 0");
+	m_TextCountGeneration = new wxStaticText(this, wxID_ANY, "Generation:0");
+	m_TextCountPopulation = new wxStaticText(this, wxID_ANY, "Population:0");
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 	sizer->Add(m_TextCountGeneration, 0, wxRIGHT, 256);
@@ -83,20 +75,14 @@ void StatusCells::BuildInterface()
 
 void StatusCells::UpdateTextCountGeneration()
 {
-	std::string label = "Generation=" + std::to_string(m_CountGeneration);
+	wxString label = wxString::Format("Generation=%i", m_CountGeneration);
 
 	m_TextCountGeneration->SetLabel(label);
-
-	//Layout();
-	//Update();
 }
 
 void StatusCells::UpdateTextCountPopulation()
 {
-	std::string label = "Population=" + std::to_string(m_CountPopulation);
+	wxString label = wxString::Format("Population=%i", m_CountPopulation);
 
 	m_TextCountPopulation->SetLabel(label);
-
-	//Layout();
-	//Update();
 }

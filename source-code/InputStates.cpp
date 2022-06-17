@@ -68,8 +68,10 @@ void InputStates::SetStates(std::vector<std::string> states)
         if (alreadyUpdated.find(state) != alreadyUpdated.end()) continue;
 
         wxColour color = wxColour(m_States[states[i]]);
+        // if background is black -> font should be white and viceversa - inequation found on stackoverflow
         wxColour blackwhite = (color.Red() * 0.299 + color.Green() * 0.587 + color.Blue() * 0.114) > 186.0 ? wxColour("black") : wxColour("white");
 
+        // new items -> push them to the list
         if (i > nOfItems - 1)
         {
             m_List->PushBack({ id, state }, { color, blackwhite });
@@ -79,6 +81,8 @@ void InputStates::SetStates(std::vector<std::string> states)
 
             continue;
         }
+
+        // updated items -> detect changes and update the list as well
 
         int itmId = m_List->Get(i).first;
         std::string itmState = m_List->Get(itmId).second;
@@ -104,6 +108,7 @@ void InputStates::SetStates(std::vector<std::string> states)
         alreadyUpdated.insert(state);
     }
 
+    // deleted items -> delete them from the list as well
     bool deletion = false;
     while (i < nOfItems--)
     {
@@ -116,7 +121,6 @@ void InputStates::SetStates(std::vector<std::string> states)
         if (alreadyUpdated.find(state) != alreadyUpdated.end()) continue;
 
         // update on grid
-        //wxColour color = m_List->GetItemBackgroundColour(i);
         m_Grid->RemoveState(state, false);
     }
     if (deletion) m_Grid->RefreshUpdate();
@@ -187,6 +191,7 @@ void InputStates::BuildInterface()
 
 void InputStates::InitializeColors()
 {
+    // 256 colors; should be as distinct as virtually possible - found on stackoverflow
     m_Colors = std::deque<std::string>({
         "#000000", "#FFFF00", "#1CE6FF", "#FF34FF", "#FF4A46", "#008941", "#006FA6", "#A30059",
         "#FFDBE5", "#7A4900", "#0000A6", "#63FFAC", "#B79762", "#004D43", "#8FB0FF", "#997D87",
@@ -222,6 +227,7 @@ void InputStates::InitializeColors()
         "#DFFB71", "#868E7E", "#98D058", "#6C8F7D", "#D7BFC2", "#3C3E6E", "#D83D66"
         });
 
+    // shuffle them for color variation inbetween uses
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     shuffle(m_Colors.begin(), m_Colors.end(), std::default_random_engine(seed));
     m_Colors.push_back("#FFFFFF");
@@ -262,6 +268,7 @@ void InputStates::Search(wxCommandEvent& evt)
 
     if (query.size() < 1) return;
 
+    // select found queries
     for (int i = 0; i < m_List->GetItemCount(); i++)
     {
         std::string state = m_List->Get(i).second;
@@ -465,6 +472,7 @@ void InputStates::StateErase()
         return;
     }
 
+    // erase cells of the selected states from the grid
     while (selection != -1)
     {
         std::string state = m_List->Get(selection).second;
@@ -491,7 +499,7 @@ void InputStates::StateDelete()
     }
 
     std::unordered_set<std::string> toBeDeleted;
-
+    // delete selected states
     while (selection != -1)
     {
         std::string state = m_List->Get(selection).second;
@@ -504,6 +512,7 @@ void InputStates::StateDelete()
         m_EditorStates->DeleteState(state);
     }
 
+    // update list
     std::vector<std::string> states;
     for (int i = 0; i < m_List->GetItemCount(); i++)
     {

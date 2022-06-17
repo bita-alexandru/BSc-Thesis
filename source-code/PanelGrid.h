@@ -18,5 +18,7 @@ private:
 	GridTools* m_GridTools = nullptr;
 	Grid* m_Grid = nullptr;
 	GridStatus* m_GridStatus = nullptr;
+
+	void BuildInterface();
 };
 

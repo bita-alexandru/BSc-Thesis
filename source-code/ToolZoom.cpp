@@ -18,12 +18,7 @@ int ToolZoom::GetSize()
 
 void ToolZoom::ZoomIn(bool center)
 {
-	if (m_Size == m_MaximumSize)
-	{
-		// error
-
-		return;
-	}
+	if (m_Size == m_MaximumSize) return;
 
 	m_Size *= 2;
 	m_Grid->SetSize(m_Size, center);
@@ -33,12 +28,7 @@ void ToolZoom::ZoomIn(bool center)
 
 void ToolZoom::ZoomOut(bool center)
 {
-	if (m_Size == m_MinimumSize)
-	{
-		// error
-
-		return;
-	}
+	if (m_Size == m_MinimumSize) return;
 
 	m_Size /= 2;
 	m_Grid->SetSize(m_Size, center);
@@ -76,11 +66,8 @@ void ToolZoom::BuildInterface()
 
 void ToolZoom::UpdateTextScale()
 {
-	std::string label = "Scale=1:" + std::to_string(m_Size);
+	wxString label = wxString::Format("Scale=1:%i", m_Size);
 	m_TextScale->SetLabel(label);
-
-	//Layout();
-	//Update();
 }
 
 void ToolZoom::OnZoomIn(wxCommandEvent& evt)

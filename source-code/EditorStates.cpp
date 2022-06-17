@@ -18,8 +18,6 @@ EditorStates::EditorStates(wxFrame* parent) : wxFrame(parent, wxID_ANY, "CellyGe
 
 	Center();
 
-    //SetBackgroundColour(wxColour(255, 232, 214));
-
 	BuildMenuBar();
 
 	BuildInterface();
@@ -43,6 +41,8 @@ void EditorStates::SetHelpWindow(HelpWindow* helpWindow)
 
 std::pair<std::vector<std::string>, std::vector<std::pair<int, std::string>>> EditorStates::Process(wxString text)
 {
+	// parse input text and return the processed states
+
 	text.MakeUpper();
 
 	// count lines (states) and mark duplicates/invalid states
@@ -160,9 +160,8 @@ std::vector<std::string> EditorStates::GetData()
 			wxYES_NO | wxCANCEL | wxICON_EXCLAMATION
 		);
 		dialog.SetYesNoLabels("Mark && Resolve", "Ignore");
-		/*dialog.SetExtendedMessage(
-			"Make sure you don't have any duplicates and that you're respecting the naming conventions."
-		);*/
+
+		// write the errors log
 		std::string extendedMessage = "";
 		for (auto& it : indexInvalid)
 		{
@@ -188,7 +187,6 @@ std::vector<std::string> EditorStates::GetData()
 			std::string col = std::to_string(ncol);
 
 			extendedMessage += it.second + " at line " + line + ", after column " + col + "\n";
-			//extendedMessage += it.second + " Line=" + line + ", Column=" + col + "\n";
 
 			it.first = nline;
 		}
@@ -229,6 +227,8 @@ std::vector<std::string> EditorStates::GetData()
 
 void EditorStates::GoTo(std::string state)
 {
+	// attempt to higlight the queried state
+
 	std::pair<int, int> position = FindState(state);
 
 	// not found
@@ -245,7 +245,6 @@ void EditorStates::GoTo(std::string state)
 	}
 	else
 	{
-		//int position = m_TextCtrl->PositionFromLine(line);
 		m_TextCtrl->ShowPosition(position.first);
 
 		m_TextCtrl->SetSelection(position.first, position.second);
@@ -262,11 +261,9 @@ void EditorStates::DeleteState(std::string state)
 	if (position.first != -1)
 	{
 		m_TextCtrl->PositionFromLine(position.first);
-		//m_TextCtrl->SetSelection(position.first, position.second);
 		if (position.first > 0)position.first--;
 		m_TextCtrl->Remove(position.first, position.second);
 
-		//m_TextCtrl->DeleteBack();
 		m_PrevText = m_TextCtrl->GetText();
 	}
 }
@@ -343,7 +340,6 @@ void EditorStates::BuildInterface()
 	m_TextCtrl = new wxStyledTextCtrl(this);
 	m_TextCtrl->SetMarginWidth(wxSTC_MARGIN_NUMBER, 80);
 	m_TextCtrl->SetMarginType(wxSTC_MARGINOPTION_SUBLINESELECT, wxSTC_MARGIN_NUMBER);
-	//m_TextCtrl->SetScrollWidth(1);
 	m_TextCtrl->MarkerSetBackground(wxSTC_MARK_CIRCLE, wxColour("red"));
 
 	m_TextCtrl->Bind(wxEVT_KEY_UP, &EditorStates::UpdateLineColKey, this);
@@ -352,19 +348,8 @@ void EditorStates::BuildInterface()
 	wxFont font = wxFont(16, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false);
 	m_TextCtrl->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
 
-	/*wxButton* save = new wxButton(this, Ids::ID_SAVE_STATES, wxString("Save"));
-	wxButton* saveClose = new wxButton(this, Ids::ID_SAVE_CLOSE_STATES, wxString("Save && Close"));
-
-	save->Bind(wxEVT_BUTTON, &EditorStates::OnSave, this);
-	saveClose->Bind(wxEVT_BUTTON, &EditorStates::OnSaveClose, this);
-
-	wxGridSizer* sizerButtons = new wxGridSizer(2);
-	sizerButtons->Add(save, 0);
-	sizerButtons->Add(saveClose, 0);*/
-
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 	sizer->Add(m_TextCtrl, 1, wxEXPAND);
-	//sizer->Add(sizerButtons, 0, wxALIGN_RIGHT | wxALL, 6);
 
 	CreateStatusBar(); GetStatusBar()->SetStatusText("Line=1\tColumn=1");
 
@@ -402,10 +387,6 @@ void EditorStates::OnCloseEvent(wxCloseEvent& evt)
 		);
 		
 		int answer = dialog.ShowModal();
-
-	/*	dlg = new wxMessageDialog(this, "save boss?", "save", wxYES_NO | wxCANCEL | wxICON_INFORMATION);
-		dlg->ShowWindowModal();
-		int answer = dlg->GetReturnCode();*/
 
 		if (answer == wxID_YES)
 		{
@@ -495,6 +476,8 @@ void EditorStates::OnMenuReplace(wxCommandEvent& evt)
 
 void EditorStates::OnFind(wxFindDialogEvent& evt)
 {
+	// attempt to highlight queried input
+
 	wxString find = m_FindData->GetFindString();
 
 	int flags = m_FindData->GetFlags();
@@ -525,6 +508,8 @@ void EditorStates::OnFind(wxFindDialogEvent& evt)
 
 void EditorStates::OnFindNext(wxFindDialogEvent& evt)
 {
+	// attempt to highlight next occurence of queried input
+
 	wxString find = m_FindData->GetFindString();
 
 	int flags = m_FindData->GetFlags();
@@ -555,6 +540,8 @@ void EditorStates::OnFindNext(wxFindDialogEvent& evt)
 
 void EditorStates::OnReplace(wxFindDialogEvent& evt)
 {
+	// attempt to replace queried input with another input
+
 	wxString replace = m_FindData->GetReplaceString();
 	wxString find = m_FindData->GetFindString();
 
@@ -565,6 +552,8 @@ void EditorStates::OnReplace(wxFindDialogEvent& evt)
 
 void EditorStates::OnReplaceAll(wxFindDialogEvent& evt)
 {
+	// attempt to replace next occurence of queried input with another input
+
 	wxString find = m_FindData->GetFindString();
 	wxString replace = m_FindData->GetReplaceString();
 
@@ -608,6 +597,8 @@ void EditorStates::OnFormat(wxCommandEvent& evt)
 
 void EditorStates::OnPrevMark(wxCommandEvent& evt)
 {
+	// go to the previously marked line
+
 	int line = m_TextCtrl->MarkerPrevious(--m_MarkLine, 1);
 
 	if (line == -1) line = m_TextCtrl->MarkerPrevious(m_TextCtrl->GetLineCount(), 1);
@@ -623,6 +614,8 @@ void EditorStates::OnPrevMark(wxCommandEvent& evt)
 
 void EditorStates::OnNextMark(wxCommandEvent& evt)
 {
+	// go to the next marked line
+
 	int line = m_TextCtrl->MarkerNext(++m_MarkLine, 1);
 
 	if (line == -1) line = m_TextCtrl->MarkerNext(0, 1);
@@ -699,7 +692,6 @@ void EditorStates::OnImport(wxCommandEvent& evt)
 			SetText(text);
 			m_InputStates->SetStates(states);
 		}
-		//else m_InputStates->SetStates({ "FREE" });
 
 		if (errors.size())
 		{
@@ -732,8 +724,6 @@ void EditorStates::UpdateLineColMouse(wxMouseEvent& evt)
 	long col = 0;
 	long pos = m_TextCtrl->GetInsertionPoint();
 
-	//if (pos == m_TextCtrl->GetLastPosition()) pos = (pos - 1 > 1) ? pos - 1 : 1;
-
 	if (!m_TextCtrl->PositionToXY(pos, &col, &line))
 	{
 		line = m_TextCtrl->GetLineCount() - 1;
@@ -752,8 +742,6 @@ void EditorStates::UpdateLineColKey(wxKeyEvent& evt)
 	long line = 0;
 	long col = 0;
 	int pos = m_TextCtrl->GetInsertionPoint();
-
-	//if (pos == m_TextCtrl->GetLastPosition()) pos = (pos - 1 > 1) ? pos - 1 : 1;
 
 	if (!m_TextCtrl->PositionToXY(pos, &col, &line))
 	{
@@ -792,6 +780,7 @@ std::pair<int, int> EditorStates::FindState(std::string state)
 		}
 		states.MakeUpper();
 
+		// compose full state and check if it matches the query
 		for (int j = 0; j < states.size(); j++)
 		{
 			char c = states[j];

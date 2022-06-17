@@ -3,7 +3,6 @@
 #include "wx/statline.h"
 
 #include "AlgorithmParameters.h"
-#include "AlgorithmPattern.h"
 #include "AlgorithmOutput.h"
 
 class PanelAlgorithm: public wxScrolledWindow
@@ -17,5 +16,7 @@ public:
 private:
 	AlgorithmParameters* m_AlgorithmParameters;
 	AlgorithmOutput* m_AlgorithmOutput;
+
+	void BuildInterface();
 };
 
