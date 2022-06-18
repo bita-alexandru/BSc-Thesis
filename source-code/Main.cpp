@@ -109,7 +109,7 @@ void Main::BuildMenuBar()
 
 void Main::SetShortcuts()
 {
-	wxAcceleratorEntry entries[17];
+	wxAcceleratorEntry entries[18];
 	// ToolZoom
 	entries[0].Set(wxACCEL_CTRL, (int)'+', Ids::ID_ZOOM_IN);
 	entries[1].Set(wxACCEL_CTRL, (int)'-', Ids::ID_ZOOM_OUT);
@@ -133,8 +133,9 @@ void Main::SetShortcuts()
 	entries[14].Set(wxACCEL_CTRL, (int)'G', Ids::ID_BUTTON_GENERATION);
 	entries[15].Set(wxACCEL_CTRL, (int)',', Ids::ID_BUTTON_SLOWER);
 	entries[16].Set(wxACCEL_CTRL, (int)'.', Ids::ID_BUTTON_FASTER);
+	entries[17].Set(wxACCEL_CTRL, (int)'P', Ids::ID_BUTTON_POPULATE);
 
-	wxAcceleratorTable accel(17, entries);
+	wxAcceleratorTable accel(18, entries);
 	SetAcceleratorTable(accel);
 }
 
