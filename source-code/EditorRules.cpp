@@ -99,8 +99,6 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 		int nline = -1;
 		int cnt = 0;
 
-		//wxLogDebug("pos=%i", ncol);
-
 		// map to real position (line, col)
 		for (int i = 0; i < m_TextCtrl->GetLineCount(); i++)
 		{
@@ -109,7 +107,6 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 
 			cnt += line.size();
 
-			//wxLogDebug("LINE=%i SIZE=%i WS=%i CNT=%i", i, line.size(), ws, cnt);
 			if (cnt >= ncol)
 			{
 				nline = i;
@@ -117,8 +114,6 @@ std::vector<std::pair<std::string, Transition>> EditorRules::GetData()
 				break;
 			}
 		}
-
-		//wxLogDebug("cnt=%i, ncol=%i", cnt,ncol);
 
 		std::string line = std::to_string(nline + 1);
 		std::string col = std::to_string(ncol);

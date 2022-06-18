@@ -1879,7 +1879,6 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(
 		// iterate through all cells
 		if (rule.second.all || rule.second.condition.empty())
 		{
-			//wxLogDebug("1. FREE_ALL");
 			const int N = Sizes::N_ROWS * Sizes::N_COLS;
 
 			for (int i = 0; i < N; i++)
@@ -1892,7 +1891,6 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(
 				{
 					applied.push_back({ x,y });
 					visited.insert(k);
-					//wxLogDebug("111");
 				}
 			}
 		}
@@ -1907,12 +1905,10 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(
 				if (m_StatePositions.find(state) == m_StatePositions.end()) continue;
 				n2 += m_StatePositions[state].size();
 			}
-			//wxLogDebug("2. N1=%i N2=%i",n1,n2);
 
 			// faster to iterate through all cells
 			if (n1 <= n2 || rule.second.condition.empty())
 			{
-				//wxLogDebug("3. FREE ALL");
 				const int N = Sizes::N_COLS * Sizes::N_ROWS;
 
 				for (int i = 0; i < N; i++)
@@ -1925,19 +1921,16 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(
 					{
 						applied.push_back({ x,y });
 						visited.insert(k);
-						//wxLogDebug("222");
 					}
 				}
 			}
 			// faster to iterate through the condition states' neighbors
 			else
 			{
-				//wxLogDebug("4. FREE NEIGHBORS");
 				for (auto& state : rule.second.states)
 				{
 					if (state == "FREE")
 					{
-						//wxLogDebug("5. FREE ALL");
 						const int N = Sizes::N_ROWS * Sizes::N_COLS;
 
 						for (int i = 0; i < N; i++)
@@ -1950,14 +1943,12 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(
 							{
 								applied.push_back({ x,y });
 								visited.insert(k);
-								wxLogDebug("333");
 							}
 						}
 					}
 					// cells of this type are placed on grid
 					else if (m_StatePositions.find(state) != m_StatePositions.end())
 					{
-						//wxLogDebug("6. FREE ADJACENTS");
 						int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
 						int dy[8] = { -1,-1,0,1,1,1,0,-1 };
 
@@ -1976,7 +1967,6 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(
 								{
 									applied.push_back({ nx,ny });
 									visited.insert(k);
-									//wxLogDebug("444");
 								}
 							}
 						}
@@ -1994,7 +1984,6 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(
 		if (rule.second.all || rule.second.condition.empty())
 		{
 			string state = rule.first;
-			//wxLogDebug("7. STATE ALL");
 			for (auto i = m_StatePositions.at(state).begin(); i != m_StatePositions.at(state).end(); i++)
 			{
 				int x = i->first;
@@ -2005,7 +1994,6 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(
 				{
 					visited.insert(k);
 					applied.push_back({ x,y });
-					//wxLogDebug("444");
 				}
 			}
 		}
@@ -2020,12 +2008,10 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(
 				if (m_StatePositions.find(state) == m_StatePositions.end()) continue;
 				n2 += m_StatePositions[state].size();
 			}
-			//wxLogDebug("8. N1=%i N2=%i", n1, n2);
 
 			// faster to iterate through all cells
 			if (n1 <= n2 || rule.second.condition.empty())
 			{
-				//wxLogDebug("9. STATE ALL");
 				string state = rule.first;
 				for (auto i = m_StatePositions.at(state).begin(); i != m_StatePositions.at(state).end(); i++)
 				{
@@ -2037,7 +2023,6 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(
 					{
 						visited.insert(k);
 						applied.push_back({ x,y });
-						//wxLogDebug("555");
 					}
 				}
 			}
@@ -2048,7 +2033,6 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(
 				{
 					if (state == "FREE")
 					{
-						//wxLogDebug("10. STATE ALL");
 						string state = rule.first;
 						for (auto i = m_StatePositions.at(state).begin(); i != m_StatePositions.at(state).end(); i++)
 						{
@@ -2060,14 +2044,12 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(
 							{
 								applied.push_back({ x,y });
 								visited.insert(k);
-								//wxLogDebug("666");
 							}
 						}
 					}
 					// cells of this type are placed on grid
 					else if (m_StatePositions.find(state) != m_StatePositions.end())
 					{
-						//wxLogDebug("11. STATE ADJACENTS");
 						int dx[8] = { 0,1,1,1,0,-1,-1,-1 };
 						int dy[8] = { -1,-1,0,1,1,1,0,-1 };
 
@@ -2086,7 +2068,6 @@ std::pair<std::vector<std::pair<int, int>>, std::string> Grid::ParseRule(
 								{
 									applied.push_back({ nx,ny });
 									visited.insert(k);
-									//wxLogDebug("777");
 								}
 							}
 						}
@@ -2107,7 +2088,6 @@ std::pair<std::vector<std::pair<std::string, std::pair<int, int>>>, std::string>
 
 	for (auto& rule : rules)
 	{
-		//wxLogDebug("RULE=%s/%s:%s", rule.first, rule.second.state, rule.second.condition);
 		std::pair<std::vector<std::pair<int, int>>, std::string> result = ParseRule(rule, visited);
 
 		// error
@@ -2150,23 +2130,16 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 {
 	std::unordered_map<std::string, std::string> neighborhood = GetNeighborhood({ x,y }, neighbors);
 
-	//wxLogDebug("[CELL_NEIGHBORHOOD]");
-	//for (auto& it : neighborhood) wxLogDebug("<%s>=%s", it.first, it.second);
-
 	bool ruleValid = true;
 	// iterate through the chain of "OR" rules
 	for (auto& rulesOr : rule.orRules)
 	{
 		ruleValid = true;
-		//wxLogDebug("[RULES_OR]");
 
 		// iterate through the chain of "AND" rules
 		for (auto& rulesAnd : rulesOr)
 		{
-			//wxLogDebug("[RULES_AND]");
 			std::vector<std::string> ruleNeighborhood = rulesAnd.first;
-			//wxLogDebug("[RULE_NEIGHBORHOOD]");
-			//for (auto& it : ruleNeighborhood)wxLogDebug("<%s>", it);
 
 			bool conditionValid = true;
 			// iterate through the chain of "OR" conditions
@@ -2178,7 +2151,6 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 				for (auto& conditionsAnd : conditionsOr)
 				{
 					std::string conditionState = conditionsAnd.second;
-					//wxLogDebug("CONDITION_STATE=%s", conditionState);
 
 					int occurences = 0;
 					if (ruleNeighborhood[0] == "ALL")
@@ -2194,12 +2166,8 @@ bool Grid::ApplyOnCell(int x, int y, Transition& rule, std::unordered_set<std::s
 						}
 					}
 
-					//wxLogDebug("OCCURENCES=%i", occurences);
-
 					int conditionNumber = conditionsAnd.first.first;
 					int conditionType = conditionsAnd.first.second;
-
-					//wxLogDebug("CONDITION_NUMBER=%i, CONDITION_TYPE=%i", conditionNumber, conditionType);
 
 					switch (conditionType)
 					{
@@ -2270,8 +2238,6 @@ void Grid::UpdateGeneration(std::vector<std::pair<std::string, std::pair<int, in
 	{
 		std::string state = change.first;
 
-		//wxLogDebug("STATE=%s", state);
-
 		state.pop_back();
 
 		std::string prevState = "";
@@ -2290,8 +2256,6 @@ void Grid::UpdateGeneration(std::vector<std::pair<std::string, std::pair<int, in
 			if (!separator) prevState.push_back(state[i]);
 			else currState.push_back(state[i]);
 		}
-
-		//wxLogDebug("PREV=<%s> CURR=<%s>", prevState, currState);
 
 		// insert positions into the current state map and remove them from the previous one
 		auto position = change.second;

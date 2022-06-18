@@ -136,8 +136,6 @@ private:
 		unordered_map<int, string>& cells, unordered_map<string, unordered_set<int>>& statePositions);
 
 	void UpdateChromosomesMaps(vector<Chromosome>& population);
-	void ShowChromosomePattern(Chromosome& chromosome);
-
 	void EndAlgorithm(bool save = true);
 
 	wxDECLARE_EVENT_TABLE();

@@ -82,8 +82,6 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 		if (!comment) invalid.push_back({ i + 1 - comments*2,"<ILLEGAL CHARACTER>" });
 	}
 
-	//wxLogDebug("<%s>%i", rules, rules.size());
-
 	stringstream ss(rules);
 	int cursor = 0;
 	int size = 0;
@@ -104,7 +102,6 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 
 		// read transitory state
 		ss >> state1;
-		//wxLogDebug("state1=<%s>", state1);
 		
 		// check if end of file
 		if (!FindWord(cursor, rules, state1) || !SkipIfComment(cursor, rules, ss, state1)) break;
@@ -119,7 +116,6 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 		if (valid)
 		{
 			ss >> symbol; FindWord(cursor, rules, symbol); SkipIfComment(cursor, rules, ss, symbol);
-			//wxLogDebug("symbol=<%s>", symbol);
 
 			// check if rule is within the size limits
 			if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, symbol,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
@@ -132,7 +128,6 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 		if (valid)
 		{
 			ss >> state2; FindWord(cursor, rules, state2); SkipIfComment(cursor, rules, ss, state2);
-			//wxLogDebug("state2=<%s>", state2);
 
 			// check if rule is within the size limits
 			if (!UpdateChars(chars, state2)) MarkInvalid(valid, invalid, state2,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
@@ -158,7 +153,6 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 		{
 			symbol.clear();
 			ss >> symbol; FindWord(cursor, rules, symbol); SkipIfComment(cursor, rules, ss, symbol);
-			//wxLogDebug("symbol=<%s>", symbol);
 
 			// check if rule is within the size limits
 			if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, symbol,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
@@ -184,7 +178,6 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 						symbol.clear();
 						ss >> symbol; FindWord(cursor, rules, symbol); SkipIfComment(cursor, rules, ss, symbol);
 						transition.condition += symbol;
-						//wxLogDebug("symbol=<%s>", symbol);
 
 						// check if rule is marked accordingly with a "("
 						if (symbol != "(") MarkInvalid(valid, invalid, symbol,  "<INVALID RULE SYMBOL, EXPECTED '('>", cursor);
@@ -211,7 +204,6 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 								string neighborhood;
 								ss >> neighborhood; FindWord(cursor, rules, neighborhood); SkipIfComment(cursor, rules, ss, neighborhood);
 								transition.condition += neighborhood;
-								//wxLogDebug("neighborhood=<%s>", neighborhood);
 
 								if (!UpdateChars(chars, neighborhood)) MarkInvalid(valid, invalid, neighborhood,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
@@ -226,7 +218,6 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 										string direction;
 										ss >> direction; FindWord(cursor, rules, direction); SkipIfComment(cursor, rules, ss, direction);
 										transition.condition += direction;
-										//wxLogDebug("direction=<%s>", direction);
 
 										// check if rule is within the size limits
 										if (valid && !UpdateChars(chars, direction)) MarkInvalid(valid, invalid, direction,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
@@ -256,7 +247,6 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 										symbol.clear();
 										ss >> symbol; FindWord(cursor, rules, symbol); SkipIfComment(cursor, rules, ss, symbol);
 										transition.condition += symbol;
-										//wxLogDebug("symbol=<%s>", symbol);
 
 										// more directions to follow
 										if (symbol == ",")
@@ -302,7 +292,6 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 								symbol.clear();
 								ss >> symbol; FindWord(cursor, rules, symbol); SkipIfComment(cursor, rules, ss, symbol);
 								transition.condition += symbol;
-								//wxLogDebug("symbol=<%s>", symbol);
 
 								if (symbol != "=") MarkInvalid(valid, invalid, symbol,  "<INVALID ASSIGNMENT SYMBOL>", cursor);
 								
@@ -325,7 +314,6 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 									string condition;
 									ss >> condition; FindWord(cursor, rules, condition); SkipIfComment(cursor, rules, ss, condition);
 									transition.condition += condition;
-									//wxLogDebug("condition=<%s>", condition);
 
 									if (!UpdateChars(chars, condition)) MarkInvalid(valid, invalid, condition,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
@@ -401,7 +389,7 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 									if (symbol == "AND") transition.condition += " AND ";
 									else if (symbol == "OR") transition.condition += " OR ";
 									else transition.condition += symbol;
-									//wxLogDebug("symbol=<%s>", symbol);
+									
 									if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, symbol,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
 									if (find(AND.begin(), AND.end(), symbol) != AND.end())
@@ -432,7 +420,6 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 						symbol.clear();
 						ss >> symbol; FindWord(cursor, rules, symbol); SkipIfComment(cursor, rules, ss, symbol);
 						if (symbol != ";") transition.condition += symbol;
-						//wxLogDebug("symbol=<%s>", symbol);
 
 						if (!UpdateChars(chars, symbol)) MarkInvalid(valid, invalid, symbol,  "<SIZE OF RULE SURPASSES MAXIMUM LIMIT>", cursor);
 
@@ -468,13 +455,9 @@ vector<pair<int, string>> Interpreter::Process(string& rules)
 		{
 			if (!NextTransition(cursor, rules, ss)) break;
 		}
-
-		//wxLogDebug("valid=%i", valid);
 	}
 
 	if (m_Transitions.size() > Sizes::RULES_MAX) invalid = { {-1,"<THE NUMBER OF RULES SURPASSES THE MAXIMUM LIMIT>"} };
-
-	//wxLogDebug("spaces=%i", spaces);
 
 	return invalid;
 }
@@ -534,7 +517,6 @@ bool Interpreter::FindWord(int& cursor, string &rules, string& s, bool comment)
 			if (BOTH_SPACED.find(c) != BOTH_SPACED.npos) spaces += 2;
 		}
 	}
-	//wxLogDebug("token=%s spaces=%i", s, spaces);
 
 	cursor = pos;
 

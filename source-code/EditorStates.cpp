@@ -64,7 +64,6 @@ std::pair<std::vector<std::string>, std::vector<std::pair<int, std::string>>> Ed
 		if (line.find("!") != line.npos)
 		{
 			int curr = (ssText.tellg() == -1) ? text.size() : (int)ssText.tellg();
-			//wxLogDebug("curr=%i prev=%i", curr, curr - line.size());
 			int lf = text.find('\n', curr - line.size());
 
 			if (lf != text.npos)
