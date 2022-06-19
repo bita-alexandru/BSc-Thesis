@@ -68,6 +68,10 @@ private:
 	double m_BestInitialSize;
 	double m_BestFitness;
 
+	const int NUMBER_OF_ELITES = 2;
+	const int TOURNAMENT_SIZE = 3;
+	const double FITNESS_CUTOFF = 0.1;
+
 	double eliteLowerBound;
 	int popSize;
 	int rows;
@@ -100,7 +104,7 @@ private:
 	vector<Chromosome> TournamentSelection(vector<Chromosome>& population);
 	vector<Chromosome> ElitismSelection(vector<Chromosome>& population);
 	vector<Chromosome> RandomSelection(vector<Chromosome>& population);
-	void DoCrossover(vector<Chromosome>& population);
+	vector<Chromosome> DoCrossover(vector<Chromosome>& population);
 	void DoMutatiton(vector<Chromosome>& population);
 	Chromosome GetBestChromosome(vector<Chromosome>& population, int epoch);
 	double GetEliteLowerBound(vector<Chromosome> population);

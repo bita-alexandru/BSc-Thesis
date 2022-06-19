@@ -189,7 +189,7 @@ void AlgorithmOutput::RunAlgorithm()
 
 		// III. apply genetic operators on the new population
 		// don't do crossover on SteadyState - it has its own version
-		if (selectionMethod != "Steady State") DoCrossover(population);
+		if (selectionMethod != "Steady State") population = DoCrossover(population);
 		DoMutatiton(population);
 
 		UpdateChromosomesMaps(population);
@@ -443,32 +443,46 @@ vector<Chromosome> AlgorithmOutput::RankSelection(vector<Chromosome>& population
 
 vector<Chromosome> AlgorithmOutput::SteadyStateSelection(vector<Chromosome>& population)
 {
-	// similar to the crossover function but instead of modifying the parents
-	// the off-springs replace random individuals (that can include one or both of their parents)
+	// similar to the regular crossover but
+	// instead of replacin the whole population with offsprings
+	// it only replaces the worst 20% chromosomes
 
 	vector<int> parents;
 	int parentsSize = 0;
+	int desiredSize = max(1, (int)ceil(FITNESS_CUTOFF * popSize)) * 2;
 
 	uniform_real_distribution<double> r01(0, 1);
 
-	for (int i = 0; i < popSize && m_Running; i++)
+	while (parentsSize < desiredSize)
 	{
-		double p = r01(generator);
-
-		if (p < pc)
+		// iterate through the genes and select for crossover
+		for (int i = 0; i < popSize && m_Running; i++)
 		{
-			parents.push_back(i);
-			parentsSize++;
+			double p = r01(generator);
+
+			if (p < pc)
+			{
+				parents.push_back(i);
+				parentsSize++;
+
+				if (parentsSize == desiredSize) break;
+			}
 		}
 	}
+
+	desiredSize /= 2;
 
 	const int N = rows * cols;
 
 	uniform_int_distribution<int> i0n(0, N - 1);
-	uniform_int_distribution<int> i0popSize(0, popSize - 1);
 
+	vector<Chromosome> newPopulation;
+	int j = 0;
+
+	// couple the resulted parents (p1, p2), (p3, p4) etc.
 	for (int i = 0; i < parentsSize - 1 && m_Running; i += 2)
 	{
+		// generate 2 cut-points
 		int xp1 = i0n(generator);
 		int xp2 = i0n(generator);
 
@@ -482,23 +496,38 @@ vector<Chromosome> AlgorithmOutput::SteadyStateSelection(vector<Chromosome>& pop
 		int p1 = parents[i];
 		int p2 = parents[i + 1];
 
-		Chromosome offspring1 = population[p1];
-		Chromosome offspring2 = population[p2];
+		Chromosome offspring = population[p1];
 
-		for (int j = xp1; j <= xp2 && m_Running; j++)
+		// iterate through the genes located between the cut-points
+		for (int k = xp1; k <= xp2 && m_Running; k++)
 		{
-			swap(offspring1.initialPattern[j], offspring2.initialPattern[j]);
+			// exchange gene information
+			offspring.initialPattern[k] = population[p2].initialPattern[k];
 		}
 
-		int k1 = i0popSize(generator);
-		offspring1.id = k1;
-		population[k1] = offspring1;
-		int k2 = i0popSize(generator);
-		offspring2.id = k2;
-		population[k2] = offspring2;
+		offspring.id = j++;
+		newPopulation.push_back(offspring);
+
+		// this is enough to replace 20% of the current population
+		if (j >= desiredSize) break;
 	}
 
-	return population;
+	// sort by worst to best
+	sort(population.begin(), population.end());
+
+
+	// include the chromosomes that don't make up the bottom 20%
+	for (int i = desiredSize; i < popSize; i++)
+	{
+		Chromosome chromosome = population[i];
+		chromosome.id = j++;
+
+		newPopulation.push_back(chromosome);
+	}
+
+	while (j-- > popSize) newPopulation.pop_back();
+
+	return newPopulation;
 }
 
 vector<Chromosome> AlgorithmOutput::TournamentSelection(vector<Chromosome>& population)
@@ -513,7 +542,7 @@ vector<Chromosome> AlgorithmOutput::TournamentSelection(vector<Chromosome>& popu
 	for (int i = 0; i < popSize && m_Running; i++) indexes[i] = i;
 
 	// apply this method until the desired population size is hit
-	int k = 3;
+	int k = TOURNAMENT_SIZE;
 	int j = 0;
 	while (j != popSize && m_Running)
 	{
@@ -522,7 +551,7 @@ vector<Chromosome> AlgorithmOutput::TournamentSelection(vector<Chromosome>& popu
 		double bestFitness = -1.0;
 
 		// create a tournament with 3 distinct randomly chosen chromosomes
-		while (tournamentIndexes.size() < 3 && m_Running)
+		while (tournamentIndexes.size() < TOURNAMENT_SIZE && m_Running)
 		{
 			int k = i0popSize(generator);
 
@@ -589,36 +618,63 @@ vector<Chromosome> AlgorithmOutput::RandomSelection(vector<Chromosome>& populati
 	return newPopulation;
 }
 
-void AlgorithmOutput::DoCrossover(vector<Chromosome>& population)
+vector<Chromosome> AlgorithmOutput::DoCrossover(vector<Chromosome>& population)
 {
 	// select chromosomes for crossover
-	// 2 parents will create 2 other chromosomes (off-springs) that will inherit genes from both parents
+	// make pairs of 2 chromosomes (called "parents")
+	// and select their offsprings to make up the new generation
+	// 
+	// return the resulted population
 
 	vector<int> parents;
 	int parentsSize = 0;
+	int desiredSize = popSize * 2;
 
 	uniform_real_distribution<double> r01(0, 1);
 
-	// iterate through the genes and select for crossover
-	for (int i = 0; i < popSize && m_Running; i++)
+	while (parentsSize < desiredSize && m_Running)
 	{
-		double p = r01(generator);
-
-		if (p < pc)
+		// iterate through the genes and select for crossover
+		for (int i = 0; i < popSize && m_Running; i++)
 		{
-			parents.push_back(i);
-			parentsSize++;
+			double p = r01(generator);
+
+			if (p < pc)
+			{
+				parents.push_back(i);
+				parentsSize++;
+
+				if (parentsSize == desiredSize) break;
+			}
 		}
 	}
-
+	
 	const int N = rows * cols;
 
 	uniform_int_distribution<int> i0n(0, N - 1);
 
+	vector<Chromosome> newPopulation;
+	int j = 0;
+
+	if (eliteLowerBound)
+	{
+		// include elites first
+		for (int i = 0; i < popSize; i++)
+		{
+			if (population[i].fitness >= eliteLowerBound)
+			{
+				Chromosome elite = population[i];
+				elite.id = j++;
+
+				newPopulation.push_back(elite);
+			}
+		}
+	}
+
 	// couple the resulted parents (p1, p2), (p3, p4) etc.
 	for (int i = 0; i < parentsSize - 1 && m_Running; i += 2)
 	{
-		// generate cut-points
+		// generate 2 cut-points
 		int xp1 = i0n(generator);
 		int xp2 = i0n(generator);
 
@@ -632,23 +688,24 @@ void AlgorithmOutput::DoCrossover(vector<Chromosome>& population)
 		int p1 = parents[i];
 		int p2 = parents[i + 1];
 
-		// if both parents are elites -> do nothing
-		if (eliteLowerBound && population[p1].fitness >= eliteLowerBound && population[p2].fitness >= eliteLowerBound) continue;
+		Chromosome offspring = population[p1];
 
 		// iterate through the genes located between the cut-points
-		for (int j = xp1; j <= xp2 && m_Running; j++)
+		for (int k = xp1; k <= xp2 && m_Running; k++)
 		{
-			// if there are no elites -> make the crossover
-			if (!eliteLowerBound)
-				swap(population[p1].initialPattern[j], population[p2].initialPattern[j]);
-			// 1st parent is an elite -> only apply changes to the 2nd
-			else if (population[p1].fitness >= eliteLowerBound)
-				population[p2].initialPattern[j] = population[p1].initialPattern[j];
-			// 2nd parents an elite -> only apply changes to the 1st
-			else if (population[p2].fitness >= eliteLowerBound)
-				population[p1].initialPattern[j] = population[p2].initialPattern[j];
+			// exchange gene information
+			offspring.initialPattern[k] = population[p2].initialPattern[k];
 		}
+
+		offspring.id = j++;
+		newPopulation.push_back(offspring);
+
+		if (j >= popSize) break;
 	}
+
+	while (j-- > popSize) newPopulation.pop_back();
+
+	return newPopulation;
 }
 
 void AlgorithmOutput::DoMutatiton(vector<Chromosome>& population)
@@ -701,7 +758,7 @@ double AlgorithmOutput::GetEliteLowerBound(vector<Chromosome> population)
 {
 	// return the 2nd best fitness
 
-	int k = 2;
+	int k = NUMBER_OF_ELITES;
 
 	sort(population.begin(), population.end());
 
