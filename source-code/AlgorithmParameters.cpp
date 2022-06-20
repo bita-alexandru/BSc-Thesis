@@ -112,7 +112,7 @@ void AlgorithmParameters::BuildInterface()
 	m_PopulationMultiplier->SetDigits(3);
 	m_PopulationMultiplier->SetRange(0.0, 1.0);
 	m_PopulationMultiplier->SetIncrement(0.005);
-	m_PopulationMultiplier->SetValue(1.0);
+	m_PopulationMultiplier->SetValue(0.0);
 
 	wxStaticText* textInitialSizeMultiplier = new wxStaticText(this, wxID_ANY, "Initial Size Fitness Multiplier");
 	textInitialSizeMultiplier->SetToolTip("0.000 - 1.000");
