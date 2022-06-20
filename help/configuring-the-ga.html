@@ -43,9 +43,9 @@
 					<li><b>Rank Selection</b></li>
 					Ranks each chromosome by their fitness and makes the selection based on that rank, and not on their fitness.
 					<li><b>Steady State Selection</b></li>
-					This selection method is based on the concept "survival of the fittest". As opposed to replacing an entire population with the resulted offsprings, it only replaces the bottom 20% chromosomes.
-					<li><b>Tournament Selection</b>, (using 3-way tournaments)</li>
-					Groups of 3 randomly chosen chromosomes are made and the most fit chromosomes get selected for the next generation.
+					This selection method is based on the concept "survival of the fittest". As opposed to replacing an entire population with the resulted offsprings, it only replaces the bottom 10% chromosomes.
+					<li><b>Tournament Selection</b>, (using 2-way tournaments)</li>
+					Groups of 2 randomly chosen chromosomes are made and the most fit chromosomes are more likely to get selected for crossover (75% chance), although selecting the worse is also possible (25% chance).
 					<li><b>Elitism Selection</b>, (using 2 elites)</li>
 					At the end of a generation, the 2 most fit chromosomes are being kept and will not suffer any changes from mutations or crossovers.
 					<li><b>Random Selection</b></li>

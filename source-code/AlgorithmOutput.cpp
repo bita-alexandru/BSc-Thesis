@@ -181,9 +181,6 @@ void AlgorithmOutput::RunAlgorithm()
 	{
 		UpdateTextEpoch(epochs);
 
-		// save the worst fitness of the best chromosomes
-		if (selectionMethod == "Elitism") eliteLowerBound = GetEliteLowerBound(population);
-
 		// II. select which chromosomes will make up the next population
 		population = SelectPopulation(population);
 
@@ -218,7 +215,6 @@ void AlgorithmOutput::GetParameters()
 	rows = Sizes::N_ROWS;
 	cols = Sizes::N_COLS;
 
-	eliteLowerBound = 0.0;
 	popSize = m_AlgorithmParameters->GetPopulationSize();
 	pc = m_AlgorithmParameters->GetProbabilityCrossover();
 	pm = m_AlgorithmParameters->GetProbabilityMutation();
@@ -443,10 +439,10 @@ vector<Chromosome> AlgorithmOutput::RankSelection(vector<Chromosome>& population
 vector<Chromosome> AlgorithmOutput::SteadyStateSelection(vector<Chromosome>& population)
 {
 	// similar to the regular crossover but
-	// instead of replacin the whole population with offsprings
+	// instead of replacing the whole population with offsprings
 	// it only replaces the worst 20% chromosomes
 
-	double fitnessLowerBound = GetFitnessLowerBound(population);
+	SetUnfitChromosomes(population);
 
 	const int N = rows * cols;
 	uniform_int_distribution<int> i0n(0, N - 1);
@@ -499,8 +495,8 @@ vector<Chromosome> AlgorithmOutput::SteadyStateSelection(vector<Chromosome>& pop
 		offspring2.id = j++;
 
 		// revert changes if these parents don't make up the bottom 20%
-		if (population[i].fitness > fitnessLowerBound) offspring1.initialPattern = population[i].initialPattern;
-		if (population[i + 1].fitness > fitnessLowerBound) offspring2.initialPattern = population[i + 1].initialPattern;
+		if (unfitChromosomes.find(population[i].id) == unfitChromosomes.end()) offspring1.initialPattern = population[i].initialPattern;
+		if (unfitChromosomes.find(population[i+1].id) == unfitChromosomes.end()) offspring2.initialPattern = population[i + 1].initialPattern;
 
 		newPopulation.push_back(offspring1);
 		newPopulation.push_back(offspring2);
@@ -524,9 +520,10 @@ vector<Chromosome> AlgorithmOutput::SteadyStateSelection(vector<Chromosome>& pop
 
 vector<Chromosome> AlgorithmOutput::TournamentSelection(vector<Chromosome>& population)
 {
-	// randomly create a group of 3 chromosomes and select the fittest one for next generation
+	// randomly create a group of 2 chromosomes and select the fittest one for next generation
 
 	uniform_int_distribution<int> i0popSize(0, popSize - 1);
+	uniform_real_distribution<double> r01(0, 1);
 
 	vector<Chromosome> newPopulation;
 
@@ -539,32 +536,55 @@ vector<Chromosome> AlgorithmOutput::TournamentSelection(vector<Chromosome>& popu
 	while (j != popSize && m_Running)
 	{
 		unordered_set<int> tournamentIndexes;
-		int bestIndex = 0;
-		double bestFitness = -1.0;
-
-		// create a tournament with 3 distinct randomly chosen chromosomes
+		
+		// create a tournament with 2 distinct randomly chosen chromosomes
 		while (tournamentIndexes.size() < TOURNAMENT_SIZE && m_Running)
 		{
 			int k = i0popSize(generator);
 
+			// make sure not to include a chromosome more than once
 			if (tournamentIndexes.find(k) == tournamentIndexes.end())
 			{
 				tournamentIndexes.insert(k);
-				// save the best one
-				if (population[k].fitness > bestFitness)
-				{
-					bestFitness = population[k].fitness;
-					bestIndex = k;
-				}
 			}
 		}
 
-		j++;
+		int bestIndex = *tournamentIndexes.begin();
+		double bestFitness = population[bestIndex].fitness;
 
-		Chromosome chromosome = population[bestIndex];
-		chromosome.id = j;
+		int worstIndex = bestIndex;
+		double worstFitness = bestFitness;
 
-		newPopulation.push_back(chromosome);
+		for (auto i = tournamentIndexes.begin(); i != tournamentIndexes.end(); i++)
+		{
+			int index = *i;
+
+			if (population[index].fitness <= worstFitness)
+			{
+				worstFitness = population[index].fitness;
+				worstIndex = index;
+			}
+		}
+
+		const double r = 0.75;
+		double p = r01(generator);
+
+		// select the best fit
+		if (p <= r)
+		{
+			Chromosome chromosome = population[bestIndex];
+			chromosome.id = j++;
+
+			newPopulation.push_back(chromosome);
+		}
+		// select the worst fit
+		else
+		{
+			Chromosome chromosome = population[worstIndex];
+			chromosome.id = j++;
+
+			newPopulation.push_back(chromosome);
+		}
 
 		if (j == popSize) break;
 	}
@@ -625,18 +645,17 @@ vector<Chromosome> AlgorithmOutput::DoCrossover(vector<Chromosome>& population)
 	vector<Chromosome> newPopulation;
 	int j = 0;
 
-	if (eliteLowerBound)
+	if (selectionMethod == "Elitism")
 	{
-		// include elites first
-		for (int i = 0; i < popSize; i++)
-		{
-			if (population[i].fitness >= eliteLowerBound)
-			{
-				Chromosome elite = population[i];
-				elite.id = j++;
+		SetEliteChromosomes(population);
 
-				newPopulation.push_back(elite);
-			}
+		// include elites first
+		for (auto i = eliteChromosomes.begin(); i != eliteChromosomes.end(); i++)
+		{
+			Chromosome elite = population[*i];
+			elite.id = j++;
+
+			newPopulation.push_back(elite);
 		}
 	}
 
@@ -707,6 +726,8 @@ void AlgorithmOutput::DoMutatiton(vector<Chromosome>& population)
 {
 	// select and alter genes to increase variety
 
+	if (selectionMethod == "Elitism") SetEliteChromosomes(population);
+
 	const int N = rows * cols;
 
 	uniform_int_distribution<int> i0n(0, m_States.size() - 1);
@@ -715,7 +736,7 @@ void AlgorithmOutput::DoMutatiton(vector<Chromosome>& population)
 	for (int i = 0; i < popSize && m_Running; i++)
 	{
 		// ignore chromosome if it's one of the elites
-		if (eliteLowerBound && population[i].fitness >= eliteLowerBound) continue;
+		if (selectionMethod == "Elitism" && eliteChromosomes.find(population[i].id) != eliteChromosomes.end()) continue;
 
 		// iterate through the chromosome's genes
 		for (int j = 0; j < N && m_Running; j++)
@@ -749,25 +770,29 @@ Chromosome AlgorithmOutput::GetBestChromosome(vector<Chromosome>& population, in
 	return chromosome;
 }
 
-double AlgorithmOutput::GetEliteLowerBound(vector<Chromosome> population)
+void AlgorithmOutput::SetEliteChromosomes(vector<Chromosome> population)
 {
-	// return the 2nd best fitness
+	// save the IDs of the 2 elites
 
 	int k = NUMBER_OF_ELITES;
+	eliteChromosomes.clear();
 
-	sort(population.begin(), population.end());
+	sort(population.rbegin(), population.rend());
 
-	return population[popSize - k].fitness;
+	for (int i = 0; i < k; i++) eliteChromosomes.insert(population[i].id);
 }
 
-double AlgorithmOutput::GetFitnessLowerBound(vector<Chromosome> population)
+void AlgorithmOutput::SetUnfitChromosomes(vector<Chromosome> population)
 {
-	// get the maximum fitness of the worst 20% chromosomes
+	// save the IDs of the worst 10% chromosomes
+
 	int k = max(1, (int)ceil(FITNESS_CUTOFF * popSize));
+
+	unfitChromosomes.clear();
 
 	sort(population.begin(), population.end());
 
-	return population[k-1].fitness;
+	for (int i = 0; i < k; i++) unfitChromosomes.insert(population[i].id);
 }
 
 void AlgorithmOutput::OnStart(wxCommandEvent& evt)

@@ -69,10 +69,9 @@ private:
 	double m_BestFitness;
 
 	const int NUMBER_OF_ELITES = 2;
-	const int TOURNAMENT_SIZE = 3;
-	const double FITNESS_CUTOFF = 0.2;
+	const int TOURNAMENT_SIZE = 2;
+	const double FITNESS_CUTOFF = 0.1;
 
-	double eliteLowerBound;
 	int popSize;
 	int rows;
 	int cols;
@@ -85,10 +84,11 @@ private:
 	int generationTarget;
 	int populationTarget;
 	default_random_engine generator;
-
 	wxString selectionMethod;
-
 	Chromosome m_BestChromosome;
+
+	unordered_set<int> eliteChromosomes;
+	unordered_set<int> unfitChromosomes;
 
 	void BuildInterface();
 	void RunAlgorithm();
@@ -107,8 +107,8 @@ private:
 	vector<Chromosome> DoCrossover(vector<Chromosome>& population);
 	void DoMutatiton(vector<Chromosome>& population);
 	Chromosome GetBestChromosome(vector<Chromosome>& population, int epoch);
-	double GetEliteLowerBound(vector<Chromosome> population);
-	double GetFitnessLowerBound(vector<Chromosome> population);
+	void SetEliteChromosomes(vector<Chromosome> population);
+	void SetUnfitChromosomes(vector<Chromosome> population);
 
 	void OnStart(wxCommandEvent& evt);
 	void OnStop(wxCommandEvent& evt);
