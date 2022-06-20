@@ -70,7 +70,7 @@ private:
 
 	const int NUMBER_OF_ELITES = 2;
 	const int TOURNAMENT_SIZE = 3;
-	const double FITNESS_CUTOFF = 0.1;
+	const double FITNESS_CUTOFF = 0.2;
 
 	double eliteLowerBound;
 	int popSize;
@@ -108,6 +108,7 @@ private:
 	void DoMutatiton(vector<Chromosome>& population);
 	Chromosome GetBestChromosome(vector<Chromosome>& population, int epoch);
 	double GetEliteLowerBound(vector<Chromosome> population);
+	double GetFitnessLowerBound(vector<Chromosome> population);
 
 	void OnStart(wxCommandEvent& evt);
 	void OnStop(wxCommandEvent& evt);

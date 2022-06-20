@@ -15,15 +15,15 @@
 				<li><b>Mutation Probability</b></li>
 				The probability that a chromosome's gene will be modified. Usually set on a very small value.
 				<li><b>Crossover Probability</b></li>
-				The probability that a chromosome will get selected for crossover (as in exchanging information with another chromosome).
+				The probability that a couple of chromosomes will produce offsprings (new chromosomes with combined information from both parents).
 			</ul>
 			<ul>
 				<li><b>Generation Fitness Multiplier</b></li>
-				The multiplier to the generation count reached by a chromosome. The higher, the more important this is to the fitness function.
+				The multiplier to the generation count reached by a chromosome. A high value means that the algorithm prioritizes finding an initial configuration that leads to a high number of generations.
 				<li><b>Population Fitness Multiplier</b></li>
-				The multiplier to the average population count reached by a chromosome. The higher, the more important this is to the fitness function.
+				The multiplier to the average population count reached by a chromosome. A high value means that the algorithm prioritizes finding an initial configuration that leads to a high average population.
 				<li><b>Initial Size Fitness Multiplier</b></li>
-				The multiplier to the initial population size of a chromosome. The higher, the more important this is to the fitness function.
+				The multiplier to the initial population size of a chromosome. A high value means that the algorithm prioritizes finding an initial configuration that minimizes the use of starting cells.
 			</ul>
 			<ul>
 				<li><b>Population Target</b></li>
@@ -35,7 +35,7 @@
 			</ul>
 			<ul>
 				<li><b>Selection Method</b></li>
-				The method of selecting the chromosomes for the following generation (as in the survival of the fittest).<br/>
+				The method of selecting the chromosomes for crossover, as in forming couples of parents and creating new chromosomes.<br/>
 				There are 6 selection methods to choose from:
 				<ol>
 					<li><b>Roulette Wheel Selection</b></li>
