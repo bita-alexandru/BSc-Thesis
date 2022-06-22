@@ -640,6 +640,9 @@ void Grid::OnPopulate(double probability)
 			{
 				// update the grid
 
+				m_Cells.clear();
+				m_StatePositions.clear();
+
 				for (auto& cell : population)
 				{
 					int y = cell.first.first;
@@ -649,6 +652,13 @@ void Grid::OnPopulate(double probability)
 					wxColour color = cell.second.second;
 
 					InsertCell(x, y, state, color, true);
+				}
+
+				if (m_Cells != m_PrevCells)
+				{
+					m_ToolUndo->PushBack(m_Cells, m_StatePositions, m_PrevCells, m_PrevStatePositions);
+					m_PrevCells = m_Cells;
+					m_PrevStatePositions = m_StatePositions;
 				}
 			}
 		}
